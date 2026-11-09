@@ -1,0 +1,40 @@
+# Python y herramientas
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Entornos y secretos
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Datos y artefactos
+data/
+artifacts/
+
+# Cachés de Hugging Face y modelos
+.cache/
+.huggingface/
+huggingface/
+hf_cache/
+.hf_cache/
+HF_HOME/
+sentence_transformers/
+torch_cache/
+
+# Notebooks y PDF original
+.ipynb_checkpoints/
+docs/*.pdf
