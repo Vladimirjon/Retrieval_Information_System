@@ -39,8 +39,8 @@ La estructura de implementación aún está pendiente. Los artefactos se generan
 | Persona | GitHub | Responsabilidad |
 |---|---|---|
 | Vladimirjon | @Vladimirjon | Dueño, CODEOWNER y líder técnico: estructura/CI, datos, índice, TF-IDF/BM25, denso, runner, núcleo de app, despliegue y QA |
-| Ismael Freire | usuario de GitHub pendiente | Preprocesamiento, Jaccard, métricas y comparación lado a lado |
-| Jorge Torres | usuario de GitHub pendiente | EDA, vista de métricas, análisis e informe |
+| Ismael Freire | @BrandonFreire | Preprocesamiento, Jaccard, métricas y comparación lado a lado |
+| Jorge Torres | @Almejandro04 | EDA, vista de métricas, análisis e informe |
 
 ## Instalación y ejecución
 

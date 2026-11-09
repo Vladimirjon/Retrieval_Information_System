@@ -4,14 +4,14 @@ Actualizado: lunes 9 de noviembre de 2026.
 
 ## Ubicación y alcance
 
-La planificación está en la rama `docs/01-plan-inicial`, pendiente de commit y PR. La implementación aún no comienza; #1 está prevista para el martes 10. El plazo interno es el martes 17 de noviembre; del 18 al 23 queda contingencia.
+La planificación está integrada en `main` (PR #19). La implementación aún no comienza; #1 empieza el martes 10. El plazo interno es el martes 17 de noviembre; del 18 al 23 queda contingencia.
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
 - Ruleset `proteger-main` (id 26888439), activo en la rama por defecto: reglas `deletion`, `non_fast_forward`, `update` y `pull_request`; exige 1 aprobación, CODEOWNER, descarta aprobaciones con commits nuevos y requiere resolver hilos. El rol admin puede omitir requisitos solo mediante bypass `pull_request`; no hay push directo.
 - Borrado automático de ramas al hacer merge activado.
 - Seis milestones M0–M5 creados con las fechas del plan; 12 etiquetas creadas (9 de área y 3 `resp:*`).
-- Las 18 issues #1–#18 están creadas con la numeración del plan. Las asignadas a Vladimirjon ya están asignadas; las de Ismael y Jorge esperan que se unan como colaboradores.
+- Las 18 issues #1–#18 están creadas con la numeración del plan. Todas asignadas: Vladimirjon (10), Ismael Freire @BrandonFreire (#3, #6, #10, #14) y Jorge Torres @Almejandro04 (#4, #12, #15, #17).
 
 ## Decisiones
 
@@ -19,9 +19,9 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 
 ## Próximos pasos
 
-1. Integrar este PR.
-2. Añadir a Ismael Freire y Jorge Torres como colaboradores y asignarles sus issues.
-3. Empezar #1 el martes 10.
+1. #1 (Vladimirjon): estructura, dependencias fijadas y CI. Bloquea a todos; cerrarla el martes 10 por la mañana.
+2. En cuanto #1 esté en `main`: #2 (Vladimirjon) y #3 (Ismael) en paralelo; #10 (Ismael) puede empezar con los contratos del plan.
+3. Jorge prepara el esqueleto del informe (#17) y el notebook de #4, que ejecuta al tener #2 y #3.
 
 ## Aprendido y pendiente de confirmar
 
