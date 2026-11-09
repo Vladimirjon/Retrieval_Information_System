@@ -128,10 +128,10 @@ Métricas: P@k divide por k incluso con ranking corto; R@k y AP@1000 dividen por
 | Persona | Issues | Alcance y coordinación |
 |---|---|---|
 | Vladimirjon (@Vladimirjon) | #1, #2, #5, #7, #8, #9, #11, #13, #16, #18 | Mayor carga y piezas críticas: estructura/CI, datos, índice, TF-IDF/BM25, embeddings/FAISS, runner, núcleo/carga de app, Hub/Space, QA, README final y checklist. Líder técnico y CODEOWNER. |
-| Ismael Freire (usuario de GitHub pendiente) | #3, #6, #10, #14 | Preprocesamiento, Jaccard sobre InvertedIndex, métricas con tests a mano y comparación lado a lado/solapamiento. |
-| Jorge Torres (usuario de GitHub pendiente) | #4, #12, #15, #17 | EDA, análisis por tipos de consulta, vista de métricas desde reports/ e informe de máximo 5 páginas con aportes del equipo. |
+| Ismael Freire (@BrandonFreire) | #3, #6, #10, #14 | Preprocesamiento, Jaccard sobre InvertedIndex, métricas con tests a mano y comparación lado a lado/solapamiento. |
+| Jorge Torres (@Almejandro04) | #4, #12, #15, #17 | EDA, análisis por tipos de consulta, vista de métricas desde reports/ e informe de máximo 5 páginas con aportes del equipo. |
 
-Claude Code orquesta; Codex, Gemini y modelos NVIDIA ejecutan encargos acotados según disponibilidad y privacidad. No se consideran colaboradores humanos ni revisores independientes si operan con la misma cuenta. Se coordina quién toca scripts/build_artifacts.py y el núcleo de app; compañeros implementan sus vistas separadas. No se delega dos veces el mismo trabajo.
+Claude Code orquesta; Codex, Antigravity (`agy`) y modelos NVIDIA ejecutan encargos acotados según disponibilidad y privacidad. No se consideran colaboradores humanos ni revisores independientes si operan con la misma cuenta. Se coordina quién toca scripts/build_artifacts.py y el núcleo de app; compañeros implementan sus vistas separadas. No se delega dos veces el mismo trabajo.
 
 ## Cronograma diario y milestones
 
@@ -139,7 +139,7 @@ Fechas del acuerdo del equipo; criterios detallados en las issues. Las métricas
 
 | Día real | Trabajo y cierre previsto | Milestone y fecha límite |
 |---|---|---|
-| Lun 9 noviembre | Planificación, verificación remota y preparación de PR; añadir colaboradores | Ruleset, seis milestones, 12 etiquetas e issues #1–#18 creados y verificados por API |
+| Lun 9 noviembre | Planificación, verificación remota y PR #19 integrado; colaboradores añadidos y sus issues asignadas | Ruleset, seis milestones, 12 etiquetas e issues #1–#18 creados y verificados por API |
 | Mar 10 | Vladimirjon #1→#2; Ismael #3 tras #1; Jorge #4 tras #2/#3, con datos listos temprano | M0 Base y datos — 2026-11-10 |
 | Mié 11 | Vladimirjon #5 y primer lote #9; Ismael #10 y arranque #6 tras índice; Jorge revisa EDA y prepara esquema del informe | M1 y M2 en paralelo, según contratos |
 | Jue 12 | Cerrar #6/#7/#8, #9 y #10; validar métricas, persistencia y carga conjunta | M1 Modelos clásicos — 2026-11-12; M2 Recuperación semántica — 2026-11-12 |
@@ -175,7 +175,7 @@ Puntos de control: M0 prueba carga/preprocesamiento y conteos; M1/M2 prueba rank
 5. Resolver hilos; los PR de Ismael y Jorge requieren aprobación vigente de CODEOWNER @Vladimirjon. Los commits nuevos descartan aprobaciones; los PR de Vladimirjon siguen el bypass admin descrito abajo.
 6. Solo Vladimirjon, o Claude Code con su cuenta cuando él lo pida, hace merge vía PR; la rama se elimina automáticamente. Actualizar STATE/TASKS al terminar la tarea.
 
-Reglas remotas verificadas por API el 9 de noviembre de 2026: ruleset `proteger-main` (id 26888439) activo sobre la rama por defecto, con reglas `deletion`, `non_fast_forward`, `update` y `pull_request`; exige 1 aprobación, CODEOWNER, descarta aprobaciones con commits nuevos y requiere resolver hilos. El rol admin tiene bypass en modo `pull_request`, por lo que Vladimirjon puede integrar sus propios PR mediante ese bypass tras pasar CI (desde #1). No habilita push directo. El borrado automático de ramas al hacer merge está activado. También están creados los seis milestones M0–M5 con las fechas del plan, 12 etiquetas (9 de área y 3 `resp:*`) y las 18 issues #1–#18; las asignadas a Ismael y Jorge esperan que se unan como colaboradores.
+Reglas remotas verificadas por API el 9 de noviembre de 2026: ruleset `proteger-main` (id 26888439) activo sobre la rama por defecto, con reglas `deletion`, `non_fast_forward`, `update` y `pull_request`; exige 1 aprobación, CODEOWNER, descarta aprobaciones con commits nuevos y requiere resolver hilos. El rol admin tiene bypass en modo `pull_request`, por lo que Vladimirjon puede integrar sus propios PR mediante ese bypass tras pasar CI (desde #1). No habilita push directo. El borrado automático de ramas al hacer merge está activado. También están creados los seis milestones M0–M5 con las fechas del plan, 12 etiquetas (9 de área y 3 `resp:*`) y las 18 issues #1–#18; Ismael (@BrandonFreire) y Jorge (@Almejandro04) son colaboradores y tienen sus issues asignadas.
 
 **Aprobaciones y bypass:** [GitHub no permite al autor aprobar su propio PR](https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/approving-a-pull-request-with-required-reviews), pero el ruleset verificado permite al rol admin omitir ese requisito mediante bypass `pull_request`. Los PR de Ismael y Jorge requieren aprobación de @Vladimirjon como CODEOWNER; Vladimirjon (o Claude Code con su cuenta, cuando él lo pida) realiza el merge. Los PR de Vladimirjon se integran con el bypass de admin después de pasar CI (desde #1); cuando haya tiempo, se recomienda una revisión no bloqueante de un compañero o una revisión cruzada de otro modelo de IA.
 
@@ -192,7 +192,7 @@ Sin atribución de IA en commits, PRs, issues o documentos: ni Co-Authored-By ni
 | Stemming o ids de embeddings no corresponden a artefactos | Guardar stem, revisiones, versión, hashes y mapeo fila-doc_id; rechazar carga incompatible. |
 | Variantes de fórmulas impiden reproducir | Fijar tf/idf, BM25 y desempate en contratos; no tunear con test. Documentar también truncamiento del denso y límites de comparación con BEIR. |
 | Dependencias incompatibles con Python 3.12/CPU | #1 fija versiones exactas con instalación limpia; #9 valida FAISS/torch y #16 misma base CPU del despliegue. |
-| Falta de colaboradores o riesgo de integrar sin revisión | Añadir a Ismael y Jorge como colaboradores y asignar sus issues. Los PR de Vladimirjon usan el bypass admin tras pasar CI; cuando haya tiempo, obtener revisión no bloqueante de un compañero o revisión cruzada de otro modelo. |
+| Riesgo de integrar sin revisión | Los PR de Vladimirjon usan el bypass admin tras pasar CI; cuando haya tiempo, obtener revisión no bloqueante de un compañero o revisión cruzada de otro modelo. |
 | Informe supera 5 páginas o tablas no se leen | #17 renderiza, cuenta y revisa visualmente todas las páginas el 16; #18 verifica entregable final el 17. |
 | Canal de entrega aún no especificado | Confirmarlo con profesor/equipo antes de #18; registrar constancia real, sin asumir que publicar repo equivale a entregar. |
 

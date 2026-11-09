@@ -23,4 +23,4 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 | #17 | docs: informe técnico de hasta cinco páginas | Jorge Torres | M5 Informe y entrega | #4, #12, #16 | pendiente |
 | #18 | docs: QA final, README y entrega completa | Vladimirjon | M5 Informe y entrega | #16, #17 | pendiente |
 
-Actualizar junto con [STATE](STATE.md) al terminar cada tarea. Estados: pendiente, en curso, hecho, bloqueado. Ismael Freire y Jorge Torres: falta añadirlos como colaboradores y asignarles sus issues.
+Actualizar junto con [STATE](STATE.md) al terminar cada tarea. Estados: pendiente, en curso, hecho, bloqueado. Ismael Freire = @BrandonFreire; Jorge Torres = @Almejandro04.
