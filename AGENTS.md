@@ -41,9 +41,9 @@ Jaccard binario; TF-IDF: tf=1+ln(tf) si tf>0, idf=ln(N/df), normalización L2; B
 
 No subir datos, índices, embeddings ni cachés a GitHub. Generar con scripts/build_artifacts.py; publicar artefactos en Hub del equipo y descargarlos al arrancar el Space. Solo resultados pequeños CSV/JSON en reports/. Nunca subir .env, credenciales ni datos personales. No añadir dependencias, archivos o refactorizaciones ajenas a la tarea.
 
-## Comandos previstos
+## Comandos
 
-**Disponibles cuando se cierre la issue #1**; todavía no están ejecutados ni garantizados. PowerShell desde la raíz:
+Instalación, `pytest` y `ruff` **comprobados en #1** (PR #21): en Python 3.12.10 local y en CI sobre Ubuntu. El último comando (Streamlit) aún no se puede ejecutar: la app no existe. PowerShell desde la raíz:
 
 ```powershell
 py -3.12 -m venv .venv
@@ -55,7 +55,7 @@ python -m ruff check .
 python -m streamlit run app/streamlit_app.py
 ```
 
-La app requiere además las issues de modelos e interfaz y sus artefactos. #1 confirma estos comandos en instalación limpia. CI ejecutará lint y tests en cada PR.
+La app requiere además las issues de modelos e interfaz y sus artefactos. El CI ejecuta lint y tests en cada PR.
 
 ## Git y revisión
 
