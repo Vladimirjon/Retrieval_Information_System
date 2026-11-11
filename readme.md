@@ -19,7 +19,7 @@ Evaluación prevista: P@10 y R@10 por consulta, MAP@1000 por sistema, clásicos 
 
 ## Stack y estructura prevista
 
-Python 3.12, NLTK, NumPy/SciPy dispersas, sentence-transformers, FAISS y Streamlit; pytest, ruff y GitHub Actions. Versiones exactas en requirements.txt a cargo de #1. No se permiten motores completos ni rank_bm25.
+Python 3.12, NLTK, NumPy/SciPy dispersas, sentence-transformers, FAISS y Streamlit; pytest, ruff y GitHub Actions. Las versiones están fijadas en `requirements.txt`. No se permiten motores completos ni rank_bm25.
 
 ```text
 src/ris/              data, preprocessing, index, retrievers, evaluation
@@ -44,7 +44,24 @@ La estructura de implementación aún está pendiente. Los artefactos se generan
 
 ## Instalación y ejecución
 
-**Se completa en la issue #1.** No hay aplicación ejecutable ni dependencias fijadas todavía. Los comandos previstos están en [AGENTS](AGENTS.md), marcados como pendientes.
+Requiere Python 3.12. En Windows PowerShell, desde la raíz del repositorio:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m pip install --no-deps -e .
+python -m pytest
+python -m ruff check .
+```
+
+Según la salida comprobada en Python 3.12.10, `python -m pytest` pasó 1 prueba y `python -m ruff check .` terminó sin errores.
+
+La aplicación Streamlit se implementará en la issue #13. Cuando exista `app/streamlit_app.py`, se iniciará con:
+
+```powershell
+python -m streamlit run app/streamlit_app.py
+```
 
 **URL del despliegue: pendiente (issue de despliegue #16).** Destino acordado: Hugging Face Spaces CPU básico, gratis; cualquier modalidad de pago requiere aprobación. El posible uso de Render con app reducida es una inferencia sin probar.
 
