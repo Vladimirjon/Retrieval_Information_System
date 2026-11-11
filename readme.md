@@ -13,7 +13,7 @@ Proyecto universitario de Recuperación de Información, Prof. Iván Carrera. Co
 | BM25 | Implementación propia, k1=1.5, b=0.75 |
 | Denso | all-MiniLM-L6-v2, 384 dimensiones, normalización y FAISS IndexFlatIP |
 
-Decisiones del equipo: [PLAN](docs/PLAN.md). FiQA está en inglés y es de dominio financiero; documento=title+text. [Datos verificados](docs/DATASET.md): 57 638 documentos y 6 648 consultas globales; test tiene 1 706 filas de qrels binarios. Las consultas de test se filtran por los ids de qrels, convertidos a str; su número único se confirmará en #2. Fuentes del profesor: [corpus y consultas](https://huggingface.co/datasets/BeIR/fiqa), [qrels](https://huggingface.co/datasets/BeIR/fiqa-qrels).
+Decisiones del equipo: [PLAN](docs/PLAN.md). FiQA está en inglés y es de dominio financiero; el cargador fija las revisiones de origen y conserva los documentos con texto vacío. [Datos verificados](docs/DATASET.md): 57 638 documentos, 6 648 consultas y 648 consultas test distintas; test tiene 1 706 filas de qrels binarios. Fuentes del profesor: [corpus y consultas](https://huggingface.co/datasets/BeIR/fiqa), [qrels](https://huggingface.co/datasets/BeIR/fiqa-qrels).
 
 Evaluación prevista: P@10 y R@10 por consulta, MAP@1000 por sistema, clásicos con y sin Porter. No hay resultados todavía.
 
