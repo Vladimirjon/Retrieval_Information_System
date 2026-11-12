@@ -32,7 +32,30 @@ docs/informe/         fuente e informe final
 data/, artifacts/     archivos locales, fuera de Git
 ```
 
-La estructura de implementación aún está pendiente. Los artefactos se generan una vez, se publican en un repo de HF Hub del equipo y el Space los descarga al arrancar; no se guardan en GitHub.
+La implementación está en curso. Se prevé publicar los artefactos en un repo de HF Hub del equipo para que el Space los descargue al arrancar; no se guardan en GitHub.
+
+`scripts/build_artifacts.py` muestra el avance del índice por cada 1.000 documentos,
+con porcentaje, vocabulario, velocidad y tiempo transcurrido. Ejecutarlo otra vez es
+seguro en ejecuciones secuenciales: reconstruye el índice desde el corpus y reemplaza
+`artifacts/index_no_stem.json` o `artifacts/index_stem.json`; no agrega documentos
+duplicados. Sí vuelve a consumir el tiempo de carga y construcción.
+
+Para construir y comprobar los índices, desde la raíz del proyecto y con el
+entorno virtual activado:
+
+```powershell
+# Sin stemming
+python scripts/build_artifacts.py
+
+# Con stemming de Porter
+python scripts/build_artifacts.py --stem
+```
+
+Cada comando carga FiQA, construye el índice, lo guarda en `artifacts/` y lo
+recarga para comprobar su contenido y configuración. Al finalizar, muestra
+el número de documentos, el vocabulario, el tiempo de construcción y el tamaño
+del archivo. La primera ejecución puede necesitar acceso a internet para
+descargar FiQA o los recursos de NLTK.
 
 ## Equipo
 
