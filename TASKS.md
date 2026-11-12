@@ -1,6 +1,6 @@
 # Tareas
 
-Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub con esta numeración. Actualizado el 11 de noviembre de 2026: #1 hecha (PR #21); #2 integrada (PR #23, issue cerrada); #3 en PR #24 abierto; #4 implementada y probada localmente, revisión e integración pendientes. Reparto y plazos: acuerdo del equipo en [PLAN](docs/PLAN.md).
+Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub con esta numeración. Actualizado el 11 de noviembre de 2026: #1 hecha (PR #21); #2 integrada (PR #23, issue cerrada); #3 en PR #24 abierto; #4 implementada en [PR #25](https://github.com/Vladimirjon/Retrieval_Information_System/pull/25), con 22 pruebas locales aprobadas, notebook ejecutado y CI del commit funcional en verde; revisión e integración pendientes. Reparto y plazos: acuerdo del equipo en [PLAN](docs/PLAN.md).
 
 | Número | Título | Responsable | Milestone | Depende de | Estado |
 |---|---|---|---|---|---|
