@@ -1,13 +1,13 @@
 # Tareas
 
-Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub con esta numeración. Actualizado el 11 de noviembre de 2026: #1 hecha (PR #21, CI en verde); #2 implementada localmente, revisión/PR/CI pendientes; las demás siguen pendientes. Reparto y plazos: acuerdo del equipo en [PLAN](docs/PLAN.md).
+Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub con esta numeración. Actualizado el 11 de noviembre de 2026: #1 hecha (PR #21); #2 integrada (PR #23, issue cerrada); #3 en PR #24 abierto; #4 implementada y probada localmente, revisión e integración pendientes. Reparto y plazos: acuerdo del equipo en [PLAN](docs/PLAN.md).
 
 | Número | Título | Responsable | Milestone | Depende de | Estado |
 |---|---|---|---|---|---|
 | #1 | chore: estructura, entorno y CI | Vladimirjon | M0 Base y datos | Ninguna | hecho |
-| #2 | feat: carga reproducible de FiQA y qrels de test | Vladimirjon | M0 Base y datos | #1 | en curso |
-| #3 | feat: preprocesamiento en inglés con stemming opcional | Ismael Freire | M0 Base y datos | #1 | pendiente |
-| #4 | docs: EDA del corpus y consultas FiQA | Jorge Torres | M0 Base y datos | #2, #3 | pendiente |
+| #2 | feat: carga reproducible de FiQA y qrels de test | Vladimirjon | M0 Base y datos | #1 | hecho |
+| #3 | feat: preprocesamiento en inglés con stemming opcional | Ismael Freire | M0 Base y datos | #1 | en curso |
+| #4 | docs: EDA del corpus y consultas FiQA | Jorge Torres | M0 Base y datos | #2, #3 | en curso |
 | #5 | feat: índice invertido con persistencia | Vladimirjon | M1 Modelos clásicos | #2, #3 | pendiente |
 | #6 | feat: recuperación Jaccard con vectores binarios | Ismael Freire | M1 Modelos clásicos | #5 | pendiente |
 | #7 | feat: recuperación por coseno TF-IDF propia | Vladimirjon | M1 Modelos clásicos | #5 | pendiente |
