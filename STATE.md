@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-Actualizado: miércoles 11 de noviembre de 2026 (#2 integrada; #3 en PR #24; #4 implementada y validada localmente, revisión pendiente).
+Actualizado: jueves 12 de noviembre de 2026 (#2 y #3 integradas; #4 aprobada y lista para integrar con el PR #25; siguiente: #5).
 
 ## Ubicación y alcance
 
-La planificación está integrada en `main` (PR #19). #1 está integrada en `main` (PR #21, merge `4257135`) y la issue cerrada. #2 está integrada mediante PR #23 (merge `a1210e1`, issue cerrada, comprobado por API y Git al preparar #4). El plazo interno es el martes 17 de noviembre; del 18 al 23 queda contingencia.
+La planificación está integrada en `main` (PR #19). #1 está integrada en `main` (PR #21, merge `4257135`) y la issue cerrada. #2 está integrada mediante PR #23 (merge `a1210e1`, issue cerrada, comprobado por API y Git al preparar #4). #3 está integrada mediante PR #24 (merge `20ea87a`, aprobado por @Vladimirjon tras ejecutar 14 pruebas y ruff en local; CI en verde). El plazo interno es el martes 17 de noviembre; del 18 al 23 queda contingencia.
 
 ## #1 hecha (estructura, entorno y CI)
 
@@ -23,7 +23,7 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Revisión cruzada final sin hallazgos pendientes. Corrigió las observaciones P3 sobre validación de columnas y precisión del formato TSV; se añadió una prueba de rutas, tipo de repo y revisiones fijadas. `load_qrels("test")` lanza ValueError si algún score no es 1 (prueba propia).
 - Estado de integración actualizado al preparar #4: PR #23 integrado e issue #2 cerrada. El registro de pruebas anteriores se conserva; esta tarea no vuelve a certificar el CI de #2.
 
-## #4 implementada y publicada (PR #25; revisión e integración pendientes)
+## #4 revisada e integrada con el PR #25
 
 - Estado inicial: `main` en `ff99a03`, árbol limpio y seis commits por detrás de `origin/main`. Tras `git fetch origin --prune`, se creó `docs/04-eda-fiqa` desde `origin/feat/03-preprocesamiento` (`c4d8ef4`), como autorizó el equipo. PR #24 sigue abierto; no se modificaron la rama de Ismael, `ris.data`, `ris.preprocessing` ni las dependencias.
 - Entregables: `notebooks/04_eda_fiqa.ipynb`, instrucciones en `notebooks/README.md`, auxiliares en `src/ris/eda.py`, ocho pruebas pequeñas en `tests/test_eda.py`, `reports/eda_summary.json` y `docs/informe/04_descripcion_corpus.md` generado desde los agregados.
@@ -33,7 +33,8 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Reproducibilidad y revisión visual: dos ejecuciones completas reprodujeron exactamente las estadísticas; la segunda tardó aproximadamente 258 s en este equipo. Las seis figuras finales son idénticas por SHA-256 a las revisadas visualmente. Los hashes de los cinco archivos de FiQA coinciden con `docs/DATASET.md`; JSON, notebook y texto para el informe son consistentes. Se registran también hashes de los recursos NLTK. El JSON ocupa aproximadamente 249 KB y el notebook 286 KB; no se versionan corpus, cachés ni PDF.
 - Revisión crítica local: se distinguen tokens, tipos, términos, CF y DF, desviación poblacional y percentiles lineales; las gráficas conservan ceros y colas. Se corrigió un valor esperado manual de varianza y se ordenaron imports. Las interpretaciones separan observaciones, implicaciones e hipótesis; no se atribuye mejora de recuperación a la reducción del vocabulario. Los PDF docentes se consultaron localmente y no se incorporan a Git.
 - **GitHub y CI:** [PR #25](https://github.com/Vladimirjon/Retrieval_Information_System/pull/25) abierto por @Almejandro04, desde `docs/04-eda-fiqa` hacia `feat/03-preprocesamiento`, con revisión solicitada a @Vladimirjon. Se comprobaron los ocho archivos publicados por sus hashes de Git, el commit `41fac35`, la referencia desde la issue #4 y la ausencia de conflictos. El [CI del commit funcional](https://github.com/Vladimirjon/Retrieval_Information_System/actions/runs/43146066439) pasó en Ubuntu con Python 3.12: instalación, Ruff y tests. La ejecución completa del notebook y la revisión visual son verificaciones locales, no pasos del CI.
-- Pendiente: aprobación de @Vladimirjon e integración coordinada. PR #24 sigue abierto; cuando se integre, verificar transición segura de base a `main`, diff y CI. `Closes #4` se incluye para la integración en la rama por defecto; #4 permanece abierta y en curso hasta revisión e integración. No hay comprobación de despliegue en esta issue.
+- Revisión de @Vladimirjon (12 de noviembre): 22 pruebas y ruff en local, ocho archivos del diff y CI en verde. Tras integrar el PR #24 se cambió la base del PR a `main` (sigue con los mismos ocho archivos). `Closes #4` cierra la issue al integrar. No hay comprobación de despliegue en esta issue.
+- Limitación conocida del preprocesamiento (#3), medida el 12 de noviembre con `preprocess`: descarta tokens que no son estrictamente alfanuméricos tras `word_tokenize`, como palabras con guion (`long-term`), decimales (`3.5`) y contracciones, y parte `S&P500` en `p500`. Es consistente en documentos y consultas; su efecto en P@10/R@10/MAP no está medido. Si se corrige, hay que volver a ejecutar el notebook de #4 y regenerar `reports/eda_summary.json` y `docs/informe/04_descripcion_corpus.md`. Decidirlo antes de ejecutar #11.
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
@@ -48,8 +49,8 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 
 ## Próximos pasos
 
-1. Revisar el PR #24 de #3; #10 puede avanzar con los contratos existentes. #1 se cerró el 11 de noviembre, un día después de la fecha interna del 10.
-2. Revisar e integrar #4 tras gestionar su dependencia de #24; su resumen queda listo para reutilizarse en #17. No se declara terminado el informe completo.
+1. Empezar #5 (índice invertido) sobre `main`; #10 puede avanzar con los contratos existentes.
+2. Decidir si se mejora la tokenización de guiones y decimales (ver limitación en #4) antes de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
 
 ## Aprendido y pendiente de confirmar
 
