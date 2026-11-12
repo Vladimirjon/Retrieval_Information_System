@@ -41,8 +41,7 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - `scripts/build_artifacts.py` informa cinco fases y, durante la construcción, muestra cada 1 000 documentos el porcentaje, vocabulario, velocidad y tiempo transcurrido.
 - `InvertedIndex.build` acepta un callback opcional de progreso sin cambiar el resultado del índice. La prueba específica y la suite completa pasan: `python -m pytest` (27 pruebas); `python -m ruff check .` sin errores.
 - Ejecuciones repetidas secuenciales reconstruyen desde el corpus y reemplazan el JSON correspondiente a `--stem`, sin acumular documentos.
-- Las dos construcciones se ejecutaron sobre FiQA y el script verificó la equivalencia al recargar. Sin stemming: 57 638 documentos, 66 796 términos, 161,67 s de construcción y 38,98 MiB. Con stemming: 57 638 documentos, 46 821 términos, 257,35 s y 36,38 MiB. La suite completa pasó 27 pruebas en Python 3.12.10. Revisión de Claude Code (12 de noviembre): 27 pruebas y ruff en verde; ocho criterios de la issue cubiertos; se retiraron espacios finales en `index.py`. Los artefactos de `artifacts/` están fuera de Git. Nota de entorno: dentro de la app de escritorio de Claude, NLTK bloquea `AppData\Roaming
-ltk_data` por redirección de ruta (5 pruebas de preprocesamiento fallan); con `NLTK_DATA` apuntando a una copia pasan las 27. No afecta al código ni al CI.
+- Las dos construcciones se ejecutaron sobre FiQA y el script verificó la equivalencia al recargar. Sin stemming: 57 638 documentos, 66 796 términos, 161,67 s de construcción y 38,98 MiB. Con stemming: 57 638 documentos, 46 821 términos, 257,35 s y 36,38 MiB. La suite completa pasó 27 pruebas en Python 3.12.10. Revisión de Claude Code (12 de noviembre): 27 pruebas y ruff en verde; los tres criterios de aceptación cubiertos; se retiraron espacios finales en `index.py`. Los artefactos de `artifacts/` están fuera de Git. Nota de entorno: dentro de la app de escritorio de Claude, NLTK bloquea `AppData\Roaming\nltk_data` por redirección de ruta (5 pruebas de preprocesamiento fallan); con `NLTK_DATA` apuntando a una copia pasan las 27. No afecta al código ni al CI.
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
@@ -57,7 +56,7 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 
 ## Próximos pasos
 
-1. Empezar #5 (índice invertido) sobre `main`; #10 puede avanzar con los contratos existentes.
+1. Empezar #6, #7 y #8 (modelos clásicos sobre `InvertedIndex`) desde `main`; #10 puede avanzar con los contratos existentes.
 2. Decidir si se mejora la tokenización de guiones y decimales (ver limitación en #4) antes de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
 
 ## Aprendido y pendiente de confirmar
