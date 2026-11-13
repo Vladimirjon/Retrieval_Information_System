@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: jueves 12 de noviembre de 2026 (#2, #3, #4, #5 y #6 integradas; #7 integrada; siguiente: #8).
+Actualizado: jueves 12 de noviembre de 2026 (#2, #3, #4, #5 y #6 integradas; #7 y #8 integradas; siguiente: #9).
 
 ## Ubicación y alcance
 
@@ -58,7 +58,15 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - El ejemplo de `Material_clase/Modelo_vectorial (1).pdf` usa TF lineal e IDF en base 10; también presenta TF sublineal. Una prueba reutiliza su corpus y recalcula los scores con la variante acordada por el equipo, sin atribuir esos valores a la diapositiva.
 - **Probado localmente** en Windows con Python 3.12: 57 pruebas, incluidas 18 de TF-IDF; Ruff y `git diff --check` sin errores. Para pytest se usó un `--basetemp` dentro de `.pytest_cache` por permisos del directorio temporal del entorno.
 - Comprobación de integración local con los dos índices FiQA existentes: 57 638 documentos y 66 796/46 821 términos sin/con Porter. Dos consultas por índice devolvieron cinco documentos cada una y sus 20 scores se recalcularon de forma independiente desde los postings; una consulta de términos desconocidos devolvió `[]` en ambos. Esto no es una evaluación de relevancia ni una medición de CI.
-- Revisión cruzada independiente del código, contrato y pruebas: sin hallazgos de corrección pendientes. Revisión de Claude Code (12 de noviembre): diff leído completo; con `NLTK_DATA` apuntando a una copia (el directorio de datos de NLTK queda redirigido en el entorno de la app), 57 pruebas y ruff en verde; CI "Lint and Test" del PR #28 en verde. Integrado con el PR #28 (autor @Vladimirjon).
+- Revisión cruzada independiente del código, contrato y pruebas: sin hallazgos de corrección pendientes. Revisión de Claude Code (12 de noviembre): código y pruebas leídos completos, cálculos manuales de las pruebas comprobados y ranking del corpus docente recalculado con un script independiente; con `NLTK_DATA` apuntando a una copia (el directorio de datos de NLTK queda redirigido en el entorno de la app), 57 pruebas y ruff en verde; CI "Lint and Test" del PR #28 en verde. Integrado con el PR #28 (autor @Vladimirjon).
+
+## #8 hecha: BM25 propio
+
+- Rama `feat/08-bm25`, creada desde `main` en `f8374da`. Integrada mediante el PR #29.
+- `BM25Retriever` reutiliza el índice invertido con la variante fijada en el plan: k1=1,5, b=0,75, `idf=ln(1+(N-df+0,5)/(df+0,5))` (nunca negativo) y suma sobre términos únicos de la consulta de `idf × tf×(k1+1)/(tf+k1×(1-b+b×dl/avgdl))`. N y avgdl cuentan los documentos vacíos; consulta vacía o avgdl=0 devuelve `[]`; solo se devuelven documentos con algún término coincidente. El índice no debe modificarse mientras se use el recuperador: IDF y la corrección de longitud se precalculan.
+- **Probado localmente** en Windows con Python 3.12: 76 pruebas, incluidas 19 de BM25; Ruff y `git diff --check` sin errores. Los valores de las pruebas están calculados a mano (longitudes, avgdl, K e idf), con casos de empate, df=N, saturación de tf, longitud, índice vacío, índice persistido y Porter.
+- Comprobación de integración local con los dos índices FiQA (57 638 documentos, avgdl 66,605): el top-10 de tres consultas por índice coincide en orden y score (tolerancia 1e-9) con un recálculo independiente desde los postings; preparación del recuperador en menos de 0,1 s y consultas entre 24 y 121 ms; una consulta de términos desconocidos devolvió `[]` en ambos. No es una evaluación de relevancia (eso es #11) ni una medición de CI.
+- Revisión de Claude Code (12 de noviembre): código y pruebas leídos completos; fórmula coincide con `docs/PLAN.md`; cálculos manuales de las pruebas comprobados; contratos de `ris.retrievers` cumplidos (orden por score y doc_id, sin duplicados, consulta vacía, k no positivo). No se hizo revisión cruzada con otro modelo en esta issue.
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
@@ -73,7 +81,7 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 
 ## Próximos pasos
 
-1. Empezar #8 sobre `InvertedIndex`, reutilizando `Result` y `Retriever` de `ris.retrievers.base`. #10 puede avanzar con los contratos existentes.
+1. Empezar #9 (embeddings y FAISS), que depende solo de #2. #10 puede avanzar con los contratos existentes; con #6, #7 y #8 integradas, #11 solo espera a #9 y #10.
 2. Decidir si se mejora la tokenización de guiones y decimales (ver limitación en #4) antes de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
 
 ## Aprendido y pendiente de confirmar
