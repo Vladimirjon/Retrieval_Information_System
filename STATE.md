@@ -81,11 +81,11 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 
 ## #10 en curso: métricas de recuperación (rama `feat/10-metricas`)
 
-- Rama creada el 13 de noviembre desde `main` en `5748687`, igual a `origin/main` tras `git fetch`. Sin commit, push ni PR todavía.
+- Rama creada el 13 de noviembre desde `main` en `5748687`, igual a `origin/main` tras `git fetch`. Rama publicada en `origin/feat/10-metricas` el 13 de noviembre; el PR lo abre @BrandonFreire.
 - `src/ris/evaluation.py` implementa `precision_at_k`, `recall_at_k`, `average_precision` y `mean_average_precision` según el contrato. P@k divide por k aunque el ranking sea corto; R@k y AP dividen por todos los relevantes; AP solo suma hasta el corte k (1000 por defecto). MAP promedia todas las consultas de qrels: ranking ausente o consulta sin relevantes aportan 0; las consultas del run fuera de qrels se ignoran; qrels vacíos devuelven 0. k no positivo o ranking duplicado lanzan ValueError. `relevant` también acepta lista.
 - `mean_average_precision` recibe `qrels: dict[str, set[str]]`: #11 debe convertir `load_qrels` (dict de scores) a conjuntos de ids con score>0.
 - **Probado localmente** (Python 3.12.10, Windows, 13 de noviembre): `python -m pytest tests/test_evaluation.py` pasa 24 pruebas (ejemplo manual P@2=R@2=0.5, AP@1000=5/6, MAP=5/12, relevante en la posición 1001 fuera del corte, k inválido, duplicados y consulta ausente); la suite completa pasa 136; `python -m ruff check .` sin errores. Comprobación con qrels test reales (offline): run ideal da MAP=1.0 en 648 consultas y run vacío 0.0; no es una evaluación de modelos (eso es #11).
-- Pendiente: commit, PR con `Closes #10`, CI y revisión de @Vladimirjon.
+- Pendiente: abrir el PR con `Closes #10`, CI en verde y revisión de @Vladimirjon.
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
