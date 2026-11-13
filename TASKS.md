@@ -1,6 +1,6 @@
 # Tareas
 
-Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub con esta numeración. Actualizado el 12 de noviembre de 2026: #1 hecha (PR #21); #2 hecha (PR #23); #3 hecha (PR #24); #4 hecha con el [PR #25](https://github.com/Vladimirjon/Retrieval_Information_System/pull/25) (22 pruebas locales, notebook ejecutado, CI en verde, revisada por @Vladimirjon). #5 hecha (índice invertido y construcción con progreso; 27 pruebas locales). #6 hecha con el [PR #27](https://github.com/Vladimirjon/Retrieval_Information_System/pull/27) (39 pruebas locales, CI en verde, revisada por @Vladimirjon). #7 hecha con el [PR #28](https://github.com/Vladimirjon/Retrieval_Information_System/pull/28) (57 pruebas locales, CI en verde); siguiente: #8. Reparto y plazos: acuerdo del equipo en [PLAN](docs/PLAN.md).
+Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub con esta numeración. Actualizado el 12 de noviembre de 2026: #1 hecha (PR #21); #2 hecha (PR #23); #3 hecha (PR #24); #4 hecha con el [PR #25](https://github.com/Vladimirjon/Retrieval_Information_System/pull/25) (22 pruebas locales, notebook ejecutado, CI en verde, revisada por @Vladimirjon). #5 hecha (índice invertido y construcción con progreso; 27 pruebas locales). #6 hecha con el [PR #27](https://github.com/Vladimirjon/Retrieval_Information_System/pull/27) (39 pruebas locales, CI en verde, revisada por @Vladimirjon). #7 hecha con el [PR #28](https://github.com/Vladimirjon/Retrieval_Information_System/pull/28) (57 pruebas locales, CI en verde). #8 hecha con el [PR #29](https://github.com/Vladimirjon/Retrieval_Information_System/pull/29) (76 pruebas locales, CI en verde); siguiente: #9. Reparto y plazos: acuerdo del equipo en [PLAN](docs/PLAN.md).
 
 | Número | Título | Responsable | Milestone | Depende de | Estado |
 |---|---|---|---|---|---|
@@ -11,7 +11,7 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 | #5 | feat: índice invertido con persistencia | Vladimirjon | M1 Modelos clásicos | #2, #3 | hecho |
 | #6 | feat: recuperación Jaccard con vectores binarios | Ismael Freire | M1 Modelos clásicos | #5 | hecho |
 | #7 | feat: recuperación por coseno TF-IDF propia | Vladimirjon | M1 Modelos clásicos | #5 | hecho |
-| #8 | feat: recuperación BM25 propia | Vladimirjon | M1 Modelos clásicos | #5 | pendiente |
+| #8 | feat: recuperación BM25 propia | Vladimirjon | M1 Modelos clásicos | #5 | hecho |
 | #9 | feat: embeddings y búsqueda exacta con FAISS | Vladimirjon | M2 Recuperación semántica | #2 | pendiente |
 | #10 | feat: métricas de recuperación con ejemplos manuales | Ismael Freire | M3 Evaluación y comparación | #1 | pendiente |
 | #11 | feat: evaluación reproducible de los cuatro modelos | Vladimirjon | M3 Evaluación y comparación | #6, #7, #8, #9, #10 | pendiente |
