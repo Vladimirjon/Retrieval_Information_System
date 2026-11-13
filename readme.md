@@ -57,6 +57,50 @@ el número de documentos, el vocabulario, el tiempo de construcción y el tamañ
 del archivo. La primera ejecución puede necesitar acceso a internet para
 descargar FiQA o los recursos de NLTK.
 
+Para el denso, medir primero una muestra antes de procesar el corpus completo:
+
+```powershell
+python scripts/build_artifacts.py --dense --limit 256 --batch-size 32 --threads 8
+python scripts/build_artifacts.py --dense --batch-size 32 --threads 8
+```
+
+La muestra ordenada por ID se guarda en `artifacts/dense_sample_256/` y el corpus
+completo en `artifacts/dense/`. El script muestra progreso y genera
+`build_report.json` con tiempos, tamaños y pico de memoria residente del proceso
+(incluye modelo, corpus, codificación y comprobación de la recarga). Los tiempos
+de una muestra sirven para estimar, no garantizan el tiempo del corpus completo.
+Un directorio denso con archivos se conserva salvo que se indique `--overwrite`;
+`--output-dir` permite elegir otra ubicación. Los artefactos permanecen fuera de Git.
+
+El encoder recibe `title + ' ' + text` y la consulta original, sin preprocesamiento
+léxico. Conserva también los documentos vacíos. Usa CPU, vectores float32 de 384
+dimensiones, normalización L2 y FAISS `IndexFlatIP`; incluye scores negativos.
+La revisión fijada de [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/tree/1110a243fdf4706b3f48f1d95db1a4f5529b4d41)
+es `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, con truncamiento a 256 tokens del
+modelo incluidos sus tokens especiales. El límite del encoder se aplica igual
+al corpus y a las consultas; los textos largos no se fragmentan.
+
+Cada directorio contiene `embeddings.npy`, `index.faiss` y `metadata.json` con
+configuración, versiones, hash del corpus y correspondencia ordenada fila-ID.
+Los hashes SHA-256 detectan corrupción accidental; los artefactos se deben obtener
+de una fuente de confianza. La recarga rechaza configuraciones incompatibles y
+comprueba los vectores contra el índice sin codificar de nuevo el corpus:
+
+```python
+from ris.retrievers import DenseRetriever
+
+retriever = DenseRetriever.load("artifacts/dense")
+results = retriever.search("How should I invest my savings?", k=10)
+```
+
+El modelo se carga en la primera consulta no vacía. Cargar los artefactos no
+requiere descargarlo; construir o consultar por primera vez puede necesitar red
+si el modelo no está en la caché de Hugging Face. Todos los empates se ordenan por
+doc_id, incluso en la frontera del top-k, mediante búsqueda exacta de los scores
+del corpus y orden posterior. Las pruebas usan vectores sintéticos y un encoder
+doble sin descargar el modelo; la construcción y consulta con MiniLM real se
+verifican por separado.
+
 ## Equipo
 
 | Persona | GitHub | Responsabilidad |
