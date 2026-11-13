@@ -13,7 +13,7 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 | #7 | feat: recuperación por coseno TF-IDF propia | Vladimirjon | M1 Modelos clásicos | #5 | hecho |
 | #8 | feat: recuperación BM25 propia | Vladimirjon | M1 Modelos clásicos | #5 | hecho |
 | #9 | feat: embeddings y búsqueda exacta con FAISS | Vladimirjon | M2 Recuperación semántica | #2 | hecho |
-| #10 | feat: métricas de recuperación con ejemplos manuales | Ismael Freire | M3 Evaluación y comparación | #1 | pendiente |
+| #10 | feat: métricas de recuperación con ejemplos manuales | Ismael Freire | M3 Evaluación y comparación | #1 | en curso |
 | #11 | feat: evaluación reproducible de los cuatro modelos | Vladimirjon | M3 Evaluación y comparación | #6, #7, #8, #9, #10 | pendiente |
 | #12 | docs: análisis comparativo con consultas concretas | Jorge Torres | M3 Evaluación y comparación | #11 | pendiente |
 | #13 | feat: núcleo Streamlit y carga unificada de modelos | Vladimirjon | M4 Interfaz y despliegue | #6, #7, #8, #9 | pendiente |
