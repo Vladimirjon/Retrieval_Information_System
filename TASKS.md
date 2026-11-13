@@ -1,6 +1,6 @@
 # Tareas
 
-Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub con esta numeración. Actualizado el 12 de noviembre de 2026: #1 hecha (PR #21); #2 hecha (PR #23); #3 hecha (PR #24); #4 hecha con el [PR #25](https://github.com/Vladimirjon/Retrieval_Information_System/pull/25) (22 pruebas locales, notebook ejecutado, CI en verde, revisada por @Vladimirjon). #5 hecha (índice invertido y construcción con progreso; 27 pruebas locales). Siguiente: #6, #7 y #8. Reparto y plazos: acuerdo del equipo en [PLAN](docs/PLAN.md).
+Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub con esta numeración. Actualizado el 12 de noviembre de 2026: #1 hecha (PR #21); #2 hecha (PR #23); #3 hecha (PR #24); #4 hecha con el [PR #25](https://github.com/Vladimirjon/Retrieval_Information_System/pull/25) (22 pruebas locales, notebook ejecutado, CI en verde, revisada por @Vladimirjon). #5 hecha (índice invertido y construcción con progreso; 27 pruebas locales). #6 en curso en la rama `feat/06-jaccard` (implementación y pruebas locales; falta PR y revisión). Siguiente: #7 y #8. Reparto y plazos: acuerdo del equipo en [PLAN](docs/PLAN.md).
 
 | Número | Título | Responsable | Milestone | Depende de | Estado |
 |---|---|---|---|---|---|
@@ -9,7 +9,7 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 | #3 | feat: preprocesamiento en inglés con stemming opcional | Ismael Freire | M0 Base y datos | #1 | hecho |
 | #4 | docs: EDA del corpus y consultas FiQA | Jorge Torres | M0 Base y datos | #2, #3 | hecho |
 | #5 | feat: índice invertido con persistencia | Vladimirjon | M1 Modelos clásicos | #2, #3 | hecho |
-| #6 | feat: recuperación Jaccard con vectores binarios | Ismael Freire | M1 Modelos clásicos | #5 | pendiente |
+| #6 | feat: recuperación Jaccard con vectores binarios | Ismael Freire | M1 Modelos clásicos | #5 | en curso |
 | #7 | feat: recuperación por coseno TF-IDF propia | Vladimirjon | M1 Modelos clásicos | #5 | pendiente |
 | #8 | feat: recuperación BM25 propia | Vladimirjon | M1 Modelos clásicos | #5 | pendiente |
 | #9 | feat: embeddings y búsqueda exacta con FAISS | Vladimirjon | M2 Recuperación semántica | #2 | pendiente |

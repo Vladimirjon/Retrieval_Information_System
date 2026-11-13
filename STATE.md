@@ -43,6 +43,14 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Ejecuciones repetidas secuenciales reconstruyen desde el corpus y reemplazan el JSON correspondiente a `--stem`, sin acumular documentos.
 - Las dos construcciones se ejecutaron sobre FiQA y el script verificó la equivalencia al recargar. Sin stemming: 57 638 documentos, 66 796 términos, 161,67 s de construcción y 38,98 MiB. Con stemming: 57 638 documentos, 46 821 términos, 257,35 s y 36,38 MiB. La suite completa pasó 27 pruebas en Python 3.12.10. Revisión de Claude Code (12 de noviembre): 27 pruebas y ruff en verde; los tres criterios de aceptación cubiertos; se retiraron espacios finales en `index.py`. Los artefactos de `artifacts/` están fuera de Git. Nota de entorno: dentro de la app de escritorio de Claude, NLTK bloquea `AppData\Roaming\nltk_data` por redirección de ruta (5 pruebas de preprocesamiento fallan); con `NLTK_DATA` apuntando a una copia pasan las 27. No afecta al código ni al CI.
 
+## #6 en curso: Jaccard binario (rama `feat/06-jaccard`)
+
+- Nuevo paquete `src/ris/retrievers/`: `base.py` define `Result(doc_id, score)` (dataclass inmutable) y el protocolo `Retriever`; `jaccard.py` implementa `JaccardRetriever(index, stem)`. Rechaza con ValueError un índice con distinta configuración de stemming.
+- `InvertedIndex.doc_lengths` cuenta tokens con repeticiones, así que no sirve para |D| en Jaccard. El retriever calcula al iniciarse los términos únicos de cada documento a partir de las posting lists (número de postings que contienen el doc_id), sin cambiar el formato del índice de #5. Los términos de consulta desconocidos cuentan en |Q| y no en la intersección.
+- **Probado localmente** (Python 3.12.10, Windows, 12 de noviembre): `python -m pytest tests/test_jaccard.py` pasa 12 pruebas con scores calculados a mano; la suite completa pasa 39; `python -m ruff check .` sin errores.
+- Prueba manual con FiQA (índice sin stemming construido en memoria, 50,1 s): el retriever se prepara en 0,17 s; consultas test entre 4 y 16 ms; orden descendente comprobado en 50 consultas y empates ordenados por doc_id. No es una evaluación de métricas (eso es #11).
+- Pendiente: PR con `Closes #6` (lo abre @BrandonFreire), CI y revisión de @Vladimirjon.
+
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
 - Ruleset `proteger-main` (id 26888439), activo en la rama por defecto: reglas `deletion`, `non_fast_forward`, `update` y `pull_request`; exige 1 aprobación, CODEOWNER, descarta aprobaciones con commits nuevos y requiere resolver hilos. El rol admin puede omitir requisitos solo mediante bypass `pull_request`; no hay push directo.
