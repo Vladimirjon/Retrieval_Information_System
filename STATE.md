@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: jueves 12 de noviembre de 2026 (#2, #3, #4, #5 y #6 integradas; #7 y #8 integradas; siguiente: #9).
+Actualizado: jueves 12 de noviembre de 2026 (#2–#9 integradas; siguiente: #10 y #13).
 
 ## Ubicación y alcance
 
@@ -68,6 +68,17 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Comprobación de integración local con los dos índices FiQA (57 638 documentos, avgdl 66,605): el top-10 de tres consultas por índice coincide en orden y score (tolerancia 1e-9) con un recálculo independiente desde los postings; preparación del recuperador en menos de 0,1 s y consultas entre 24 y 121 ms; una consulta de términos desconocidos devolvió `[]` en ambos. No es una evaluación de relevancia (eso es #11) ni una medición de CI.
 - Revisión de Claude Code (12 de noviembre): código y pruebas leídos completos; fórmula coincide con `docs/PLAN.md`; cálculos manuales de las pruebas comprobados; contratos de `ris.retrievers` cumplidos (orden por score y doc_id, sin duplicados, consulta vacía, k no positivo). No se hizo revisión cruzada con otro modelo en esta issue.
 
+## #9 hecha: embeddings y búsqueda exacta con FAISS
+
+- Rama `feat/09-denso-faiss`, creada desde `main` en `002f3a1`, cuyo commit se comprobó en GitHub. Integrada mediante el PR #30. `DenseRetriever` utiliza MiniLM, texto original, vectores float32 normalizados de 384 dimensiones y `IndexFlatIP`. El desempate por ID se aplica a todo el ranking; se conservan los documentos vacíos y los scores negativos.
+- La revisión del modelo quedó fijada en `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`; el límite es de 256 tokens del modelo, incluidos los especiales. El índice, embeddings, metadatos y reporte se guardan en `artifacts/`, excluido de Git.
+- **Probado localmente**: 112 pruebas y Ruff pasan, con `python -m pytest` y con `pytest` a secas (ver revisión abajo). Con 32 documentos reales, se construyó y recargó el índice y una consulta real coincidió en ranking y scores con un cálculo NumPy independiente. Una muestra independiente de 256 documentos tardó 7,53 s con 4 hilos y 5,40 s con 8 hilos, batch 32; se estimó una generación completa de unos 20–28 minutos, no un tiempo garantizado.
+- **FiQA completo, probado localmente**: 57 638 documentos, incluidos los vacíos; batch 32 y 8 hilos en CPU. La generación tardó 1 581,28 s (26 min 21 s), el pico de memoria residente del proceso fue 1 255,46 MiB y los artefactos principales ocupan 169,62 MiB. El índice se guardó en `artifacts/dense/`, se recargó y la consulta `How should I invest my savings?` obtuvo el mismo ranking y scores antes y después de la persistencia, sin recodificar el corpus. Detalles en `artifacts/dense/build_report.json`.
+- Se recalculó independientemente el hash de FiQA (`78c669dba3430c37ca631b9c368311799d312f59d82bc850186be08012741bb0`); coincide con el manifiesto. Para dos consultas reales, los 10 primeros IDs y scores de FAISS coincidieron con producto vectorial NumPy (tolerancias `rtol=1e-5`, `atol=1e-6`). Consulta vacía devuelve `[]`. Estos resultados verifican la implementación, no miden relevancia.
+- Revisión cruzada (12 de noviembre): `mistral-large-4` de NVIDIA vía OpenCode (gratis, sin Codex), con los cambios como adjunto, sin hallazgos P0/P1; sus P2/P3 se evaluaron uno a uno y casi todos se descartaron tras leer el código (división por cero imposible tras codificar un lote, archivos huérfanos inexistentes porque se reescriben los tres, `faiss-cpu` fijado e instalado). No ejecutó nada, así que no verificó pruebas, versiones ni rendimiento.
+- Revisión de Claude Code (12 de noviembre): código, pruebas y script leídos completos; 112 pruebas y Ruff en verde. Con los artefactos reales de FiQA (57 638 documentos): ids y hash del corpus coinciden con el corpus; embeddings float32 de norma 1; 5 documentos recodificados con el MiniLM real (vacío, el más largo de 16 990 caracteres y 3 al azar) difieren de lo guardado como máximo 1,5e-7; el top-10 de 5 consultas coincide en orden y score con NumPy; consultas de 136 a 520 ms en este equipo, incluida la codificación de la consulta (medición local, no del Space). El pico de memoria y los 26 min de construcción se toman de `build_report.json`, no se midieron de nuevo.
+- Hallazgo corregido: `pytest` a secas no recolectaba `tests/test_build_artifacts.py` (`No module named 'scripts'`); se añadió `pythonpath = ["."]` en `pyproject.toml`. Pendientes menores sin bloquear: `--output-dir` puede escribir fuera de las carpetas ignoradas por Git, y los hilos de torch al consultar salen de los metadatos (8); revisarlo en #16 si el Space tiene menos CPUs. CI "Lint and Test" del PR #30 en verde. Integrado con el PR #30 (autor @Vladimirjon). La publicación de artefactos y el despliegue corresponden a #16.
+
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
 - Ruleset `proteger-main` (id 26888439), activo en la rama por defecto: reglas `deletion`, `non_fast_forward`, `update` y `pull_request`; exige 1 aprobación, CODEOWNER, descarta aprobaciones con commits nuevos y requiere resolver hilos. El rol admin puede omitir requisitos solo mediante bypass `pull_request`; no hay push directo.
@@ -81,7 +92,7 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 
 ## Próximos pasos
 
-1. Empezar #9 (embeddings y FAISS), que depende solo de #2. #10 puede avanzar con los contratos existentes; con #6, #7 y #8 integradas, #11 solo espera a #9 y #10.
+1. Con #6–#9 integradas, #11 solo espera a #10, y #13 ya puede empezar (depende de #6–#9); #10 puede avanzar con los contratos existentes.
 2. Decidir si se mejora la tokenización de guiones y decimales (ver limitación en #4) antes de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
 
 ## Aprendido y pendiente de confirmar
