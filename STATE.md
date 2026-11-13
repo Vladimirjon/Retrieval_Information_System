@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: jueves 12 de noviembre de 2026 (#2, #3, #4, #5 y #6 integradas; siguiente: #7 y #8).
+Actualizado: jueves 12 de noviembre de 2026 (#2, #3, #4, #5 y #6 integradas; #7 implementada localmente, pendiente de integración; siguiente: #8).
 
 ## Ubicación y alcance
 
@@ -51,6 +51,15 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Prueba manual con FiQA (índice sin stemming construido en memoria, 50,1 s): el retriever se prepara en 0,17 s; consultas test entre 4 y 16 ms; orden descendente comprobado en 50 consultas y empates ordenados por doc_id. No es una evaluación de métricas (eso es #11).
 - Revisión de Claude Code (12 de noviembre): diff leído completo; con `NLTK_DATA` apuntando a una copia, 39 pruebas y ruff en verde; CI "Lint and Test" del PR en verde; cumple los contratos de ris.retrievers (orden por score y doc_id, sin duplicados, consulta vacía, k no positivo). Integrado mediante PR #27 (autor @BrandonFreire).
 
+## #7 en curso: coseno TF-IDF propio
+
+- Rama local `feat/07-tfidf`, creada desde `main` en `6deb642`; se comprobó que coincidía con `main` remoto al comenzar. Sin commit, push ni PR.
+- `TfidfRetriever` reutiliza el índice invertido y aplica a documentos y consultas `tf=1+ln(f)` para `f>0`, `idf=ln(N/df)` y coseno con normalización L2, según el acuerdo en el plan. Ignora términos fuera del vocabulario, devuelve `[]` si la consulta tiene norma cero y devuelve solo documentos con score positivo. El índice no debe modificarse mientras se use el recuperador: IDF y normas se precalculan.
+- El ejemplo de `Material_clase/Modelo_vectorial (1).pdf` usa TF lineal e IDF en base 10; también presenta TF sublineal. Una prueba reutiliza su corpus y recalcula los scores con la variante acordada por el equipo, sin atribuir esos valores a la diapositiva.
+- **Probado localmente** en Windows con Python 3.12: 57 pruebas, incluidas 18 de TF-IDF; Ruff y `git diff --check` sin errores. Para pytest se usó un `--basetemp` dentro de `.pytest_cache` por permisos del directorio temporal del entorno.
+- Comprobación de integración local con los dos índices FiQA existentes: 57 638 documentos y 66 796/46 821 términos sin/con Porter. Dos consultas por índice devolvieron cinco documentos cada una y sus 20 scores se recalcularon de forma independiente desde los postings; una consulta de términos desconocidos devolvió `[]` en ambos. Esto no es una evaluación de relevancia ni una medición de CI.
+- Revisión cruzada independiente del código, contrato y pruebas: sin hallazgos de corrección pendientes. Pendiente: commit/push y PR cuando se autoricen; CI e integración. La issue permanece abierta.
+
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
 - Ruleset `proteger-main` (id 26888439), activo en la rama por defecto: reglas `deletion`, `non_fast_forward`, `update` y `pull_request`; exige 1 aprobación, CODEOWNER, descarta aprobaciones con commits nuevos y requiere resolver hilos. El rol admin puede omitir requisitos solo mediante bypass `pull_request`; no hay push directo.
@@ -64,7 +73,7 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 
 ## Próximos pasos
 
-1. Empezar #7 y #8 (modelos clásicos sobre `InvertedIndex`, reutilizando `Result` y `Retriever` de `ris.retrievers.base`) desde `main`; #10 puede avanzar con los contratos existentes.
+1. Revisar e integrar #7 mediante PR cuando corresponda; empezar #8 sobre `InvertedIndex`, reutilizando `Result` y `Retriever` de `ris.retrievers.base`. #10 puede avanzar con los contratos existentes.
 2. Decidir si se mejora la tokenización de guiones y decimales (ver limitación en #4) antes de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
 
 ## Aprendido y pendiente de confirmar
