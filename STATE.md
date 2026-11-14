@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: jueves 12 de noviembre de 2026 (#2–#9 integradas; siguiente: #10 y #13).
+Actualizado: viernes 13 de noviembre de 2026 (#2–#10 integradas; siguiente: #11 y #13).
 
 ## Ubicación y alcance
 
@@ -79,13 +79,15 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Revisión de Claude Code (12 de noviembre): código, pruebas y script leídos completos; 112 pruebas y Ruff en verde. Con los artefactos reales de FiQA (57 638 documentos): ids y hash del corpus coinciden con el corpus; embeddings float32 de norma 1; 5 documentos recodificados con el MiniLM real (vacío, el más largo de 16 990 caracteres y 3 al azar) difieren de lo guardado como máximo 1,5e-7; el top-10 de 5 consultas coincide en orden y score con NumPy; consultas de 136 a 520 ms en este equipo, incluida la codificación de la consulta (medición local, no del Space). El pico de memoria y los 26 min de construcción se toman de `build_report.json`, no se midieron de nuevo.
 - Hallazgo corregido: `pytest` a secas no recolectaba `tests/test_build_artifacts.py` (`No module named 'scripts'`); se añadió `pythonpath = ["."]` en `pyproject.toml`. Pendientes menores sin bloquear: `--output-dir` puede escribir fuera de las carpetas ignoradas por Git, y los hilos de torch al consultar salen de los metadatos (8); revisarlo en #16 si el Space tiene menos CPUs. CI "Lint and Test" del PR #30 en verde. Integrado con el PR #30 (autor @Vladimirjon). La publicación de artefactos y el despliegue corresponden a #16.
 
-## #10 en curso: métricas de recuperación (rama `feat/10-metricas`)
+## #10 hecha: métricas de recuperación (PR #31, rama `feat/10-metricas`)
 
 - Rama creada el 13 de noviembre desde `main` en `5748687`, igual a `origin/main` tras `git fetch`. Rama publicada en `origin/feat/10-metricas` el 13 de noviembre; el PR lo abre @BrandonFreire.
 - `src/ris/evaluation.py` implementa `precision_at_k`, `recall_at_k`, `average_precision` y `mean_average_precision` según el contrato. P@k divide por k aunque el ranking sea corto; R@k y AP dividen por todos los relevantes; AP solo suma hasta el corte k (1000 por defecto). MAP promedia todas las consultas de qrels: ranking ausente o consulta sin relevantes aportan 0; las consultas del run fuera de qrels se ignoran; qrels vacíos devuelven 0. k no positivo o ranking duplicado lanzan ValueError. `relevant` también acepta lista.
 - `mean_average_precision` recibe `qrels: dict[str, set[str]]`: #11 debe convertir `load_qrels` (dict de scores) a conjuntos de ids con score>0.
 - **Probado localmente** (Python 3.12.10, Windows, 13 de noviembre): `python -m pytest tests/test_evaluation.py` pasa 24 pruebas (ejemplo manual P@2=R@2=0.5, AP@1000=5/6, MAP=5/12, relevante en la posición 1001 fuera del corte, k inválido, duplicados y consulta ausente); la suite completa pasa 136; `python -m ruff check .` sin errores. Comprobación con qrels test reales (offline): run ideal da MAP=1.0 en 648 consultas y run vacío 0.0; no es una evaluación de modelos (eso es #11).
-- Pendiente: abrir el PR con `Closes #10`, CI en verde y revisión de @Vladimirjon.
+- Revisión de Claude Code (13 de noviembre, a pedido de @Vladimirjon): código y pruebas leídos completos. **Probado localmente:** `pytest tests/test_evaluation.py` pasa 24 pruebas y `ruff check .` sin errores; contraste con una referencia independiente (AP con fracciones exactas, P@k y R@k directos) sobre 20 000 casos aleatorios sin diferencias. La suite completa en este equipo tiene 10 fallos de `test_preprocessing`/`test_tfidf` porque falta el corpus `stopwords` de NLTK (no es del PR: no toca esos archivos); el CI "Lint and Test" del PR sí pasó.
+- Cambio de la revisión: la validación de `k`/duplicados y la conversión de `relevant` a conjunto estaban repetidas en tres funciones; pasan a `_prepare`, y las anotaciones usan `Collection`/`Mapping` porque `relevant` también acepta listas. Sin cambio de comportamiento. Para #11: convertir `load_qrels` a ids con score>0 (esa misma condición ya existe en `ris.eda`); no se añadió un helper para no salir del alcance de #10.
+- Integrada con el PR #31 (autor @BrandonFreire).
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
@@ -100,7 +102,7 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 
 ## Próximos pasos
 
-1. Con #6–#9 integradas, #11 solo espera a #10, y #13 ya puede empezar (depende de #6–#9); #10 puede avanzar con los contratos existentes.
+1. Con #6–#10 integradas, #11 y #13 pueden empezar (#11 depende de #6–#10 y #13 de #6–#9).
 2. Decidir si se mejora la tokenización de guiones y decimales (ver limitación en #4) antes de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
 
 ## Aprendido y pendiente de confirmar

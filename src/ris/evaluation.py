@@ -1,27 +1,30 @@
 """Métricas de recuperación: P@k, R@k, AP@k y MAP (convención TREC)."""
 
+from collections.abc import Collection, Mapping
 
-def _validate(ranking: list[str], k: int) -> None:
+
+def _prepare(ranking: list[str], relevant: Collection[str], k: int) -> set[str]:
+    """Valida ranking y k y devuelve los relevantes como conjunto."""
     if k <= 0:
         raise ValueError(f"k debe ser positivo, se recibió {k}")
     if len(set(ranking)) != len(ranking):
         raise ValueError("el ranking contiene doc_id duplicados")
+    return set(relevant)
 
 
 def _hits_at_k(ranking: list[str], relevant: set[str], k: int) -> int:
     return sum(1 for doc_id in ranking[:k] if doc_id in relevant)
 
 
-def precision_at_k(ranking: list[str], relevant: set[str], k: int = 10) -> float:
-    _validate(ranking, k)
+def precision_at_k(ranking: list[str], relevant: Collection[str], k: int = 10) -> float:
+    relevant = _prepare(ranking, relevant, k)
     # Se divide siempre por k: un ranking con menos de k documentos se
     # penaliza como si las posiciones faltantes fueran no relevantes.
-    return _hits_at_k(ranking, set(relevant), k) / k
+    return _hits_at_k(ranking, relevant, k) / k
 
 
-def recall_at_k(ranking: list[str], relevant: set[str], k: int = 10) -> float:
-    _validate(ranking, k)
-    relevant = set(relevant)
+def recall_at_k(ranking: list[str], relevant: Collection[str], k: int = 10) -> float:
+    relevant = _prepare(ranking, relevant, k)
     if not relevant:
         return 0.0
     # Se divide por todos los relevantes de la consulta, no solo por los
@@ -29,9 +32,10 @@ def recall_at_k(ranking: list[str], relevant: set[str], k: int = 10) -> float:
     return _hits_at_k(ranking, relevant, k) / len(relevant)
 
 
-def average_precision(ranking: list[str], relevant: set[str], k: int = 1000) -> float:
-    _validate(ranking, k)
-    relevant = set(relevant)
+def average_precision(
+    ranking: list[str], relevant: Collection[str], k: int = 1000
+) -> float:
+    relevant = _prepare(ranking, relevant, k)
     if not relevant:
         return 0.0
     hits = 0
@@ -46,7 +50,7 @@ def average_precision(ranking: list[str], relevant: set[str], k: int = 1000) -> 
 
 
 def mean_average_precision(
-    run: dict[str, list[str]], qrels: dict[str, set[str]]
+    run: Mapping[str, list[str]], qrels: Mapping[str, Collection[str]]
 ) -> float:
     if not qrels:
         return 0.0
