@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: viernes 13 de noviembre de 2026 (#2–#10 integradas; siguiente: #11 y #13).
+Actualizado: sábado 14 de noviembre de 2026 (#2–#10 integradas; #11 implementada en local sin PR; siguiente: #13).
 
 ## Ubicación y alcance
 
@@ -89,6 +89,17 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Cambio de la revisión: la validación de `k`/duplicados y la conversión de `relevant` a conjunto estaban repetidas en tres funciones; pasan a `_prepare`, y las anotaciones usan `Collection`/`Mapping` porque `relevant` también acepta listas. Sin cambio de comportamiento. Para #11: convertir `load_qrels` a ids con score>0 (esa misma condición ya existe en `ris.eda`); no se añadió un helper para no salir del alcance de #10.
 - Integrada con el PR #31 (autor @BrandonFreire).
 
+## #11 implementada en local: evaluación reproducible (rama `feat/11-evaluacion`, sin PR todavía)
+
+- Rama creada el 14 de noviembre desde `main` (`18ab326`, igual a `origin/main`). Sin commits ni push; los cinco archivos están sin rastrear. La implementación la hizo un subagente Sonnet de Claude (sin Codex ni Antigravity por falta de cupo); Claude Code revisó el diff completo.
+- Entregables: `scripts/evaluate.py` (lógica en funciones importables; usa `ris.evaluation`, no reimplementa métricas), `tests/test_evaluate.py` (33 pruebas), `reports/README.md` (esquema completo del CSV y del JSON para #15 y #12), `reports/metrics_per_query.csv` (4 536 filas, 200 KB) y `reports/metrics_summary.json` (8 KB).
+- Decisiones: `stem` vale `false`/`true`/`na` (el denso no aplica Porter y se evalúa una sola vez); filas ordenadas por modelo, stem y `qid` como cadena; floats con `repr` completo; `--depth` debe ser ≥ 1000 porque `ap_at_1000` y MAP@1000 fijan el corte en 1000; los rankings completos no se versionan (`--rankings-dir` opcional, rechazado dentro de `reports/`; el JSON guarda `rankings_sha256` por corrida); sin timestamps ni rutas absolutas; escritura atómica. nDCG@10 no se implementó (opcional; exige fuente primaria verificada).
+- **Probado localmente** (Python 3.12.10, Windows, 14 de noviembre): `python -m pytest` pasa 169 pruebas (con `NLTK_DATA` apuntando a una copia, ver nota de #5), `python -m ruff check .` y `git diff --check` sin errores. Ejecución real con los artefactos de FiQA (57 638 documentos, 648 consultas test, 1 706 pares): dos corridas dieron CSV y JSON idénticos byte a byte (SHA-256 del CSV `f4ba4752…3302`, del JSON `22c58a45…c38d`; 359 s y 332 s, de ellos ~150 s el denso).
+- Verificación independiente de Claude Code: medias del CSV iguales a las del JSON en las 7 configuraciones (tolerancia 1e-12, 648 `qid` únicos por configuración); P@10, R@10 y AP@1000 de 5 consultas del denso recalculados con NumPy y fórmulas directas coinciden con el CSV. El subagente comprobó además 21 combinaciones (3 consultas × 7 configuraciones) con su propio script, aunque usaba los retrievers del repo.
+- Revisión cruzada (14 de noviembre): otro subagente Sonnet de Claude, de solo lectura, con contexto limpio; sin hallazgos P0/P1. Ejecutó las 33 pruebas, ruff y comprobó CSV/JSON/README con pandas y recalculó a mano los valores esperados de las pruebas. Sus cuatro P2 se evaluaron y no se corrigen: (1) el script importa constantes y funciones privadas de `ris.data` y `ris.retrievers.dense` (igual que `ris.eda`; un renombrado interno lo rompería, conviene una función pública de procedencia en `ris.data` en otra issue); (2) los archivos escritos con `mkstemp` conservan permisos 0600 en Linux/macOS, sin efecto en Windows; (3) los dos `os.replace` no son una transacción única, como ya dice el README; (4) la reproducibilidad con datos reales se respalda con esta nota, no con una prueba automática. No ejecutó `evaluate.py` completo.
+- Resultados (648 consultas test; P@10 / R@10 / MAP@1000): Jaccard 0.0145 / 0.0579 / 0.0376 (sin Porter) y 0.0151 / 0.0599 / 0.0352 (con Porter); TF-IDF 0.0468 / 0.2032 / 0.1250 y 0.0475 / 0.2063 / 0.1325; BM25 0.0620 / 0.2766 / 0.1781 y 0.0677 / 0.3033 / 0.1987; denso 0.1045 / 0.4413 / 0.3116. Son medidas de esta implementación; no se compararon con valores publicados de BEIR (no se verificó una fuente primaria).
+- Limitaciones: la igualdad bit a bit del denso solo se probó en este equipo (mismos hilos y versiones); no se corrió el CI de Ubuntu para esta rama; la limitación de tokenización de #3 (guiones, decimales, contracciones) queda documentada en el JSON y en `reports/README.md`, y su efecto no está medido. Se decidió no cambiarla en #11 (es de #3 y alteraría #4).
+
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
 - Ruleset `proteger-main` (id 26888439), activo en la rama por defecto: reglas `deletion`, `non_fast_forward`, `update` y `pull_request`; exige 1 aprobación, CODEOWNER, descarta aprobaciones con commits nuevos y requiere resolver hilos. El rol admin puede omitir requisitos solo mediante bypass `pull_request`; no hay push directo.
@@ -102,8 +113,9 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 
 ## Próximos pasos
 
-1. Con #6–#10 integradas, #11 y #13 pueden empezar (#11 depende de #6–#10 y #13 de #6–#9).
-2. Decidir si se mejora la tokenización de guiones y decimales (ver limitación en #4) antes de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
+1. Abrir el PR de `feat/11-evaluacion` (Closes #11) cuando se pida; hasta entonces no hay commits ni push. Tras integrarla, #12 y #15 pueden consumir `reports/` (esquema en `reports/README.md`).
+2. #13 puede empezar (depende de #6–#9, ya integradas).
+3. La tokenización de guiones y decimales (ver limitación en #4) sigue sin cambiar; si se corrige en #3, hay que regenerar `reports/` de #4 y de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
 
 ## Aprendido y pendiente de confirmar
 
