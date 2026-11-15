@@ -2,6 +2,7 @@ import csv
 import getpass
 import gzip
 import json
+import os
 from hashlib import sha256
 from itertools import product
 from pathlib import Path
@@ -225,7 +226,7 @@ def environment(monkeypatch, tmp_path):
         return text.lower().split()
 
     for module in ("ris.index", "ris.retrievers.jaccard", "ris.retrievers.tfidf",
-                   "ris.retrievers.bm25"):
+                   "ris.retrievers.bm25", "scripts.evaluate"):
         monkeypatch.setattr(f"{module}.preprocess", preprocess)
     monkeypatch.setattr(evaluate, "load_corpus", lambda: CORPUS)
     monkeypatch.setattr(evaluate, "load_queries", lambda split: QUERIES)
@@ -291,7 +292,7 @@ def test_run_writes_documented_schema_and_hand_calculated_jaccard(environment, t
     assert summary["counts"] == {
         "n_queries": 4, "n_queries_without_relevant": 0, "n_qrel_pairs": 6,
         "n_relevant_pairs": 5, "n_relevant_docs_distinct": 4,
-        "n_relevant_docs_not_in_corpus": 0, "n_corpus_docs": 5,
+        "n_relevant_docs_not_in_corpus": 0, "n_corpus_docs": 5, "n_rows": 28,
     }
     assert summary["schema_version"] == 1
     assert summary["config"]["k"] == 2
@@ -370,6 +371,120 @@ def test_rankings_dir_outside_reports_writes_reproducible_gzip(environment, tmp_
     assert [line["qid"] for line in lines] == QIDS
     assert [doc for doc, _ in lines[0]["ranking"]] == ["d1", "d2", "d3"]
     assert sorted(path.name for path in (tmp_path / "reports").iterdir()) == [
+        "metrics_per_query.csv", "metrics_summary.json",
+    ]
+
+
+def test_summary_includes_csv_hash_and_nltk_resources_without_absolute_paths(
+    environment, tmp_path
+):
+    summary = execute(environment, tmp_path / "out")
+    provenance = summary["provenance"]
+    csv_bytes = (tmp_path / "out" / "metrics_per_query.csv").read_bytes()
+    assert provenance["metrics_per_query_sha256"] == sha256(csv_bytes).hexdigest()
+    resources = provenance["nltk_resources"]
+    assert resources["version"] == summary["versions"]["nltk"]
+    assert set(resources["files"]) == {
+        "tokenizers/punkt_tab/english/abbrev_types.txt",
+        "tokenizers/punkt_tab/english/collocations.tab",
+        "tokenizers/punkt_tab/english/ortho_context.tab",
+        "tokenizers/punkt_tab/english/sent_starters.txt",
+        "corpora/stopwords/english",
+    }
+    for name, digest in resources["files"].items():
+        assert not Path(name).is_absolute() and ":" not in name and "\\" not in name
+        assert len(digest) == 64
+        int(digest, 16)
+
+
+def test_sample_doc_ids_is_deterministic_uniform_and_includes_extremes():
+    ids = [str(number) for number in range(1000)]
+    sample = evaluate.sample_doc_ids(ids, 5)
+    ordered = sorted(ids)
+    assert sample == evaluate.sample_doc_ids(list(reversed(ids)), 5)
+    assert len(sample) == 5
+    assert sample[0] == ordered[0] and sample[-1] == ordered[-1]
+    assert sample == [ordered[position] for position in (0, 250, 500, 749, 999)]
+    # Con menos documentos que la muestra se comprueban todos.
+    assert evaluate.sample_doc_ids(["b", "a"], 500) == ["a", "b"]
+
+
+def test_verify_index_sample_accepts_the_matching_index(environment):
+    index = InvertedIndex.load(environment / "index_no_stem.json", expected_stem=False)
+    assert evaluate.verify_index_sample(index, CORPUS, sample_size=500) == 5
+    # Con una muestra menor que el corpus también incluye el primero y el último.
+    assert evaluate.verify_index_sample(index, CORPUS, sample_size=2) == 2
+
+
+def test_verify_index_sample_rejects_same_ids_with_swapped_texts(environment):
+    index = InvertedIndex.load(environment / "index_no_stem.json", expected_stem=False)
+    swapped = {**CORPUS, "d1": CORPUS["d2"], "d2": CORPUS["d1"]}
+    assert swapped.keys() == CORPUS.keys()
+    with pytest.raises(ValueError, match=r"muestra.*no total.*build_artifacts\.py"):
+        evaluate.verify_index_sample(index, swapped)
+
+
+def test_verify_index_sample_rejects_a_different_stopword_list(environment, monkeypatch):
+    index = InvertedIndex.load(environment / "index_no_stem.json", expected_stem=False)
+
+    def preprocess_with_another_stopword(text, *, stem=False):
+        return [token for token in text.lower().split() if token != "gato"]
+
+    monkeypatch.setattr(evaluate, "preprocess", preprocess_with_another_stopword)
+    with pytest.raises(ValueError, match="preprocesamiento"):
+        evaluate.verify_index_sample(index, CORPUS)
+
+
+def test_run_rejects_an_index_with_same_ids_but_other_content(environment, tmp_path):
+    swapped = {**CORPUS, "d1": CORPUS["d2"], "d2": CORPUS["d1"]}
+    InvertedIndex.build(swapped, stem=False).save(environment / "index_no_stem.json")
+    with pytest.raises(ValueError, match="no corresponde"):
+        execute(environment, tmp_path / "out")
+    assert not (tmp_path / "out").exists()
+
+
+def test_verify_reports_passes_after_a_correct_run_and_detects_a_modified_csv(
+    environment, tmp_path
+):
+    output = tmp_path / "out"
+    execute(environment, output)
+    evaluate.verify_reports(output)
+    csv_path = output / "metrics_per_query.csv"
+    csv_path.write_bytes(csv_path.read_bytes().replace(b"0.5", b"0.6", 1))
+    with pytest.raises(ValueError, match=r"python scripts/evaluate\.py"):
+        evaluate.verify_reports(output)
+    csv_path.unlink()
+    with pytest.raises(ValueError, match="Falta"):
+        evaluate.verify_reports(output)
+
+
+def test_failed_second_replace_leaves_a_mismatch_that_verify_reports_detects(
+    environment, tmp_path, monkeypatch
+):
+    output = tmp_path / "out"
+    execute(environment, output)
+    evaluate.verify_reports(output)
+    old_summary = (output / "metrics_summary.json").read_bytes()
+    real_replace, destinations = os.replace, []
+
+    def replace_failing_the_second_time(source, destination):
+        destinations.append(Path(destination).name)
+        if len(destinations) == 2:
+            raise OSError("fallo simulado")
+        return real_replace(source, destination)
+
+    monkeypatch.setattr(evaluate.os, "replace", replace_failing_the_second_time)
+    with pytest.raises(OSError, match="simulado"):
+        evaluate.run(
+            artifacts_dir=environment, output_dir=output, k=3,
+            dense_encoder=HashEncoder(), out=lambda _: None,
+        )
+    # El CSV se escribe primero; el JSON viejo queda con el hash del CSV viejo.
+    assert destinations == ["metrics_per_query.csv", "metrics_summary.json"]
+    assert (output / "metrics_summary.json").read_bytes() == old_summary
+    with pytest.raises(ValueError, match=r"python scripts/evaluate\.py"):
+        evaluate.verify_reports(output)
+    assert sorted(path.name for path in output.iterdir()) == [
         "metrics_per_query.csv", "metrics_summary.json",
     ]
 

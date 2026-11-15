@@ -26,9 +26,9 @@ Opciones (todas opcionales):
 | `--output-dir DIR` | `reports` | Dónde escribir el CSV y el JSON. |
 | `--rankings-dir DIR` | (nada) | Vuelca los rankings completos como JSONL gzip (uno por corrida, `rankings_<modelo>[_stem\|_no_stem].jsonl.gz`). Se rechaza si cae dentro de `reports/`; use `artifacts/` o similar. Nunca se versionan. |
 
-Reejecutar sobrescribe los dos archivos. Se preparan ambos como temporales y solo entonces se reemplazan (si algo falla antes, quedan los anteriores). Ejecuta 7 corridas: Jaccard, TF-IDF y BM25 con y sin Porter (índices distintos) y el denso una sola vez, porque no usa preprocesamiento léxico. Los tiempos y el progreso van solo a la salida estándar, nunca a los archivos.
+Reejecutar sobrescribe los dos archivos. Se preparan ambos como temporales y solo entonces se reemplazan, primero el CSV y después el JSON (si algo falla antes de reemplazar, quedan los anteriores). Al terminar, el propio script ejecuta `verify_reports` (ver «Consistencia entre el CSV y el JSON»). Ejecuta 7 corridas: Jaccard, TF-IDF y BM25 con y sin Porter (índices distintos) y el denso una sola vez, porque no usa preprocesamiento léxico. Los tiempos y el progreso van solo a la salida estándar, nunca a los archivos.
 
-Errores comprobados: `k` o `depth` no positivos, `k > depth`, `depth < 1000`, artefactos ausentes (el mensaje indica cómo generarlos), índice con configuración de stemming distinta o de otro corpus, y artefacto denso de otro corpus (por `corpus_sha256`).
+Errores comprobados: `k` o `depth` no positivos, `k > depth`, `depth < 1000`, artefactos ausentes (el mensaje indica cómo generarlos), índice con configuración de stemming distinta, de otro corpus o cuyo contenido no coincide con el corpus y el preprocesamiento actuales (comprobación por muestra, ver abajo), y artefacto denso de otro corpus (por `corpus_sha256`).
 
 ## `metrics_per_query.csv`
 
@@ -89,6 +89,7 @@ UTF-8, `indent=2`, claves ordenadas alfabéticamente, `\n`, sin timestamps ni va
 | `n_relevant_docs_distinct` | Documentos relevantes distintos. |
 | `n_relevant_docs_not_in_corpus` | Relevantes que no están en el corpus. |
 | `n_corpus_docs` | Documentos del corpus. |
+| `n_rows` | Filas de datos del CSV (sin cabecera); `verify_reports` la contrasta con el archivo. |
 
 ### `provenance`
 
@@ -96,6 +97,8 @@ UTF-8, `indent=2`, claves ordenadas alfabéticamente, `\n`, sin timestamps ni va
 | --- | --- |
 | `dataset` | Lista de `{repo, revision, file, sha256}` de los archivos de FiQA y de los qrels test, con las revisiones fijadas en `ris.data`. |
 | `artifacts_dir_files` | Por archivo, con ruta **relativa a `--artifacts-dir`**: `index_no_stem.json` e `index_stem.json` (`sha256`, `format_version`, `stem`, `n_docs`, `n_terms`) y `dense/metadata.json` (`sha256`, `model_revision`, `corpus_sha256`, `doc_ids_sha256`, `format_version`, `n_docs`, `file_sha256` de `embeddings.npy` e `index.faiss`, `build_batch_size`, `build_threads`, `build_library_versions`). El artefacto denso se verifica contra el hash del corpus cargado antes de evaluar. |
+| `metrics_per_query_sha256` | SHA-256 de los bytes exactos de `metrics_per_query.csv` que acompañan a este JSON. |
+| `nltk_resources` | `{version, files}`: versión de NLTK y SHA-256 de los recursos que usa `preprocess` (`tokenizers/punkt_tab/english/{abbrev_types.txt, collocations.tab, ortho_context.tab, sent_starters.txt}` y `corpora/stopwords/english`), con nombres relativos al directorio de datos de NLTK, nunca rutas absolutas. |
 | `query_ids_sha256` | Hash de la lista ordenada de ids de consulta evaluados. |
 
 ### `results[]`
@@ -109,6 +112,17 @@ UTF-8, `indent=2`, claves ordenadas alfabéticamente, `\n`, sin timestamps ni va
 | `mean_recall_at_k` | float | Media de `recall`. |
 | `map_at_1000` | float | MAP@1000: `ris.evaluation.mean_average_precision` sobre todas las consultas de los qrels. |
 | `rankings_sha256` | texto | SHA-256 de todos los rankings de profundidad `depth` de esa corrida (ver abajo). |
+
+## Consistencia entre el CSV y el JSON
+
+Escribir dos archivos no es atómico en conjunto: si falla el segundo reemplazo, quedaría un CSV nuevo con un JSON viejo. Por eso el JSON guarda `provenance.metrics_per_query_sha256`, y `verify_reports(output_dir)` (en `scripts/evaluate.py`) relee ambos archivos y lanza `ValueError` si el hash o `counts.n_rows` no coinciden con el CSV; el script la ejecuta al terminar cada corrida.
+
+- **La vista #15 debe validar antes de mostrar:** calcular el SHA-256 de los bytes de `metrics_per_query.csv` y compararlo con `provenance.metrics_per_query_sha256`; si no coinciden, no mostrar los resultados y avisar.
+- **Cómo recuperarse:** ejecutar de nuevo `python scripts/evaluate.py` (idempotente; vuelve a escribir ambos archivos), o restaurar los dos desde Git.
+
+## Qué comprueba y qué no comprueba el script sobre los índices
+
+Los índices clásicos no guardan el hash del corpus ni del preprocesamiento. Tras cargar cada uno, `verify_index_sample` toma una muestra determinista de 500 documentos (ids ordenados, paso uniforme, incluidos el primero y el último), recalcula `preprocess(título + ' ' + texto, stem=…)` con la misma entrada que `InvertedIndex.build` y exige que la longitud y todas las frecuencias de cada documento coincidan; si no, aborta y pide regenerar los índices. Es una comprobación **por muestra, no total**: detecta índices de otro contenido o preprocesados con otros recursos de NLTK (stopwords, punkt) solo si esos cambios afectan a algún documento de la muestra. Los SHA-256 de `provenance.nltk_resources` documentan los recursos usados en esta evaluación, pero no prueban con qué recursos se construyeron los índices: eso lo cubre únicamente la muestra. El corpus y el denso sí se comparan completos (`corpus_sha256`).
 
 ## Reproducibilidad
 

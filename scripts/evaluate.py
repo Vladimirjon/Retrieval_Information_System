@@ -14,10 +14,13 @@ import os
 import platform
 import sys
 import tempfile
+from collections import Counter
 from collections.abc import Callable, Mapping
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from time import perf_counter
+
+import nltk
 
 from ris import data
 from ris.data import Doc, load_corpus, load_qrels, load_queries
@@ -28,6 +31,7 @@ from ris.evaluation import (
     recall_at_k,
 )
 from ris.index import InvertedIndex
+from ris.preprocessing import preprocess, setup_nltk
 from ris.retrievers import (
     BM25Retriever,
     DenseRetriever,
@@ -50,6 +54,10 @@ CSV_NAME = "metrics_per_query.csv"
 SUMMARY_NAME = "metrics_summary.json"
 # InvertedIndex.load rechaza cualquier otra versión de formato.
 INDEX_FORMAT_VERSION = 1
+INDEX_SAMPLE_SIZE = 500
+_PUNKT_FILES = (
+    "abbrev_types.txt", "collocations.tab", "ortho_context.tab", "sent_starters.txt",
+)
 BUILD_HINT = (
     "Genérelos con: python scripts/build_artifacts.py (sin Porter), "
     "python scripts/build_artifacts.py --stem (con Porter) y "
@@ -106,6 +114,48 @@ def corpus_sha256(corpus: Mapping[str, Doc]) -> str:
     return _json_hash([
         [doc_id, corpus[doc_id].title, corpus[doc_id].text] for doc_id in sorted(corpus)
     ])
+
+
+def sample_doc_ids(doc_ids: list[str], sample_size: int) -> list[str]:
+    """Muestra determinista: ids ordenados, paso uniforme, con el primero y el último."""
+    ordered = sorted(doc_ids)
+    if len(ordered) <= sample_size:
+        return ordered
+    if sample_size == 1:
+        return ordered[:1]
+    last = len(ordered) - 1
+    positions = sorted({round(i * last / (sample_size - 1)) for i in range(sample_size)})
+    return [ordered[position] for position in positions]
+
+
+def verify_index_sample(
+    index: InvertedIndex, corpus: Mapping[str, Doc], name: str = "el índice",
+    sample_size: int = INDEX_SAMPLE_SIZE,
+) -> int:
+    """Comprueba por muestra que el índice coincide con corpus y preprocesamiento actuales.
+
+    Recalcula, con la misma entrada que ``InvertedIndex.build``, longitud y
+    frecuencias de cada documento de la muestra. Es una comprobación por muestra,
+    no total: no garantiza que todo el índice sea correcto. Devuelve el tamaño de
+    la muestra comprobada.
+    """
+    sample = sample_doc_ids(list(corpus), sample_size)
+    for doc_id in sample:
+        doc = corpus[doc_id]
+        tokens = preprocess(f"{doc.title} {doc.text}", stem=index.stem)
+        frequencies = Counter(tokens)
+        # Si la longitud coincide y cada tf recalculado coincide, no queda ningún
+        # otro término con tf > 0 en ese documento.
+        if index.doc_lengths.get(doc_id) != len(tokens) or any(
+            index.postings.get(term, {}).get(doc_id) != tf
+            for term, tf in frequencies.items()
+        ):
+            raise ValueError(
+                f"{name} no corresponde al corpus o al preprocesamiento actuales "
+                f"(comprobación por muestra de {len(sample)} documentos, no total; "
+                f"primer desacuerdo en el documento {doc_id}). {BUILD_HINT}."
+            )
+    return len(sample)
 
 
 def retrieve_rankings(
@@ -225,7 +275,11 @@ def render_summary(summary: dict) -> str:
 
 
 def write_atomically(files: Mapping[Path, str]) -> None:
-    """Prepara todos los temporales y solo entonces los mueve a su destino."""
+    """Prepara todos los temporales y solo entonces los mueve, en el orden dado.
+
+    Los reemplazos no son atómicos en conjunto: si el segundo falla queda el primer
+    archivo nuevo y el segundo viejo. ``verify_reports`` lo detecta.
+    """
     temporaries: list[tuple[Path, Path]] = []
     try:
         for destination, content in files.items():
@@ -241,6 +295,26 @@ def write_atomically(files: Mapping[Path, str]) -> None:
     finally:
         for temporary, _ in temporaries:
             temporary.unlink(missing_ok=True)
+
+
+def verify_reports(output_dir: Path) -> None:
+    """Relee el CSV y el JSON y comprueba que el JSON describe exactamente ese CSV."""
+    csv_path, summary_path = output_dir / CSV_NAME, output_dir / SUMMARY_NAME
+    again = "Ejecute de nuevo `python scripts/evaluate.py`"
+    for path in (csv_path, summary_path):
+        if not path.is_file():
+            raise ValueError(f"Falta {path}. {again}.")
+    csv_bytes = csv_path.read_bytes()
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    expected = summary["provenance"]["metrics_per_query_sha256"]
+    if hashlib.sha256(csv_bytes).hexdigest() != expected:
+        raise ValueError(
+            f"{CSV_NAME} no corresponde a {SUMMARY_NAME} (SHA-256 distinto): "
+            f"una escritura anterior quedó a medias. {again}."
+        )
+    rows_in_csv = len(csv_bytes.splitlines()) - 1  # sin la cabecera
+    if rows_in_csv != summary["counts"]["n_rows"]:
+        raise ValueError(f"{CSV_NAME} no tiene las filas que declara {SUMMARY_NAME}. {again}.")
 
 
 def dump_rankings(path: Path, rankings: Mapping[str, list[Result]], qids: list[str]) -> None:
@@ -294,6 +368,23 @@ def package_versions() -> dict[str, str | None]:
         except PackageNotFoundError:
             versions[package] = None
     return versions
+
+
+def nltk_provenance() -> dict:
+    """Versión de NLTK y SHA-256 de los recursos de ``preprocess`` (rutas relativas)."""
+    setup_nltk()
+    pointers = {
+        f"tokenizers/punkt_tab/english/{filename}": nltk.data.find(
+            f"tokenizers/punkt_tab/english/{filename}"
+        )
+        for filename in _PUNKT_FILES
+    }
+    pointers["corpora/stopwords/english"] = nltk.data.find("corpora/stopwords/english")
+    files = {}
+    for relative_name, pointer in sorted(pointers.items()):
+        with pointer.open() as stream:
+            files[relative_name] = hashlib.sha256(stream.read()).hexdigest()
+    return {"version": version("nltk"), "files": files}
 
 
 def dataset_provenance() -> list[dict]:
@@ -456,6 +547,9 @@ def run(
                 f"{path.name} no corresponde al corpus cargado "
                 f"(N={index.N}, corpus={len(corpus)}). {BUILD_HINT}."
             )
+        sampled = verify_index_sample(index, corpus, path.name)
+        out(f"  {path.name}: coincide con el corpus y el preprocesamiento en una "
+            f"muestra de {sampled} documentos (comprobación por muestra, no total).")
         index_provenance[path.name] = {
             "sha256": file_sha256(path), "format_version": INDEX_FORMAT_VERSION,
             "stem": index.stem, "n_docs": index.N, "n_terms": len(index.postings),
@@ -484,6 +578,8 @@ def run(
         raise ValueError(f"Se esperaban {expected_rows} filas y hay {len(rows)}")
     results.sort(key=lambda r: (MODELS.index(r["model"]), STEM_ORDER.index(r["stem"])))
     metadata = dense.metadata
+    counts["n_rows"] = len(rows)
+    csv_text = render_csv(rows)
     summary = {
         "schema_version": SCHEMA_VERSION,
         "config": build_config(k, depth, hyperparameters(*bm25_params, metadata)),
@@ -505,15 +601,19 @@ def run(
                     "build_library_versions": metadata["library_versions"],
                 },
             },
+            "metrics_per_query_sha256": hashlib.sha256(csv_text.encode("utf-8")).hexdigest(),
+            "nltk_resources": nltk_provenance(),
             "query_ids_sha256": _json_hash(qids),
         },
         "versions": package_versions(),
         "results": results,
     }
+    # CSV primero y JSON después: el JSON lleva el hash del CSV exacto.
     write_atomically({
-        output_dir / CSV_NAME: render_csv(rows),
+        output_dir / CSV_NAME: csv_text,
         output_dir / SUMMARY_NAME: render_summary(summary),
     })
+    verify_reports(output_dir)
     out(f"Archivos escritos en {output_dir} ({len(rows):,} filas) | "
         f"tiempo total: {perf_counter() - started:.1f} s")
     return summary
