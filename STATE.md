@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: domingo 15 de noviembre de 2026 (#11 integrada; #12 validada localmente, pendiente de publicación/revisión; #13 pendiente).
+Actualizado: domingo 15 de noviembre de 2026 (#11 integrada; #12 publicada en PR #33 con CI funcional en verde y revisión humana pendiente; #13 pendiente).
 
 ## Ubicación y alcance
 
@@ -113,7 +113,8 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - **Probado localmente:** dos ejecuciones completas del notebook desde un kernel nuevo y una ejecución adicional de `python -m scripts.analyze_models --output artifacts/analysis/comparison_second.json`; resumen idéntico byte a byte, SHA-256 `39bc476818e393e3fc9179ec370a0f92a1d483e999d3b9014f59f7313dc39a9c`. Cuatro figuras idénticas por hash entre ejecuciones y revisadas visualmente; 14 tablas renderizadas a HTML e inspección visual de sus formatos. Salidas finales sin errores, stderr ni rutas personales.
 - Auditoría local independiente (fuera de Git) de las 56 filas de medias, 27 conjuntos de deltas/conteos, cuatro rankings completos de casos, scores/posiciones, qrels y fragmentos originales, además de los valores de la tabla del informe. Recalculó las métricas desde posiciones; la ejecución también las contrasta con `ris.evaluation` y el CSV. `python -m pytest -q --basetemp .pytest_cache/issue12-final`: **194 pruebas**; `python -m ruff check .`, `pip check` y `git diff --check` sin errores.
 - Hallazgos: denso MAP@1000=0,311586 frente a BM25/Porter 0,198736 (Δ=+0,112850; AP mejora/empeora/empata en 456/148/44 consultas). Porter cambia MAP en Jaccard −0,002362, TF-IDF +0,007524 y BM25 +0,020680. Grupos de longitud n=81/409/158; dígitos 73/575; mayúsculas 118/530. Caso `1074`: relevante `443960`, denso primero y BM25 no recuperado en top-1000. Caso `1310`: relevante `535651`, BM25 primero y denso en 113. Las explicaciones distinguen observaciones, hipótesis, juicios ausentes y límites de los extremos; no se afirma significancia estadística.
-- Pendientes: publicación y CI del PR de #12, aprobación de @Vladimirjon e integración autorizada. No se declara #12 hecha ni se verifica despliegue. Índices, embeddings, cachés, figuras auxiliares y rankings completos permanecen excluidos de Git.
+- **Publicación y CI:** [PR #33](https://github.com/Vladimirjon/Retrieval_Information_System/pull/33) abierto por @Almejandro04 contra `main`, sin borrador, con revisión solicitada a @Vladimirjon. Commit funcional `52d23d05f58e67fadbfe38e8fe3214521aaab892`; [CI de Ubuntu/Python 3.12](https://github.com/Vladimirjon/Retrieval_Information_System/actions/runs/43785299224) terminado con éxito. La lista remota contiene los 11 archivos previstos; el CSV y JSON de #11 no aparecen en el diff. Este cierre documental vuelve a activar CI; su resultado y commit final se registran en el PR.
+- Pendientes: aprobación humana de @Vladimirjon e integración autorizada. #12 sigue en curso hasta revisión e integración; no se hace merge ni se activa auto-merge, y no se cierra manualmente la issue. No hay comprobación de despliegue. Índices, embeddings, cachés, figuras auxiliares y rankings completos permanecen excluidos de Git.
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
