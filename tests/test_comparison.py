@@ -12,11 +12,11 @@ from ris.data import Doc
 from ris.retrievers import Result
 
 
-def small_rows():
+def small_rows(qids=("02", "10")):
     return [{"model": model, "stem": stem, "qid": qid, "k": 10,
              "precision": value, "recall": value, "ap_at_1000": value}
             for model, stem in c.CONFIGURATIONS
-            for qid, value in (("02", .0), ("10", .5))]
+            for qid, value in zip(qids, (.0, .5), strict=True)]
 
 
 def write_reports(path, rows):
@@ -40,9 +40,14 @@ def write_reports(path, rows):
 
 def test_validate_preserves_string_ids_and_checks_means(tmp_path):
     write_reports(tmp_path, small_rows())
-    rows, _ = c.validate_reports(tmp_path, {"02", "10"})
+    rows, summary = c.validate_reports(tmp_path, {"02", "10"})
     assert rows[0]["qid"] == "02"
-    assert c.aggregate(rows, ["02", "10"])[0]["ap_at_1000"] == .25
+    expected = c.aggregate(rows, ["02", "10"])
+    for actual, expected_entry in zip(summary["results"], expected, strict=True):
+        assert actual["n_queries"] == expected_entry["n"]
+        assert actual["mean_precision_at_k"] == expected_entry["precision"]
+        assert actual["mean_recall_at_k"] == expected_entry["recall"]
+        assert actual["map_at_1000"] == expected_entry["ap_at_1000"]
 
 
 @pytest.mark.parametrize("mutation", ["hash", "count", "mean", "split", "depth"])
@@ -90,6 +95,9 @@ def test_group_boundaries_and_overlapping_families(monkeypatch):
     assert groups["digits_yes"] == ["a", "d"]
     assert groups["uppercase_yes"] == ["a"]
     assert sum(map(len, groups.values())) == 3 * len(queries)
+    assert set(groups["length_0_3"]) & set(groups["digits_yes"]) & set(
+        groups["uppercase_yes"]
+    )
 
 
 def test_paired_deltas_counts_percentiles_and_zero_relative():
@@ -110,14 +118,14 @@ def test_paired_deltas_counts_percentiles_and_zero_relative():
 
 
 def test_case_selection_extrema_lexicographic_ties_and_no_case():
-    rows = small_rows()
+    rows = small_rows(("9", "10"))
     assert c.select_cases(rows) == {"dense_improves": None, "dense_worsens": None}
     for row in rows:
         if (row["model"], row["stem"]) == c.BASELINE:
             row["ap_at_1000"] = 0
         if row["model"] == "dense":
             row["ap_at_1000"] = 1
-    assert c.select_cases(rows)["dense_improves"]["qid"] == "02"
+    assert c.select_cases(rows)["dense_improves"]["qid"] == "10"
     for row in rows:
         if row["qid"] == "10" and row["model"] == "dense":
             row["ap_at_1000"] = -.1
@@ -154,6 +162,9 @@ def test_committed_analysis_is_consistent_with_inputs_and_case_positions():
     """Guarda de los entregables reales sin red, corpus ni artefactos pesados."""
     root = Path(__file__).resolve().parents[1]
     summary = json.loads((root / "reports/comparison_summary.json").read_text("utf-8"))
+    assert summary["provenance"]["metrics_per_query_sha256"] == c.sha256(
+        root / "reports/metrics_per_query.csv"
+    )
     groups = summary["groups"]
     qids = set(groups["digits_yes"]["qids"]) | set(groups["digits_no"]["qids"])
     rows, _ = c.validate_reports(root / "reports", qids)
