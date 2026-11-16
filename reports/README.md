@@ -139,3 +139,30 @@ Datos de FiQA, índices, embeddings, cachés y rankings completos (`--rankings-d
 ## Fuera de alcance
 
 nDCG@10 no está implementado: es opcional y exige una fuente primaria verificada para las referencias de BEIR.
+
+## Análisis comparativo (#12)
+
+`comparison_summary.json` (esquema 1) es un derivado de los dos archivos de #11;
+no los reemplaza. Lo generan el notebook `12_analisis_modelos.ipynb` o
+`python -m scripts.analyze_models`; reproducción en `notebooks/README.md`.
+
+| Clave | Contenido |
+| --- | --- |
+| `counts`, `methodology` | Conteos contrastados con datos reales, comparador BM25/Porter fijo, tolerancia 1e-12, reglas operativas, selección por extremos de AP y ausencia de aleatoriedad. |
+| `overall` | Siete filas: `model`, `stem`, `n`, `precision`, `recall`, `ap_at_1000`. Aquí `ap_at_1000` es la **media** de AP, es decir MAP@1000. |
+| `porter`, `versus_bm25_porter` | Pares `target`/`reference`, `n` y, para cada métrica, delta medio absoluto, relativo (fracción; `null` si referencia cero), conteos improved/worsened/tied y mínimo/cuartiles lineales/máximo. |
+| `groups` | Por grupo: `n`, lista de `qids` como cadenas y `means` con las siete configuraciones. Cada familia es exhaustiva; grupos de familias distintas se solapan. |
+| `cases` | `dense_improves` y `dense_worsens`: `qid`, consulta original, ΔAP, todos los relevantes y evidencia de ambos rankings. Serían `null` si no hubiera casos de ese signo. |
+| `cases.*.rankings` | Métricas por consulta, tamaño/hash del ranking local y solo documentos del top-10 más todos los relevantes: `doc_id`, posición (o `null`: «no recuperado en top-1000»), score del modelo, juicio/score qrel, título y fragmento fiel con offsets y longitud original. |
+| `provenance` | Hashes de reportes de entrada, revisiones/hashes de datos, recursos NLTK, configuración/versión original y local, commit de código de recuperación/evaluación, hashes de fuentes y artefactos, diferencias de bytes y validación de casos. |
+
+Todos los ids siguen siendo texto; relevancia significa `score > 0`. Un juicio
+ausente se etiqueta «no juzgado», nunca «juzgado no relevante». Los scores de
+modelos distintos no están calibrados. Los cuatro rankings de casos completos y
+las figuras auxiliares quedan en `artifacts/analysis/`, fuera de Git.
+
+Antes de agregar se valida el SHA-256 exacto del CSV, esquema, tipos, split/cortes,
+4 536 filas, siete conjuntos idénticos de 648 qids sin duplicados y medias con
+`atol=1e-12, rtol=0`. `.gitattributes` mantiene LF en el CSV incluso en Windows;
+no cambian sus valores ni su hash original. La ejecución falla si hay una
+inconsistencia: no modifica ni regenera los reportes de #11.
