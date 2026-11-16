@@ -1,0 +1,2 @@
+# El JSON de #11 verifica el hash de los bytes exactos del CSV, también en Windows.
+reports/metrics_per_query.csv text eol=lf
