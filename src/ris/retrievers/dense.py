@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from collections.abc import Callable
 from hashlib import sha256
 from importlib.metadata import version
@@ -73,18 +74,21 @@ class DenseRetriever:
         self.metadata = metadata
         self.doc_ids = tuple(metadata["doc_ids"])
         self._encoder = encoder
+        self._encoder_lock = threading.Lock()  # una sola carga de MiniLM aunque busquen dos hilos
 
     def _encode(self, texts: list[str], batch_size: int) -> np.ndarray:
         if self._encoder is None:
-            # Importación diferida: los modelos clásicos no cargan torch/MiniLM.
-            import torch
-            from sentence_transformers import SentenceTransformer
+            with self._encoder_lock:
+                if self._encoder is None:
+                    # Importación diferida: los modelos clásicos no cargan torch/MiniLM.
+                    import torch
+                    from sentence_transformers import SentenceTransformer
 
-            torch.set_num_threads(self.metadata["threads"])
-            self._encoder = SentenceTransformer(
-                MODEL_NAME, revision=MODEL_REVISION, device="cpu",
-                trust_remote_code=False,
-            )
+                    torch.set_num_threads(self.metadata["threads"])
+                    self._encoder = SentenceTransformer(
+                        MODEL_NAME, revision=MODEL_REVISION, device="cpu",
+                        trust_remote_code=False,
+                    )
         self._encoder.max_seq_length = MAX_SEQ_LENGTH
         vectors = self._encoder.encode(
             texts, batch_size=batch_size, convert_to_numpy=True,

@@ -15,6 +15,7 @@ from time import perf_counter
 
 from ris.data import Doc, load_corpus
 from ris.index import InvertedIndex
+from ris.preprocessing import preprocess
 from ris.retrievers import (
     BM25Retriever,
     DenseRetriever,
@@ -129,6 +130,7 @@ class SearchEngine:
         self._corpus_loader = corpus_loader
         self._dense_loader = dense_loader
         self._corpus: Mapping[str, Doc] | None = None
+        self._empty_doc_ids: frozenset[str] | None = None
         self._indexes: dict[bool, InvertedIndex] = {}
         self._retrievers: dict[tuple[str, bool | None], Retriever] = {}
         self._failures: dict[tuple[str, bool | None], str] = {}
@@ -204,9 +206,19 @@ class SearchEngine:
                         ) from error
                     if not corpus:
                         raise ModelUnavailableError("El corpus FiQA está vacío.")
+                    self._empty_doc_ids = frozenset(
+                        doc_id for doc_id, doc in corpus.items() if not doc.text.strip()
+                    )
                     self._corpus = corpus
                     self._record("corpus", started)
         return self._corpus
+
+    @property
+    def empty_doc_ids(self) -> frozenset[str]:
+        """Ids sin texto visible, calculados una vez al cargar el corpus."""
+        if self._empty_doc_ids is None:
+            _ = self.corpus
+        return self._empty_doc_ids
 
     def _index(self, stem: bool) -> InvertedIndex:
         if stem not in self._indexes:
@@ -289,6 +301,20 @@ class SearchEngine:
                 self._run(model, stem, retriever, _WARMUP_QUERY, 1)
                 self._record("dense_encoder", started)
 
+    # ------------------------------------------------------------- explicación
+
+    @staticmethod
+    def query_terms(query: str, *, stem: bool = False) -> tuple[str, ...]:
+        """Términos con los que buscan los modelos clásicos, sin repetir y en orden."""
+        return tuple(dict.fromkeys(preprocess(query, stem=stem)))
+
+    def matched_terms(
+        self, doc_id: str, terms: tuple[str, ...], *, stem: bool = False
+    ) -> tuple[str, ...]:
+        """Cuáles de `terms` aparecen en el documento según el índice clásico."""
+        postings = self._index(stem).postings
+        return tuple(term for term in terms if doc_id in postings.get(term, ()))
+
     # ---------------------------------------------------------------- búsqueda
 
     def _run(self, model: str, stem: bool, retriever: Retriever, query: str, k: int):
@@ -304,7 +330,8 @@ class SearchEngine:
             raise ModelUnavailableError(message) from error
 
     def search(
-        self, model: str, query: str, k: int = 10, *, stem: bool = False
+        self, model: str, query: str, k: int = 10, *, stem: bool = False,
+        skip_empty: bool = False,
     ) -> SearchResponse:
         """Busca en un modelo y une cada doc_id con su título y texto originales."""
         self._check_model(model)
@@ -314,9 +341,16 @@ class SearchEngine:
             raise ValueError("k debe ser un entero positivo")
         retriever = self.get_retriever(model, stem)
         started = perf_counter()
-        results = self._run(model, stem, retriever, query, k)
-        elapsed_ms = (perf_counter() - started) * 1000
         corpus = self.corpus
+        if skip_empty and model == "dense":
+            requested = min(len(corpus), k + len(self.empty_doc_ids))
+        else:
+            requested = k
+        results = self._run(model, stem, retriever, query, requested)
+        if skip_empty:
+            results = [result for result in results
+                       if result.doc_id not in self.empty_doc_ids][:k]
+        elapsed_ms = (perf_counter() - started) * 1000
         hits = tuple(
             Hit(rank, result.doc_id, corpus[result.doc_id].title,
                 corpus[result.doc_id].text, result.score)

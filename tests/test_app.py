@@ -11,6 +11,8 @@ from app.ui import (
     WORDMARK,
     Request,
     build_assets,
+    clean_text,
+    highlight_spans,
     parse_request,
     parse_view,
     respond,
@@ -75,24 +77,94 @@ class FakeEngine:
         self.error = error
         self.calls = []
 
-    def search(self, model, query, k, *, stem):
-        self.calls.append((model, query, k, stem))
+    def search(self, model, query, k, *, stem, skip_empty=False):
+        self.calls.append((model, query, k, stem, skip_empty))
         if self.error:
             raise self.error
         hits = (Hit(1, "501384", "", "Texto <b>uno</b>.", 10.5), Hit(2, "315741", "", "", 9.0))
         return SearchResponse(model=model, stem=stem, query=query, k=k, hits=hits, elapsed_ms=12.345)
+
+    @staticmethod
+    def query_terms(query, *, stem=False):
+        return tuple(dict.fromkeys(query.lower().split()))
+
+    def matched_terms(self, doc_id, terms, *, stem=False):
+        self.calls.append(("matched", doc_id, terms, stem))
+        return terms[:1] if doc_id == "501384" else ()
 
 
 def test_response_carries_seq_hits_and_rounded_time():
     engine = FakeEngine()
     request = Request(q="savings", model="bm25", k=5, stem=True, view="buscar", seq=4)
     response = respond(engine, request)
-    assert engine.calls == [("bm25", "savings", 5, True)]
+    assert engine.calls[0] == ("bm25", "savings", 5, True, True)
     assert response["seq"] == 4
     assert response["key"] == request.key
     assert response["elapsed_ms"] == 12.3
-    assert response["hits"][0] == {"rank": 1, "doc_id": "501384", "text": "Texto <b>uno</b>.", "score": 10.5}
+    assert response["terms"] == ["savings"]
+    assert response["hits"][0] == {
+        "rank": 1, "doc_id": "501384", "text": "Texto <b>uno</b>.", "score": 10.5,
+        "matched": ["savings"], "spans": [],
+    }
+    assert response["hits"][1]["matched"] == []
+    assert response["hits"][1]["spans"] == []
     assert len(response["hits"]) == 2
+
+
+def test_dense_response_has_no_terms_and_does_not_touch_the_classical_index():
+    engine = FakeEngine()
+    request = Request(q="savings", model="dense", k=5, stem=False, view="buscar", seq=1)
+    response = respond(engine, request)
+    assert response["terms"] == []
+    assert all(hit["matched"] == [] for hit in response["hits"])
+    assert not any(call[0] == "matched" for call in engine.calls)
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("**Here's a sneak peek** of [top posts](https://np.reddit.com/r/x/top/?sort=top&amp;t=year)",
+         "Here's a sneak peek of top posts"),
+        (r"\#1: [Hi](http://a.b/c) ^^I'm ^^a ^^bot", "#1: Hi I'm a bot"),
+        ("# Heading\n> quoted &amp; more", "Heading\nquoted & more"),
+        ("2^3 = 8 and snake_case_name", "2^3 = 8 and snake_case_name"),
+        ("<b>no es markdown</b>", "<b>no es markdown</b>"),
+        ("I'm a bot, *bleep*, *bloop*. 2*3 and a * b", "I'm a bot, bleep, bloop. 2*3 and a * b"),
+    ],
+)
+def test_clean_text_strips_reddit_markdown_but_keeps_plain_text(raw, expected):
+    assert clean_text(raw) == expected
+
+
+def test_highlight_spans_follow_the_same_preprocessing_and_visible_offsets(monkeypatch):
+    def fake_preprocess(word, *, stem=False):
+        if "-" in word:
+            return []
+        return [word.lower().removesuffix("s") if stem else word.lower()]
+
+    monkeypatch.setattr("app.ui.preprocess", fake_preprocess)
+    from app.ui import _word_terms
+
+    _word_terms.cache_clear()
+    text = "Invests & savings, but GOOG-stock and 1.000 stay."
+    spans = highlight_spans(text, ("invest", "saving", "goog", "1"), stem=True)
+    assert [text[a:b] for a, b in spans] == ["Invests", "savings"]
+    assert spans == [[0, 7], [10, 17]]
+
+
+def test_highlight_spans_use_utf16_offsets_and_cache_repeated_words(monkeypatch):
+    from app.ui import _word_terms
+
+    calls = []
+    def fake_preprocess(word, *, stem=False):
+        calls.append((word, stem))
+        return [word]
+
+    monkeypatch.setattr("app.ui.preprocess", fake_preprocess)
+    _word_terms.cache_clear()
+    assert highlight_spans("😀 Cat cat", ("cat",), stem=False) == [[3, 6], [7, 10]]
+    assert calls.count(("cat", False)) == 1
+    _word_terms.cache_clear()
 
 
 def test_empty_query_does_not_search():
@@ -134,8 +206,11 @@ def test_css_is_scoped_to_the_component():
 def test_corpus_text_is_escaped_in_the_frontend():
     js = (FRONTEND / "app.js").read_text(encoding="utf-8")
     # El texto, el id y los mensajes de error del servidor pasan por esc()
-    assert "${esc(lead)}" in js and "${esc(rest)}" in js
+    assert "${marked(lead, h.spans, leadAt)}" in js
+    assert "${marked(rest, h.spans, restAt)}" in js
+    assert "<mark>${esc(text.slice(a - offset, b - offset))}</mark>" in js
     assert "${esc(h.doc_id)}" in js and "${esc(r.error)}" in js
+    assert "${esc(scoreTip(r.model, h, r.terms || []))}" in js
 
 
 def test_palette_is_ciruela_and_old_colors_are_gone():
