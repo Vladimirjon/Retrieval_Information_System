@@ -16,10 +16,10 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 | #10 | feat: métricas de recuperación con ejemplos manuales | Ismael Freire | M3 Evaluación y comparación | #1 | hecho |
 | #11 | feat: evaluación reproducible de los cuatro modelos | Vladimirjon | M3 Evaluación y comparación | #6, #7, #8, #9, #10 | hecho (PR #32 integrado en `5122203`; issue cerrada; CI final de `d8793aa` en verde) |
 | #12 | docs: análisis comparativo con consultas concretas | Jorge Torres | M3 Evaluación y comparación | #11 | hecho (PR #33 integrado en `58577b1`) |
-| #13 | feat: núcleo Streamlit y carga unificada de modelos | Vladimirjon | M4 Interfaz y despliegue | #6, #7, #8, #9 | en curso (PR abierto; 238 pruebas locales, Playwright y revisión cruzada; falta CI e integración) |
+| #13 | feat: núcleo Streamlit y carga unificada de modelos | Vladimirjon | M4 Interfaz y despliegue | #6, #7, #8, #9 | hecha (PR #34 integrado, issue cerrada). Segunda vuelta del pulido en `fix/13-interfaz-pulida` sin commit: 270 pruebas locales, Ruff, sintaxis JS y prueba en navegador; faltan PR y CI |
 | #14 | feat: vista de comparación lado a lado | Ismael Freire | M4 Interfaz y despliegue | #13 | pendiente |
 | #15 | feat: vista de métricas desde reports | Jorge Torres | M4 Interfaz y despliegue | #11, #13 | pendiente |
-| #16 | chore: despliegue gratuito en Hugging Face Spaces | Vladimirjon | M4 Interfaz y despliegue | #9, #13, #14, #15 | pendiente (bloqueo a decidir: HF exige plan de pago para Spaces Docker/Gradio; ver STATE) |
+| #16 | chore: despliegue gratuito en Hugging Face Spaces | Vladimirjon | M4 Interfaz y despliegue | #9, #13, #14, #15 | pendiente (propuesta: Streamlit Community Cloud + artefactos en repo dataset de HF; esperando aprobación para editar la issue) |
 | #17 | docs: informe técnico de hasta cinco páginas | Jorge Torres | M5 Informe y entrega | #4, #12, #16 | pendiente |
 | #18 | docs: QA final, README y entrega completa | Vladimirjon | M5 Informe y entrega | #16, #17 | pendiente |
 

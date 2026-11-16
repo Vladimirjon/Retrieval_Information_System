@@ -53,7 +53,7 @@
   font: 400 var(--t-md)/1.55 var(--font); -webkit-font-smoothing: antialiased;
   font-feature-settings: "ss01" 0;
 }
-.jab ::selection { background: var(--accent-soft); color: var(--ink); }
+.jab ::selection { background: var(--line); color: var(--ink); }
 .jab input { caret-color: var(--accent-ink); }
 .jab button { font: inherit; color: inherit; }
 .jab :focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: 6px; }
@@ -170,8 +170,9 @@
 .jab .suggest li {
   display: flex; align-items: center; gap: var(--s3); min-height: 44px; padding: 0 var(--s3);
   border-radius: var(--r-item); cursor: pointer; color: var(--ink-2);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  overflow: hidden;
 }
+.jab .suggest li span { display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .jab .suggest li svg { flex: none; width: 16px; height: 16px; color: var(--ink-3); }
 .jab .suggest li b { color: var(--ink); font-weight: 600; }
 .jab .suggest li[aria-selected="true"], .jab .suggest li:hover { background: var(--surface); }
@@ -235,34 +236,60 @@
 /* ---------- Resultados ---------- */
 .jab .results { padding: var(--s5) 0 var(--s8); }
 .jab .status { min-height: 22px; margin: 0 0 var(--s3); color: var(--ink-3); font-size: var(--t-sm); }
-.jab .list { list-style: none; margin: 0; padding: 0; transition: opacity var(--d-fast) ease-out; }
+.jab .list { list-style: none; margin: 0; padding: 0; transition: opacity var(--d-fast) ease-out, transform var(--d-fast) ease-out; }
 .jab .list[data-stale="true"] { opacity: .45; }
+.jab .list.leaving { opacity: 0; transform: translateX(-8px); }
 .jab .row {
   display: grid; grid-template-columns: 28px 1fr; gap: var(--s3);
   padding: var(--s5) 0; border-top: 1px solid var(--line);
   animation: row-in 220ms var(--ease-out) both; animation-delay: calc(min(var(--i, 0), 8) * 30ms);
 }
 .jab .row:first-child { border-top: 0; }
+.jab .row > div { min-width: 0; }  /* la columna de texto puede encogerse */
+.jab .lead, .jab .snippet { overflow-wrap: break-word; word-break: normal; }
 @keyframes row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .jab .rank { padding-top: 2px; color: var(--ink-3); font-size: var(--t-sm); text-align: right; }
-.jab .row:first-child .rank { color: var(--accent-ink); font-weight: 700; }
+.jab .row[data-top="true"] .rank { color: var(--accent-ink); font-weight: 700; }
 .jab .lead { margin: 0; font-size: var(--t-lg); font-weight: 600; line-height: 1.35; color: var(--ink); text-wrap: balance; }
 .jab .snippet {
   margin: var(--s1) 0 0; max-width: 68ch; color: var(--ink-2); line-height: 1.55; text-wrap: pretty;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 .jab .row.open .snippet { display: block; -webkit-line-clamp: unset; white-space: pre-line; }
-.jab .meta { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s3); color: var(--ink-3); font-size: var(--t-xs); }
+.jab .row.open .snippet { animation: reveal var(--d-page) var(--ease-out) both; }
+@keyframes reveal { from { opacity: .55; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.jab mark { background: var(--accent-soft); color: var(--accent-ink); border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.jab .meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); margin-top: var(--s3); color: var(--ink-3); font-size: var(--t-xs); }
 .jab .score { display: inline-flex; align-items: center; gap: var(--s2); }
+.jab .tip-target { border-radius: 4px; cursor: help; }
 .jab .score-bar { width: 56px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .jab .score-bar i { display: block; height: 100%; background: var(--ink-3); border-radius: 2px; }
-.jab .row:first-child .score-bar i { background: var(--accent); }
+.jab .row[data-top="true"] .score-bar i { background: var(--accent); }
 .jab .more {
   position: relative; margin-left: auto; padding: var(--s1) 0; border: 0; background: transparent;
   color: var(--accent-ink); font-size: var(--t-xs); font-weight: 600; cursor: pointer;
 }
 .jab .more::after { content: ""; position: absolute; inset: -10px -8px; }  /* hit slop */
 .jab .more:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* La burbuja se posiciona fuera del flujo y se vincula al control con aria-describedby. */
+.jab .tooltip {
+  position: fixed; z-index: 100; max-width: 260px; padding: var(--s2) var(--s3);
+  border-radius: 8px; background: var(--ink); color: #fff;
+  font-size: var(--t-xs); line-height: 1.45; box-shadow: var(--shadow-menu);
+  opacity: 0; transform: translateX(-5px) scale(.97); pointer-events: none;
+  transition: opacity var(--d-exit) var(--ease-out), transform var(--d-exit) var(--ease-out);
+}
+.jab .tooltip[hidden] { display: none; }
+.jab .tooltip.visible { opacity: 1; transform: none; }
+
+.jab .pager { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: var(--s1); margin-top: var(--s5); }
+.jab .pager[hidden] { display: none; }
+.jab .pager button { min-width: 40px; min-height: 40px; padding: 0 var(--s2); border: 0; border-radius: 10px; background: transparent; color: var(--ink-2); font-size: var(--t-sm); cursor: pointer; transition: background-color var(--d-fast) ease-out, transform var(--d-fast) ease-out; }
+.jab .pager button:hover:not(:disabled) { background: var(--surface); }
+.jab .pager button:active:not(:disabled) { transform: scale(.97); }
+.jab .pager button[aria-current="page"] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.jab .pager button:disabled { opacity: .45; cursor: default; }
 
 /* Esqueleto de carga */
 .jab .skeleton .lead, .jab .skeleton .snippet { border-radius: 6px; background: var(--surface); color: transparent; }
@@ -289,6 +316,7 @@
 /* ---------- Transición inicio → resultados ---------- */
 ::view-transition-old(bar), ::view-transition-new(bar),
 ::view-transition-old(logo), ::view-transition-new(logo) { animation-duration: var(--d-page); animation-timing-function: var(--ease-out); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0s; }
 
 /* ---------- Teléfono ---------- */
 @media (max-width: 640px) {

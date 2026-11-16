@@ -31,7 +31,7 @@
       </span>
       <label class="sr-only" for="jab-q">Consulta</label>
       <input id="jab-q" type="text" autocomplete="off" spellcheck="false" maxlength="300"
-             placeholder="Pregunta en inglés"
+             placeholder="Busca en FiQA: How should I invest my savings?"
              role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="jab-suggest">
       <button class="clear" type="button" aria-label="Borrar" hidden>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
@@ -50,13 +50,15 @@
         <div role="group" data-models></div>
         <hr>
         <div class="setting"><span>Resultados</span><div class="seg" data-k></div></div>
-        <div class="setting" data-stem-row><span>Raíz de palabras</span><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Raíz de palabras (Porter)"></button></div>
+        <div class="setting" data-stem-row tabindex="0" data-tip="Porter reduce palabras inglesas a su raíz para buscar variantes. No se aplica a Embeddings."><span>Raíz de palabras</span><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Raíz de palabras (Porter)"></button></div>
       </div>
     </div>
 
     <section class="results" aria-label="Resultados">
       <p class="status num" role="status" aria-live="polite"></p>
       <ol class="list"></ol>
+      <nav class="pager" aria-label="Páginas de resultados" hidden></nav>
     </section>
   </div>
+  <div id="jab-tip" class="tooltip" role="tooltip" hidden></div>
 </div>

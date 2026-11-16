@@ -28,7 +28,7 @@ def simple_preprocess(monkeypatch):
     def preprocess(text, *, stem=False):
         return text.lower().split()
 
-    for module in ("index", "retrievers.jaccard", "retrievers.tfidf", "retrievers.bm25"):
+    for module in ("index", "engine", "retrievers.jaccard", "retrievers.tfidf", "retrievers.bm25"):
         monkeypatch.setattr(f"ris.{module}.preprocess", preprocess, raising=False)
 
 
@@ -275,3 +275,50 @@ def test_default_dense_loader_checks_the_corpus_hash(tmp_path, monkeypatch):
     engine = SearchEngine(tmp_path, corpus_loader=lambda: CORPUS)
     engine.search("dense", "gato")
     assert seen["sha"] == corpus_sha256(CORPUS)
+
+
+def test_query_terms_are_unique_and_keep_order(engine):
+    assert engine.query_terms("Perro gato perro") == ("perro", "gato")
+    assert engine.query_terms("   ") == ()
+
+
+def test_matched_terms_lists_query_terms_present_in_the_document(engine):
+    terms = engine.query_terms("gato loro ballena")
+    assert engine.matched_terms("d1", terms) == ("gato",)
+    assert engine.matched_terms("d3", terms) == ("loro",)
+    assert engine.matched_terms("d4", terms) == ()
+
+
+def test_skip_empty_is_opt_in_and_fills_requested_dense_ranking(engine):
+    normal = engine.search("dense", "gato", 2)
+    assert [hit.doc_id for hit in normal.hits] == ["d4", "d3"]
+    filtered = engine.search("dense", "gato", 2, skip_empty=True)
+    assert [hit.doc_id for hit in filtered.hits] == ["d3", "d2"]
+    assert [hit.rank for hit in filtered.hits] == [1, 2]
+    assert filtered.k == 2
+
+
+def test_skip_empty_returns_fewer_hits_when_no_more_nonempty_docs(engine):
+    result = engine.search("dense", "gato", 4, skip_empty=True)
+    assert [hit.doc_id for hit in result.hits] == ["d3", "d2", "d1"]
+
+
+def test_skip_empty_uses_text_only_and_requests_extra_only_for_dense(engine, monkeypatch):
+    requested = []
+    original_run = engine._run
+
+    def track_run(model, stem, retriever, query, k):
+        requested.append((model, k))
+        return original_run(model, stem, retriever, query, k)
+
+    monkeypatch.setattr(engine, "_run", track_run)
+    assert engine.empty_doc_ids == frozenset({"d4"})
+    assert [hit.doc_id for hit in engine.search("bm25", "gato", 2, skip_empty=True).hits] == ["d1", "d2"]
+    assert [hit.doc_id for hit in engine.search("dense", "gato", 2, skip_empty=True).hits] == ["d3", "d2"]
+    assert requested == [("bm25", 2), ("dense", 3)]
+
+
+def test_title_without_visible_text_is_empty(tmp_path):
+    corpus = {"d1": Doc(title="Only title", text="  "), "d2": Doc(title="", text="visible")}
+    engine = SearchEngine(tmp_path, corpus_loader=lambda: corpus)
+    assert engine.empty_doc_ids == frozenset({"d1"})

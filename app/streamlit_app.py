@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import sys
+import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,7 +28,7 @@ from app.context import AppContext
 from app.ui import jab_component, parse_request, respond
 from app.views import comparison, metrics
 from ris.data import load_queries
-from ris.engine import MODELS, EngineError, SearchEngine
+from ris.engine import CLASSICAL_MODELS, EngineError, SearchEngine
 
 PAGE_CSS = """
 <style>
@@ -35,6 +36,16 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .block-container { max-width: none; padding: 0 0 4rem; }
 .stApp { font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif; }
 .st-key-jab_views { width: min(720px, 100% - 32px); margin: 0 auto; }
+/* Streamlit atenúa la página mientras vuelve a ejecutar el script en cada interacción;
+   jab ya muestra su propio estado de carga, así que se anula ese fundido gris. */
+[data-testid="stElementContainer"][data-stale="true"] { opacity: 1 !important; transition: none !important; }
+.jab-loading { min-height: 85vh; display: grid; place-content: center; justify-items: center; gap: 24px; color: #201A1F; text-align: center; }
+.jab-loading svg { width: 120px; height: auto; }
+.jab-loading .dot { fill: #7A2E5E; }
+.jab-loading-bar { width: min(440px, 80vw); height: 56px; border-radius: 28px; background: #F3F1F2; animation: jab-load 1.4s ease-in-out infinite alternate; }
+.jab-loading p { margin: 0; max-width: 36ch; color: #5E5560; font-size: 14px; }
+@keyframes jab-load { from { opacity: 1; transform: scaleX(1); } to { opacity: .65; transform: scaleX(.98); } }
+@media (prefers-reduced-motion: reduce) { .jab-loading-bar { animation: none; } }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,19 +53,39 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 """
 
 
-@st.cache_resource(show_spinner="Preparando jab…")
-def get_engine() -> SearchEngine:
-    """Un único motor por proceso, con los cuatro modelos y el encoder ya cargados."""
-    engine = SearchEngine(os.environ.get("JAB_ARTIFACTS_DIR", ROOT / "artifacts"))
-    for model in MODELS:
+def _warm(engine: SearchEngine, models: tuple[str, ...]) -> None:
+    """Carga los modelos pedidos y registra sus tiempos; un fallo no detiene la app."""
+    first = len(engine.load_events)
+    for model in models:
         try:
             engine.warm_up((model,))
         except EngineError as error:
             print(f"[jab] {error}", flush=True)  # el modelo informa su error al usarse
-    for event in engine.load_events:
+    for event in engine.load_events[first:]:
         rss = "" if event.rss_mib is None else f", RSS {event.rss_mib:.0f} MiB"
         print(f"[jab] carga {event.step}: {event.seconds:.2f} s{rss}", flush=True)
+
+
+@st.cache_resource(show_spinner=False)
+def get_engine() -> SearchEngine:
+    """Un único motor por proceso, cargado una sola vez y compartido por todas las sesiones.
+
+    Los clásicos (unos 5 s) se cargan antes de mostrar la interfaz. MiniLM (20 a 60 s,
+    sobre todo importar torch) termina en segundo plano; si alguien busca con
+    Embeddings antes, esa búsqueda espera a que acabe.
+    """
+    engine = SearchEngine(os.environ.get("JAB_ARTIFACTS_DIR", ROOT / "artifacts"))
+    _warm(engine, CLASSICAL_MODELS)
+    threading.Thread(
+        target=_warm, args=(engine, ("dense",)), name="jab-dense", daemon=True
+    ).start()
     return engine
+
+
+@st.cache_resource(show_spinner=False)
+def _engine_status() -> dict[str, bool]:
+    """Estado compartido entre ejecuciones: la pantalla de carga solo se pinta una vez."""
+    return {"ready": False}
 
 
 @st.cache_resource(show_spinner=False)
@@ -71,7 +102,23 @@ def main() -> None:
     mark = Path(__file__).parent / "static" / "jab-mark.svg"
     st.set_page_config(page_title="jab · búsqueda en FiQA", page_icon=str(mark), layout="wide")
     st.markdown(PAGE_CSS, unsafe_allow_html=True)
-    engine = get_engine()
+    status = _engine_status()
+    if status["ready"]:
+        engine = get_engine()  # ya en caché: sin pantalla de carga en cada interacción
+    else:
+        loading = st.empty()
+        logo = (Path(__file__).parent / "static" / "jab-wordmark.svg").read_text(encoding="utf-8")
+        loading.markdown(
+            f'<div class="jab-loading" role="status" aria-live="polite">'
+            f'{logo}<div class="jab-loading-bar" aria-hidden="true"></div>'
+            '<p>Preparando el buscador… solo la primera vez, unos segundos</p></div>',
+            unsafe_allow_html=True,
+        )
+        try:
+            engine = get_engine()
+        finally:
+            loading.empty()
+        status["ready"] = True
 
     # Estado que el navegador envió en la interacción anterior.
     state = st.session_state.get("jab") or {}
