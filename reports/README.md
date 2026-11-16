@@ -134,7 +134,7 @@ Datos de FiQA, índices, embeddings, cachés y rankings completos (`--rankings-d
 
 ## Limitación conocida de la tokenización clásica
 
-`ris.preprocessing.preprocess` conserva solo tokens estrictamente alfanuméricos (`str.isalnum()`): descarta guiones, decimales (`3.5`) y contracciones, igual en documentos y consultas. Es consecuente con el contrato de la issue #3 y no se corrige aquí; su efecto en las métricas no se ha medido. El denso no la sufre porque usa el texto original.
+Hasta el 16 de noviembre, `ris.preprocessing.preprocess` descartaba entero todo token no alfanumérico (guiones, decimales, barras): 112 de las 648 consultas test perdían alguna palabra. Desde entonces cada token se parte en sus trozos alfanuméricos (`goog-stock` → `goog`, `stock`; `1.000` → `1`, `000`) y solo se descarta `n't`, igual en documentos y consultas. Con ese único cambio, MAP@1000 subió en las seis configuraciones clásicas (BM25 con Porter: 0,198736 → 0,206219). Limitación que queda: un decimal se parte en dos números (`3.5` → `3`, `5`) y puede coincidir con documentos que solo tengan esos números por separado. El denso no se ve afectado porque usa el texto original.
 
 ## Fuera de alcance
 

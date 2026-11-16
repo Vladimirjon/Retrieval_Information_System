@@ -48,9 +48,9 @@
       "dense"
     ],
     "preprocessing": {
-      "classical": "ris.preprocessing.preprocess: minúsculas, nltk.word_tokenize, stopwords inglesas de NLTK, solo tokens str.isalnum(); Porter opcional; misma configuración en documentos y consulta",
+      "classical": "ris.preprocessing.preprocess: minúsculas, nltk.word_tokenize, trozos alfanuméricos de cada token (alnum_pieces), stopwords inglesas de NLTK; Porter opcional; misma configuración en documentos y consulta",
       "dense": "ninguno: título + ' ' + texto originales",
-      "known_limitation": "preprocess descarta tokens no estrictamente alfanuméricos (guiones, decimales, contracciones) en documentos y consultas; su efecto en las métricas no se ha medido (corresponde a la issue #3)"
+      "known_limitation": "desde el 16 de noviembre los tokens con guion, punto o barra se parten en trozos ('goog-stock' -> goog, stock; '1.000' -> 1, 000) en lugar de descartarse; se descarta n't. Un decimal se parte en dos números ('3.5' -> 3, 5)"
     },
     "query_order": "qid ascendente como cadena",
     "ranking_order": "score descendente; empate por doc_id ascendente",
@@ -111,15 +111,15 @@
       "index_no_stem.json": {
         "format_version": 1,
         "n_docs": 57638,
-        "n_terms": 66796,
-        "sha256": "28068d698b8c1187cde6b62ec5df1c614dcd6d602cc994b95a6ee0ab7dc69f13",
+        "n_terms": 78115,
+        "sha256": "d1d1951f35746c8ab41fcebfabef200e9e982ff8d143279703c08537023ce1b0",
         "stem": false
       },
       "index_stem.json": {
         "format_version": 1,
         "n_docs": 57638,
-        "n_terms": 46821,
-        "sha256": "871839f0c9809fab425b5476429daffc259fbe9b5406c6f3e030940d3117329f",
+        "n_terms": 57620,
+        "sha256": "33f9ac24b03a682574a9c45deca67ea9d6282645acfc1d6908f791cef219b4e9",
         "stem": true
       }
     },
@@ -143,7 +143,7 @@
         "sha256": "6adc2a640dcdd22bb8b3858f89107adef2a7c3db20a63550dfa7a0f71e379e44"
       }
     ],
-    "metrics_per_query_sha256": "f4ba4752632369aafe5dd0c9c71e0e89a9efd84368445851d0bf89b91eb23302",
+    "metrics_per_query_sha256": "c9ad4f7a06de53512f65ea4ef7b5a97b3d3666b680727c5c3433e74f0161a2ea",
     "nltk_resources": {
       "files": {
         "corpora/stopwords/english": "f6d005956f407dbc6ea32e5ff0c7e8e6f71488d3239b9023efdc7fc139d6375b",
@@ -158,63 +158,63 @@
   },
   "results": [
     {
-      "map_at_1000": 0.03758529649250426,
-      "mean_precision_at_k": 0.014506172839506174,
-      "mean_recall_at_k": 0.05794019937538457,
+      "map_at_1000": 0.03851954210374813,
+      "mean_precision_at_k": 0.015432098765432098,
+      "mean_recall_at_k": 0.06307877650470242,
       "model": "jaccard",
       "n_empty_rankings": 0,
       "n_queries": 648,
-      "rankings_sha256": "115afb97a59b527c3d2083df426497b8addc2f95916b4fd7b2ad92f9a4652f6e",
+      "rankings_sha256": "65f3dc7d000b04f116ac746f3ce692ab5b75dcb4adf43ddccd463e27e7305a1f",
       "stem": "false"
     },
     {
-      "map_at_1000": 0.03522364420076761,
+      "map_at_1000": 0.038461083621982944,
       "mean_precision_at_k": 0.015123456790123458,
-      "mean_recall_at_k": 0.05987477885626033,
+      "mean_recall_at_k": 0.060502473349695565,
       "model": "jaccard",
       "n_empty_rankings": 0,
       "n_queries": 648,
-      "rankings_sha256": "731182f6356bd469df712380ea552b661f22f9cf78d35865d53fe9aecb15f8c9",
+      "rankings_sha256": "622c683eb347c9f3783574c7bea520ddbe5f3beef872727bf1c3401677421a40",
       "stem": "true"
     },
     {
-      "map_at_1000": 0.12501950512719395,
-      "mean_precision_at_k": 0.04675925925925926,
-      "mean_recall_at_k": 0.2031574349861387,
+      "map_at_1000": 0.13302835140531388,
+      "mean_precision_at_k": 0.049074074074074076,
+      "mean_recall_at_k": 0.21745968366338736,
       "model": "tfidf",
       "n_empty_rankings": 0,
       "n_queries": 648,
-      "rankings_sha256": "4b2884b236294189d12fb84f467376e5c016f153ba3677b864ff0ef8bb8bc486",
+      "rankings_sha256": "94d8173132b83333fc80de0b442bbcd1fc8164bf254d3c758f213bd3771e6d7b",
       "stem": "false"
     },
     {
-      "map_at_1000": 0.13254358428887694,
-      "mean_precision_at_k": 0.047530864197530866,
-      "mean_recall_at_k": 0.2063289205650317,
+      "map_at_1000": 0.13971771897786603,
+      "mean_precision_at_k": 0.050462962962962966,
+      "mean_recall_at_k": 0.219552870826019,
       "model": "tfidf",
       "n_empty_rankings": 0,
       "n_queries": 648,
-      "rankings_sha256": "942df862b944ab56c2825a7aa71f6d198b5446c726f7ac13072b089ec7511776",
+      "rankings_sha256": "c93b99802a9e4af83dff646633d7e04ea1a23c81a36866bd0bd2101149705a44",
       "stem": "true"
     },
     {
-      "map_at_1000": 0.17805584629427654,
-      "mean_precision_at_k": 0.06203703703703704,
-      "mean_recall_at_k": 0.27660999408684595,
+      "map_at_1000": 0.18099260544155976,
+      "mean_precision_at_k": 0.06373456790123458,
+      "mean_recall_at_k": 0.28483187337354005,
       "model": "bm25",
       "n_empty_rankings": 0,
       "n_queries": 648,
-      "rankings_sha256": "b23496ca832f65dcc7fe3718d4f04ee745b642775db30382da115b7f6dc4e5bc",
+      "rankings_sha256": "6db8e23b8e5ecd1b62c180ac46805ae25498b5a09e579c308d0b277216117255",
       "stem": "false"
     },
     {
-      "map_at_1000": 0.19873602295691423,
-      "mean_precision_at_k": 0.06774691358024691,
-      "mean_recall_at_k": 0.3033050754115569,
+      "map_at_1000": 0.20621917443991963,
+      "mean_precision_at_k": 0.06944444444444445,
+      "mean_recall_at_k": 0.31302117378506267,
       "model": "bm25",
       "n_empty_rankings": 0,
       "n_queries": 648,
-      "rankings_sha256": "06257df8ed02388a8f0824fe26ee30d96be3934762e53e7b62f557e7d178583c",
+      "rankings_sha256": "547632c2587c8779af5acd4b808bb7aaacc239421099800ac2cd97972dcc80bb",
       "stem": "true"
     },
     {
