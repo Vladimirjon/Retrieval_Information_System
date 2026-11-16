@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: sábado 14 de noviembre de 2026 (#2–#10 integradas; PR #32 de #11 abierto con observaciones; siguiente: #13).
+Actualizado: domingo 15 de noviembre de 2026 (#2–#11 integradas; #13 implementada en local, sin PR; pendiente de #11: validación completa de los índices).
 
 ## Ubicación y alcance
 
@@ -89,7 +89,9 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Cambio de la revisión: la validación de `k`/duplicados y la conversión de `relevant` a conjunto estaban repetidas en tres funciones; pasan a `_prepare`, y las anotaciones usan `Collection`/`Mapping` porque `relevant` también acepta listas. Sin cambio de comportamiento. Para #11: convertir `load_qrels` a ids con score>0 (esa misma condición ya existe en `ris.eda`); no se añadió un helper para no salir del alcance de #10.
 - Integrada con el PR #31 (autor @BrandonFreire).
 
-## #11 en revisión: evaluación reproducible (PR #32, rama `feat/11-evaluacion`)
+## #11 hecha: evaluación reproducible (PR #32, rama `feat/11-evaluacion`)
+
+- **Integrada** el 15 de noviembre con el [PR #32](https://github.com/Vladimirjon/Retrieval_Information_System/pull/32) (merge `5122203`, bypass de admin a pedido de @Vladimirjon); la issue #11 está cerrada. El CI "Lint and Test" del commit `d8793aa` pasó en Ubuntu antes del merge.
 
 - Rama creada el 14 de noviembre desde `main` (`18ab326`, igual a `origin/main`). La rama está publicada y el [PR #32](https://github.com/Vladimirjon/Retrieval_Information_System/pull/32) está abierto contra `main`; el commit revisado es `0b7f793`.
 - Entregables: `scripts/evaluate.py` (lógica en funciones importables; usa `ris.evaluation`, no reimplementa métricas), `tests/test_evaluate.py` (33 pruebas), `reports/README.md` (esquema completo del CSV y del JSON para #15 y #12), `reports/metrics_per_query.csv` (4 536 filas, 200 KB) y `reports/metrics_summary.json` (8 KB).
@@ -102,6 +104,26 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 - Resultados (648 consultas test; P@10 / R@10 / MAP@1000): Jaccard 0.0145 / 0.0579 / 0.0376 (sin Porter) y 0.0151 / 0.0599 / 0.0352 (con Porter); TF-IDF 0.0468 / 0.2032 / 0.1250 y 0.0475 / 0.2063 / 0.1325; BM25 0.0620 / 0.2766 / 0.1781 y 0.0677 / 0.3033 / 0.1987; denso 0.1045 / 0.4413 / 0.3116. Son medidas de esta implementación; no se compararon con valores publicados de BEIR (no se verificó una fuente primaria).
 - **CI:** el [job de Ubuntu del commit `0b7f793`](https://github.com/Vladimirjon/Retrieval_Information_System/actions/runs/43652943390) pasó.
 - Limitaciones: la igualdad bit a bit del denso solo se probó en este equipo (mismos hilos y versiones); la limitación de tokenización de #3 (guiones, decimales, contracciones) queda documentada en el JSON y en `reports/README.md`, y su efecto no está medido. Se decidió no cambiarla en #11 (es de #3 y alteraría #4).
+
+## #13 en curso: app JAB y motor único (rama `feat/13-app-streamlit`, sin commit ni PR todavía)
+
+- Rama creada el 15 de noviembre desde `main` (`5122203`, igual a `origin/main` tras `git fetch`). Los cambios locales previos de STATE/TASKS se conservaron.
+- Entregado en local: `src/ris/engine.py` (`SearchEngine`: carga perezosa con candado por modelo, validación de coherencia con el corpus, mensajes legibles, `warm_up`, registro de tiempos y RSS), `app/` (pantalla JAB, componente de búsqueda en vivo con sugerencias, tarjetas de resultados, `AppContext` y vistas reservadas `comparison.py`/`metrics.py` con `render(context)`), `app/README.md` (contrato para #14/#15), `.streamlit/config.toml`, `tests/test_engine.py` (22) y `tests/test_app.py` (11).
+- **Probado localmente** (Windows, Python 3.12, 15 de noviembre): `python -m pytest` pasa 210 pruebas, `ruff check .` y `pip check` sin errores. En navegador, con los artefactos reales: los cuatro modelos devuelven 10 resultados con doc_id, título (aviso de título vacío), texto y score; Porter, top-n=25, consulta vacía (mensaje de ayuda), consulta con HTML (se escapa) y artefactos ausentes (un solo mensaje con el comando que los genera) funcionan; las vistas reservadas se abren sin error.
+- **Medido en este equipo** (CPU, 8 hilos, no es el entorno de despliegue): arranque del motor 17,4 s más 4,5 s de importaciones; el 13,5 s de MiniLM es lo que domina y se paga antes de la primera consulta (`warm_up`). Memoria residente 995 MiB tras el arranque y 1 097 MiB si se usa también el índice con Porter. Consulta en caliente: clásicos 8–11 ms, denso 145–430 ms.
+- **Verificado en la documentación oficial (15 de noviembre): el plan de despliegue de #16 no es ejecutable tal cual.** Hugging Face indica que los Spaces Gradio y Docker requieren un plan de pago para crearse (PRO para cuentas personales) y que solo los estáticos son gratis; el SDK de Streamlit ya no se ofrece. La cuenta VLADIMIRJON figura sin PRO. "CPU Basic sin costo por hora" no significa que una cuenta gratuita pueda crear el Space. Alternativas con cifras oficiales: Streamlit Community Cloud (hasta aprox. 2,7 GB de memoria según su página, que advierte que puede cambiar; reposo tras 12 h sin tráfico); Vercel Hobby (2 GB y 1 vCPU por función, paquetes Python de 500 MB o hasta 5 GB en beta, sin estado garantizado entre invocaciones); Render gratis (reposo a los 15 min y arranque de aproximadamente un minuto). Ninguna se probó con esta aplicación. Decisión pendiente del equipo antes de #16; el motor no depende del destino.
+- Verificado también: un componente propio de Streamlit 1.67 envía lo escrito con retardo (21 caracteres produjeron una sola ejecución), así que la búsqueda en vivo no exige cambiar de framework.
+- Pendiente: revisión cruzada, commit y PR; probar el artefacto denso corrupto en la interfaz (hoy solo en pruebas unitarias); comprobar sesiones simultáneas reales; revisar el diseño en un teléfono (solo se midió que no hay desbordamiento a 800 px); medir en el destino real (#16). El denso ordena en Python los 57 638 scores por consulta (contrato de #9); si el autocompletado en vivo necesita más velocidad, optimizarlo ahí.
+
+### #13: interfaz jab desde el prototipo aprobado (16 de noviembre)
+
+- @Vladimirjon rechazó la interfaz anterior (amontonada, mucho texto, ids poco claros, azul y naranja genéricos) y aprobó el prototipo de `design/prototipo/` con la paleta **ciruela** (16 de noviembre). Reglas del sistema de diseño en `design/README.md`.
+- La app usa ahora un componente propio: `app/frontend/` (`index.html`, `styles.css` acotado a `.jab`, `app.js`) y `app/ui.py` (valida lo que envía el navegador y arma la respuesta). `app/streamlit_app.py` aloja el componente y dibuja debajo las vistas de #14/#15 con el mismo `AppContext`. Se eliminaron `search_box.py`, `results.py`, `style.py` y `logo.py` de la versión anterior (nunca se subieron). Motivo: `st.html` elimina las etiquetas `<svg>` y los estilos de Streamlit no permitían el diseño aprobado.
+- Sincronización navegador–Python: un único estado `{q, model, k, stem, view, seq}`; cada cambio sube `seq` y Python responde con el `seq` atendido y una `key` de la búsqueda. Se adoptó tras reproducir un fallo: al activar Porter por primera vez (carga del índice con Porter) y cambiar enseguida de vista, Streamlit perdía el cambio de vista. Con el estado único, tres reinicios seguidos con esa secuencia funcionaron.
+- **Probado localmente** (16 de noviembre): `python -m pytest` 238 pruebas (25 del motor, 36 de la app), `ruff check .` sin errores. Con Playwright sobre la app real (Chromium, 1280×860 y 390×844): los cuatro modelos devuelven 10 resultados; búsqueda en vivo, sugerencias, Ctrl+K y teclas 1–4, top-n 20, Porter, Comparar/Métricas con las vistas reservadas, consulta sin resultados con "Probar con Embeddings", borrar y repetir, artefactos ausentes con mensaje legible, sin desbordamiento horizontal ni errores de consola.
+- **Revisión cruzada** (Codex `codex review`, 16 de noviembre): un P1 y dos P2, los tres confirmados y corregidos con pruebas: (1) un fallo al cargar MiniLM tumbaba el arranque; ahora es `ModelUnavailableError` y los demás modelos siguen; (2) el índice clásico solo se comparaba por tamaño; ahora sus ids deben coincidir con los del corpus (el contenido completo sigue sin verificarse, limitación ya registrada en #11); (3) el denso no comprobaba el corpus; ahora `DenseRetriever.load` recibe `corpus_sha256` (con FiQA real coincide: `78c669dba343…`). No se repitió la revisión tras corregir.
+- Medido en este equipo: arranque del motor entre 17 y 33 s según la ejecución (MiniLM entre 13 y 71 s, variable), memoria ~1 000 MiB (1 100 con Porter). Búsquedas vistas en la app: clásicos 50–220 ms, denso 260–525 ms (incluye la ida y vuelta de Streamlit solo en lo que percibe el usuario; el tiempo mostrado es el del motor).
+- Pendiente: commit y PR; la fuente Schibsted Grotesk se carga desde Google Fonts (autoalojarla antes de #16 si se quiere evitar la petición externa); limpiar el worktree `../Retrieval_Information_System-diseno` y la rama local `feat/13-app-diseno` (quedaron carpetas temporales de Codex con permisos bloqueados); decidir el destino de #16.
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
@@ -117,7 +139,7 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 ## Próximos pasos
 
 1. Con #11 integrada ([PR #32](https://github.com/Vladimirjon/Retrieval_Information_System/pull/32)), #12 y #15 pueden consumir `reports/` (esquema en `reports/README.md`; #15 debe validar `metrics_per_query_sha256`). Pendiente de #11: validación completa de la procedencia del corpus de los índices clásicos (hoy solo por muestra de 500 documentos).
-2. #13 puede empezar (depende de #6–#9, ya integradas).
+2. #13 implementada en local en `feat/13-app-streamlit`; falta revisión, commit y PR. Decidir el destino de #16 (ver arriba) antes de que Ismael y Jorge dependan de él; #14 y #15 pueden empezar sobre `app/context.py`.
 3. La tokenización de guiones y decimales (ver limitación en #4) sigue sin cambiar; si se corrige en #3, hay que regenerar `reports/` de #4 y de #11. El resumen de #4 queda listo para reutilizarse en #17; no se declara terminado el informe completo.
 
 ## Aprendido y pendiente de confirmar

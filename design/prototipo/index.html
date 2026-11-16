@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jab · prototipo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-mode="home">
+  <template id="logo-svg">
+    <svg viewBox="-7 -6 146 100" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 26V66A16 16 0 0 1 0 82"/>
+        <circle cx="54" cy="45" r="19"/>
+        <path d="M73 26V64"/>
+        <path d="M92 2V64"/>
+        <circle cx="111" cy="45" r="19"/>
+      </g>
+      <circle class="dot" cx="16" cy="8" r="5.5"/>
+    </svg>
+  </template>
+
+  <header class="top">
+    <nav class="nav" aria-label="Vistas">
+      <a href="#" aria-current="page">Buscar</a>
+      <a href="#">Comparar</a>
+      <a href="#">Métricas</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="home" aria-label="Inicio">
+      <a class="logo first" href="#" aria-label="jab, inicio" data-logo></a>
+      <div class="slot" data-slot="home"></div>
+      <div class="examples" aria-label="Ejemplos">
+        <button class="example" type="button">How should I invest my savings?</button>
+        <button class="example" type="button">What is a good credit score?</button>
+        <button class="example" type="button">Should I pay off my mortgage early?</button>
+      </div>
+    </section>
+
+    <div class="results-head">
+      <a class="logo" href="#" aria-label="jab, inicio" data-logo data-home></a>
+      <div class="slot" data-slot="results"></div>
+    </div>
+
+    <!-- La barra es un solo elemento que se mueve entre inicio y resultados -->
+    <div class="bar" id="bar" role="search">
+      <span class="bar-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+      </span>
+      <label class="sr-only" for="q">Consulta</label>
+      <input id="q" type="text" autocomplete="off" spellcheck="false" maxlength="300"
+             placeholder="Pregunta en inglés"
+             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
+      <button class="clear" type="button" aria-label="Borrar" hidden>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+      </button>
+      <button class="chip" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="menu">
+        <span data-model-name>BM25</span>
+        <kbd class="kbd">Ctrl K</kbd>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+      </button>
+      <span class="progress" aria-hidden="true"></span>
+
+      <ul class="suggest" id="suggest" role="listbox" aria-label="Sugerencias" hidden></ul>
+
+      <div class="menu" id="menu" role="menu" aria-label="Modelo y ajustes" hidden>
+        <p class="menu-label">Modelo</p>
+        <div role="group" data-models></div>
+        <hr>
+        <div class="setting"><span>Resultados</span><div class="seg" data-k></div></div>
+        <div class="setting" data-stem-row><span>Raíz de palabras</span><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Raíz de palabras (Porter)"></button></div>
+      </div>
+    </div>
+
+    <section class="results" aria-label="Resultados">
+      <p class="status num" role="status" aria-live="polite"></p>
+      <ol class="list"></ol>
+    </section>
+  </main>
+
+  <div class="proto" aria-label="Paleta del prototipo">
+    Paleta
+    <button type="button" data-palette-btn="ciruela" aria-pressed="true">Ciruela</button>
+    <button type="button" data-palette-btn="oro" aria-pressed="false">Oro viejo</button>
+    <button type="button" data-palette-btn="oliva" aria-pressed="false">Oliva</button>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
