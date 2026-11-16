@@ -17,7 +17,7 @@ from nltk import word_tokenize
 from nltk.corpus import stopwords
 
 from ris.data import Doc
-from ris.preprocessing import preprocess
+from ris.preprocessing import alnum_pieces, preprocess
 
 STAGES = ("original", "normalized", "lexical", "porter")
 LABELS = {
@@ -123,8 +123,8 @@ def profile_texts(
     for identifier, text in texts:
         ids.append(identifier)
         profiles["original"].add(word_tokenize(text))
-        profiles["normalized"].add(
-            [token for token in word_tokenize(text.lower()) if token.isalnum()]
+        profiles["normalized"].add(  # misma partición de tokens que preprocess
+            [piece for token in word_tokenize(text.lower()) for piece in alnum_pieces(token)]
         )
         plain = preprocess(text, stem=False)
         profiles["lexical"].add(plain)
@@ -361,7 +361,7 @@ def provenance(root: Path) -> dict:
         "policy": {
             "document": "(title + ' ' + text).strip(); se conservan vacíos",
             "original": "nltk.word_tokenize sobre texto original; incluye puntuación y caso",
-            "normalized": "word_tokenize(text.lower()); isalnum; sin eliminar stopwords",
+            "normalized": "word_tokenize(text.lower()); trozos alfanuméricos (alnum_pieces); sin eliminar stopwords",
             "lexical": "ris.preprocessing.preprocess(text, stem=False)",
             "porter": "ris.preprocessing.preprocess(text, stem=True)",
             "statistics": "población completa, ddof=0, percentiles lineales; sin muestreo",

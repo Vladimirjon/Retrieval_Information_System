@@ -464,14 +464,15 @@ def build_config(k: int, depth: int, hyper: dict) -> dict:
         "preprocessing": {
             "classical": (
                 "ris.preprocessing.preprocess: minúsculas, nltk.word_tokenize, "
-                "stopwords inglesas de NLTK, solo tokens str.isalnum(); Porter opcional; "
+                "trozos alfanuméricos de cada token (alnum_pieces), stopwords inglesas "
+                "de NLTK; Porter opcional; "
                 "misma configuración en documentos y consulta"
             ),
             "dense": "ninguno: título + ' ' + texto originales",
             "known_limitation": (
-                "preprocess descarta tokens no estrictamente alfanuméricos (guiones, "
-                "decimales, contracciones) en documentos y consultas; su efecto en "
-                "las métricas no se ha medido (corresponde a la issue #3)"
+                "desde el 16 de noviembre los tokens con guion, punto o barra se parten "
+                "en trozos ('goog-stock' -> goog, stock; '1.000' -> 1, 000) en lugar de "
+                "descartarse; se descarta n't. Un decimal se parte en dos números ('3.5' -> 3, 5)"
             ),
         },
         "hyperparameters": hyper,

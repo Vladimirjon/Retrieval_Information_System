@@ -1,309 +1,323 @@
 {
   "cases": {
     "dense_improves": {
-      "delta_ap_at_1000": 1.0,
-      "n_relevant": 1,
-      "qid": "1074",
-      "query": "How common is “pass-through” health insurance?",
+      "delta_ap_at_1000": 0.9993718592964824,
+      "n_relevant": 2,
+      "qid": "2076",
+      "query": "Can vet / veterinary bills be considered deductions (tax-deductible) for Income Tax purposes [Canada]?",
       "rankings": {
         "bm25_true": {
           "documents": [
             {
-              "doc_id": "544869",
+              "doc_id": "541809",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 1,
               "rank_status": "recuperado",
-              "score": 19.05463685068052,
-              "snippet": "We should do away with the concept of insurance for health, period.    You don't have safety insurance that covers police services.  You don't have national defense insurance.  You don't have fire services insurance.  Why?  Because they are essential services that are commonly needed and serve as a public good.  *Every single human being* suffers from the common ailment known as *humanity.*  Thus, every single human being needs health care.  Health *care,* not health insurance.",
-              "snippet_end": 482,
+              "score": 24.7799353825447,
+              "snippet": "\"No, your business cannot deduct your non-business expenses.  You can only deduct from your business income those reasonable expenses you paid in order to earn income for the business. Moreover, for there to be a tax benefit, your business generally has to have income (but I expect there are exceptions; HST input tax credits come to mind.) The employment income from your full-time job wouldn't count as business income for your corporation. The corporation has nothing to do with that income – it's earned personally, by you. With respect to restaurant bills: These fall under a category known as ",
+              "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 482,
+              "text_length": 1509,
               "title": ""
             },
             {
-              "doc_id": "573394",
+              "doc_id": "212783",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 2,
               "rank_status": "recuperado",
-              "score": 14.750717314891713,
-              "snippet": "\"Depending on what you mean by \"\"High-quality health insurance,\"\" it is part of the problem.  If you don't care about price (because you are using your insurance pays for everything), providers will charge as much as your insurance will pay.  Health insurance in this country turned into a poorly built health service subscription business because the government made it cheaper for your employer to provide you wages in the form of health insurance than in money.  There are new health service business models popping up that are built as a health service subscription.  Providers charge a flat mont",
+              "score": 21.64890100379724,
+              "snippet": "\"Federal taxes are generally lower in Canada.  Canada's top federal income tax rate is 29%; the US rate is 35% and will go to 39.6% when Bush tax cuts expire.  The healthcare surcharge will kick in in a few years, pushing the top bracket by a few more points and over 40%. State/provincial taxes are lower in the US.  You may end up in the 12% bracket in New York City or around 10% in California or other \"\"bad\"\" income-tax states.  But Alberta is considered a tax haven in Canada and has a 10% flat tax.  Ontario's top rate is about 11%, but there are surtaxes that can push the effective rate to a",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 1313,
+              "text_length": 3796,
               "title": ""
             },
             {
-              "doc_id": "187085",
+              "doc_id": "328073",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 3,
               "rank_status": "recuperado",
-              "score": 14.742401021481058,
-              "snippet": "During World War II, the United States (US) instituted wage and price controls.  To attract better employees, companies would offer benefits to get around salary limits.  Health insurance was one of the more successful benefits.   At that time, income taxes were newer and there were many ways to evade them.  Companies could generally deduct expenses.  So at that time, health care was deductible because everything was.  And at that time, only wages were taxable compensation from employer to employee.   Since that time, many other benefits have become non-deductible for employers, e.g. housing o",
+              "score": 21.544098592529753,
+              "snippet": "You don't have to wait.  If you sell your shares now, your gain can be considered a capital gain for income tax purposes. Unlike in the United States, Canada does not distinguish between short-term vs. long-term gains where you'd pay different rates on each type of gain.  Whether you buy and sell a stock within minutes or buy and sell over years, any gain you make on a stock can generally be considered a capital gain. I said generally because there is an exception:  If you are deemed by CRA to be trading professionally -- that is, if you make a living buying and selling stocks frequently -- th",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 2545,
+              "text_length": 919,
               "title": ""
             },
             {
-              "doc_id": "46893",
+              "doc_id": "235266",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 4,
               "rank_status": "recuperado",
-              "score": 14.429559546377984,
-              "snippet": "\"Jeez - you want me to come over and read the articles to you as well?   &gt;Ghana operates the National Health Insurance Scheme to provide citizens with health insurance. The level of premiums citizens must pay varies according to their level of income. Most medical facilities are run directly by the Ministry of Health or Ghana Health Service.[8]  &gt;Rwanda operates a system of universal health insurance through the Ministry of Health called Mutuelle de Santé (Mutual Health), a system of community-based insurance where people pay premiums based on their income level into local health insuran",
+              "score": 21.10711547553368,
+              "snippet": "In the general case if you have income coming in from a foreign source you need to declare it on your Canadian tax form, and nominally pay tax on it. However Canada has a tax agreement with the UK to ensure that you are not taxed twice. You also declare how much tax you have paid to the UK, and that is deducted from your Canadian tax bill. You may need to consult a tax professional, or maybe just read the Revenue Canada website to get the details. If you are holding this money for a friend, then you may find that this does not count as income to you. If you are getting it transferred to you in",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 1566,
+              "text_length": 1248,
               "title": ""
             },
             {
-              "doc_id": "17215",
+              "doc_id": "518624",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 5,
               "rank_status": "recuperado",
-              "score": 14.39972633593751,
-              "snippet": "The answer seems to depend on where you live.  Perhaps you already found this, but the summary from the IRS is: The insurance laws in some states do not allow a corporation to purchase group health insurance when the corporation only has one employee. Therefore, if the shareholder was the sole corporate employee, the shareholder had to purchase his health insurance in his own name. The IRS issued Notice 2008-1, which ruled that under certain situations the shareholder would be allowed an above-the-line deduction even if the health insurance policy was purchased in the name of the shareholder. ",
+              "score": 20.839037069381952,
+              "snippet": "\"The other answer has mentioned \"\"factual resident\"\", and you have raised the existence of a U.S./Canada tax treaty in your comment, and provided a link to a page about determining residency. I'd like to highlight part of the first link: You are a factual resident of Canada for tax purposes if you keep   significant residential ties in Canada while living or travelling   outside the country. The term factual resident means that, although you left Canada, you   are still considered to be a resident of Canada for income tax   purposes. Notes If you have established ties in a country that Canada ",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 2242,
+              "text_length": 4796,
               "title": ""
             },
             {
-              "doc_id": "207437",
+              "doc_id": "228445",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 6,
               "rank_status": "recuperado",
-              "score": 14.009581422278412,
-              "snippet": "It's up to the insurance companies that insure their businesses. Source *am CEO. Source. My insurance requires drug testing. I don't care at all, but my insurance company sure does.  *edit: not health insurance, businesses run on insurance, operating machinery, to make sure mistakes don't happen, etc. health insurance costs are negligible to employers.",
-              "snippet_end": 354,
+              "score": 20.67398355741532,
+              "snippet": "Yes, you have to file a tax return in Canada.  Non residents that have earned employment income in Canada are required to file a Canadian personal income tax return. Usually, your employer will have deducted sufficient taxes from your pay-cheques, resulting in a tax refund upon filing your Canadian tax return. You will also receive a tax credit on your US tax return for taxes paid in Canada.",
+              "snippet_end": 394,
               "snippet_start": 0,
-              "text_length": 354,
+              "text_length": 394,
               "title": ""
             },
             {
-              "doc_id": "298014",
+              "doc_id": "527776",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 7,
               "rank_status": "recuperado",
-              "score": 13.98827789850968,
-              "snippet": "\"I work for a health billing company. It is completely the provider's responsibility to bill your health insurance in a timely manner if they have your health insurance information on file (it sounds like they did). If you can gather a copy of your EOB (Explanation of Benefits) from your health insurance, it will likely say something to the extent of: \"\"claim was submitted after the timely filing limit, therefore no payment was made. The patient is not liable for the remaining balance.\"\" Don't let the hospital/physician bully you into paying for something they should have submitted to the insu",
+              "score": 20.051020701919747,
+              "snippet": "For tax purposes you will need to file as an employee (T4 slips and tax withheld automatically), but also as an entrepreneur. I had the same situation myself last year. Employee and self-employed is a publication from Revenue Canada that will help you. You need to fill out the statement of business activity form and keep detailed records of all your deductible expenses. Make photocopies and keep them 7 years. May I suggest you take an accountant to file your income tax form. More expensive but makes you less susceptible to receive Revenue Canada inspectors for a check-in.  If you can read fren",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 626,
+              "text_length": 689,
               "title": ""
             },
             {
-              "doc_id": "490223",
+              "doc_id": "41922",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 8,
               "rank_status": "recuperado",
-              "score": 13.703636090128684,
-              "snippet": "While the OP disses the health insurance coverage offered through his wife's employer as a complete rip-off, one advantage of such coverage is that, if set up right (by the employer), the premiums can be paid for through pre-tax dollars instead of post-tax dollars. On the other hand,  Health insurance premiums cannot be deducted on Schedule C by self-employed persons. So the self-employed person has to pay both the employer's share as well as the employee's share of Social Security and Medicare taxes on that money. Health insurance premiums can be deducted on Line 29 of Form 1040 but only for ",
+              "score": 19.05646023626699,
+              "snippet": "This would be no different than asking if you can live in one state and earn a paycheck, then move to another state with a lower tax rate before your tax bill is due so you can save on your taxes for that income. Answer -- No The tax on lottery winnings is based on the state where the lottery was held, because for legal purposes that's where the winnings are considered to have been earned for taxation purposes. Also, changing where you live after earning money does not change your tax liability at all.  You still owe the state where the money was earned the tax that is due. I hope this helps. ",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 1489,
+              "text_length": 610,
               "title": ""
             },
             {
-              "doc_id": "157990",
+              "doc_id": "550345",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 9,
               "rank_status": "recuperado",
-              "score": 13.597577035142884,
-              "snippet": "It's not mostly individually damaging, unfortunately. As the obese spend more on health insurance claims, we as the entire health insurance policy holders pay the price with higher premiums, since no health insurance company will pay that difference out of their pockets. With that said, instead of a ban, I'd rather see a soda tax, similar to cigarette taxes. You drink more, you pay more so when you start looking for health care related to your obesity, at least you contributed to a fund that can benefit everyone.",
-              "snippet_end": 518,
+              "score": 18.83141615328521,
+              "snippet": "Salaries and etc are a business expense and chargeable against revenue for tax purposes.  It is NOT tax deductible but it is an expense on an income statement in calculating net profit (after tax).  You could say salary &amp; etc are tax effective but not tax deductible.",
+              "snippet_end": 271,
               "snippet_start": 0,
-              "text_length": 518,
+              "text_length": 271,
               "title": ""
             },
             {
-              "doc_id": "276900",
+              "doc_id": "87998",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 10,
               "rank_status": "recuperado",
-              "score": 13.576409579720957,
-              "snippet": "The amount covered by the insurance takes into account the amount of money healthcare providers charge, according to this Quora post by Amy Chai (MD). For example, Medicare pays about 20 cents on the dollar for what a health provider bills. As a result, health providers have to artificially increase the amount of money they charge. Health providers cannot charge uninsured patients differently from insured patients, otherwise health insurances may complain to the feds, which in turn may charge the health providers with fraud for artificially inflating the medical bills.",
-              "snippet_end": 575,
+              "score": 18.675126770720833,
+              "snippet": "TaxTips.ca's Federal Tax Rates page has basic information about income tax in Canada, and it states: Canadian federal income tax is   calculated based on taxable income,   then non-refundable tax credits are   deducted to determine the net amount   payable.  For 2009, every taxpayer can   earn taxable income of $10,320 ($9,600   in 2008) before paying any federal   tax. [...] (emphasis mine) Of course there are also provincial taxes to consider, but generally each province has a basic personal exemption amount.  TaxTips.ca's page for Ontario rates lists $8,881 as the basic personal exemption i",
+              "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 575,
+              "text_length": 648,
               "title": ""
             },
             {
-              "doc_id": "443960",
+              "doc_id": "184646",
+              "judgment": "relevante",
+              "qrel_score": 1,
+              "rank": 796,
+              "rank_status": "recuperado",
+              "score": 10.270497236193261,
+              "snippet": "No. Medical bills for yourself or your human companions may be: Canada Revenue Seeing-eye dogs and the like also get special treatment Nice Doggie There are pet medical insurance policies; but as they are often priced like human policies, they might exclude your animal if it has a pre-existing condition. Good Luck Scott",
+              "snippet_end": 321,
+              "snippet_start": 0,
+              "text_length": 321,
+              "title": ""
+            },
+            {
+              "doc_id": "278824",
               "judgment": "relevante",
               "qrel_score": 1,
               "rank": null,
               "rank_status": "no recuperado en top-1000",
               "score": null,
-              "snippet": "\"Even though this isn't really personal finance related I still feel like there are some misconceptions here that could be addressed. I don't know where you got the phrase \"\"pass-through\"\" insurance from.  What you're describing is a self-funded plan.  In a self-funded arrangement an employer contracts a third-party-administrator (TPA), usually one of the big health insurance carriers, to use it's provider network, process and adjudicate claims, etc.  In addition to the TPA there will be some sort of stop-loss insurance coverage on each participant.  Stop-loss coverage usually provides a maxim",
-              "snippet_end": 600,
+              "snippet": "\"In the US service animals are treated like durable medical equipment from a tax POV, and some expenses can be deducted. Likewise, expenses associated with working animals are business or hobby expenses than can be deducted to a certain extent.  But pets, no. Legally they are \"\"chattels\"\" -- property that can move. Generally speaking, you can't deduct the cost of maintaining your belongings.\"",
+              "snippet_end": 395,
               "snippet_start": 0,
-              "text_length": 4860,
+              "text_length": 395,
               "title": ""
             }
           ],
           "metrics": {
-            "ap_at_1000": 0.0,
+            "ap_at_1000": 0.000628140703517588,
             "precision": 0.0,
             "recall": 0.0
           },
           "n_retrieved": 1000,
-          "ranking_sha256": "0a4d180d6cd9542ab5f0e6415dfa161b64461778bc84c56aa374703b7dd23519"
+          "ranking_sha256": "938491de02970208804e5acb1d680ed4a3621415cfab6838c2ffe53115193bcf"
         },
         "dense_na": {
           "documents": [
             {
-              "doc_id": "443960",
+              "doc_id": "278824",
               "judgment": "relevante",
               "qrel_score": 1,
               "rank": 1,
               "rank_status": "recuperado",
-              "score": 0.6179859638214111,
-              "snippet": "\"Even though this isn't really personal finance related I still feel like there are some misconceptions here that could be addressed. I don't know where you got the phrase \"\"pass-through\"\" insurance from.  What you're describing is a self-funded plan.  In a self-funded arrangement an employer contracts a third-party-administrator (TPA), usually one of the big health insurance carriers, to use it's provider network, process and adjudicate claims, etc.  In addition to the TPA there will be some sort of stop-loss insurance coverage on each participant.  Stop-loss coverage usually provides a maxim",
-              "snippet_end": 600,
+              "score": 0.6167045831680298,
+              "snippet": "\"In the US service animals are treated like durable medical equipment from a tax POV, and some expenses can be deducted. Likewise, expenses associated with working animals are business or hobby expenses than can be deducted to a certain extent.  But pets, no. Legally they are \"\"chattels\"\" -- property that can move. Generally speaking, you can't deduct the cost of maintaining your belongings.\"",
+              "snippet_end": 395,
               "snippet_start": 0,
-              "text_length": 4860,
+              "text_length": 395,
               "title": ""
             },
             {
-              "doc_id": "153664",
-              "judgment": "no juzgado",
-              "qrel_score": null,
+              "doc_id": "184646",
+              "judgment": "relevante",
+              "qrel_score": 1,
               "rank": 2,
               "rank_status": "recuperado",
-              "score": 0.5599609613418579,
-              "snippet": "I bought Health Insurance for myself after a period without it, and my premiums were not terrible. I was a 27 year old man, living in California, no preexisting conditions, and I paid approximately 90$ a month. This was for a standard Health Insurance plan.  However, when I moved back to NY a little while later, insurance companies wanted almost $500/month for catastrophic coverage.  So, from personal experience, my answer is that price varies widely by state. Different states have different regulations as to what Health Insurance Companies need to cover and at what price. In NY, Health Insura",
-              "snippet_end": 600,
+              "score": 0.6067289113998413,
+              "snippet": "No. Medical bills for yourself or your human companions may be: Canada Revenue Seeing-eye dogs and the like also get special treatment Nice Doggie There are pet medical insurance policies; but as they are often priced like human policies, they might exclude your animal if it has a pre-existing condition. Good Luck Scott",
+              "snippet_end": 321,
               "snippet_start": 0,
-              "text_length": 1040,
+              "text_length": 321,
               "title": ""
             },
             {
-              "doc_id": "423191",
+              "doc_id": "541809",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 3,
               "rank_status": "recuperado",
-              "score": 0.5347423553466797,
-              "snippet": "\"These policies are usually called dread disease policies or critical illness insurance, and they normally aren't a good deal. Furthermore, with the passage of the Affordable Care Act, such policies may become less common or disappear entirely. These policies aren't a great deal because of the effects of adverse selection and asymmetric information, two closely related concepts in the economics of insurance. When you purchase an insurance policy, the insurance company charges you a premium based on your average risk level or the average risk level of your risk pool, e.g. you and your fellow em",
+              "score": 0.515290379524231,
+              "snippet": "\"No, your business cannot deduct your non-business expenses.  You can only deduct from your business income those reasonable expenses you paid in order to earn income for the business. Moreover, for there to be a tax benefit, your business generally has to have income (but I expect there are exceptions; HST input tax credits come to mind.) The employment income from your full-time job wouldn't count as business income for your corporation. The corporation has nothing to do with that income – it's earned personally, by you. With respect to restaurant bills: These fall under a category known as ",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 10082,
+              "text_length": 1509,
               "title": ""
             },
             {
-              "doc_id": "54400",
+              "doc_id": "325118",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 4,
               "rank_status": "recuperado",
-              "score": 0.52967369556427,
-              "snippet": "I understand that if I have multiple health insurance policies, I can only make claim from only one of them if ever I incur medical expenses (I'm from the Philippines). In the US, you cannot simultaneously submit a claim for payment of a medical bill, or request reimbursement for a bill already paid, to multiple insurance companies, but if you are covered by more  than one policy, then any part of a claim not paid by one company  can be submitted to another company that is also covering you. In fact, if you have employer-paid or employer-provided coverage, most  insurance companies will want y",
-              "snippet_end": 600,
+              "score": 0.5068906545639038,
+              "snippet": "\"Mortgage interest in Canada is not generally tax deductible for individuals. (Where did you read otherwise?) As an individual, the only mortgage interest you may be able to deduct is when you borrow the money to purchase an income-producing asset, e.g another property you can rent out, or investments producing dividends or other income.  In these cases, the interest you pay on the borrowed funds, i.e. the \"\"carrying costs\"\" for your investments, would be deductible against the income produced by the investments purchased.\"",
+              "snippet_end": 529,
               "snippet_start": 0,
-              "text_length": 1604,
+              "text_length": 529,
               "title": ""
             },
             {
-              "doc_id": "588509",
+              "doc_id": "77214",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 5,
               "rank_status": "recuperado",
-              "score": 0.5246611833572388,
-              "snippet": "The insurance company is must assume you do have a preexisting condition you are unaware of.  The reason for that is that Affordable Care Act precludes the Insurance company from denying coverage of them if you do.  Insurance companies are businesses.  They are in business to make money(unless you have a nonprofit insurer).  They can not do that if you can buy insurance only when you need for them to pay out.  So even though you may not have a preexisting condition, they are precluded from requiring an examination that would detect the most expensive preexisting conditions (hidden cancers, neu",
+              "score": 0.49644020199775696,
+              "snippet": "\"Canada did not introduce income taxes before World War I.  Specifically deficits forced them to in the later part of the war: The Conservatives opposed income tax as they wanted to attract immigrants primarily from the United Kingdom and the United States, as opposed to Eastern Europe, and they wanted to give their preferred choice of newcomers some incentive to come to Canada. Wartime expenses forced the Tories to re-consider their options and in 1917 the wartime government imposed a \"\"temporary\"\" income tax to cover expenses. Despite the new tax the Canadian government ran up considerable d",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 1590,
+              "text_length": 923,
               "title": ""
             },
             {
-              "doc_id": "493525",
+              "doc_id": "140977",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 6,
               "rank_status": "recuperado",
-              "score": 0.5213569402694702,
-              "snippet": "\"The editorial highlights some reasonable reforms-- consistent and transparent pricing--- and then seemingly takes a left turn. This concept or \"\"cutting out the middle man\"\" is a fantasy born of a time when local doctors provided affordable but limited care to a limited population. It's been a hollow talking point perpetuated by industry lobby in response to single-payer proposals. Keeping health care between patient and doctor doesn't address the key reasons why health insurance exists in the first place.   The author suggests government-funded escrow accounts for those who can't afford the ",
-              "snippet_end": 600,
+              "score": 0.495514452457428,
+              "snippet": "Yes, legitimate, documented, expenses are written off against that income.",
+              "snippet_end": 74,
               "snippet_start": 0,
-              "text_length": 2400,
+              "text_length": 74,
               "title": ""
             },
             {
-              "doc_id": "222665",
+              "doc_id": "48211",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 7,
               "rank_status": "recuperado",
-              "score": 0.5206516981124878,
-              "snippet": "Health insurance is tough, as you know, because the offerings vary dramatically by State, and there is the added complication of the Affordable Care Act, which depending on where and who you are has had either a good or bad impact on the available options. If you are a sole proprietor or other business person, I'd advise talking to someone at a local chamber of commerce. Also, professional organizations like the IEEE or ACM (for IT professionals) often offer catastrophic medical or other health plans. Some employer plans give you the option to continue coverage at a higher cost when COBRA laps",
-              "snippet_end": 600,
+              "score": 0.49430692195892334,
+              "snippet": "A simpler view is that tax deductions allow you to give to charities from your gross salary, not your net salary.",
+              "snippet_end": 113,
               "snippet_start": 0,
-              "text_length": 747,
+              "text_length": 113,
               "title": ""
             },
             {
-              "doc_id": "145464",
+              "doc_id": "21846",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 8,
               "rank_status": "recuperado",
-              "score": 0.5170115232467651,
-              "snippet": "Obama sold health insurance reform since before he was president. He made enormous effort on its behalf to see it actually pass. His popularity is a huge reason why it passed at all.   Of course it was votes in Congress that mattered, but your statement just doesn't hold water.",
-              "snippet_end": 278,
+              "score": 0.4893260896205902,
+              "snippet": "You're right. That's pretty much it. You get a deduction for any medical expenses above 10% of your Adjusted Gross Income. You also have to itemize your deductions; claiming the standard deduction won't do.",
+              "snippet_end": 206,
               "snippet_start": 0,
-              "text_length": 278,
+              "text_length": 206,
               "title": ""
             },
             {
-              "doc_id": "82543",
+              "doc_id": "260651",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 9,
               "rank_status": "recuperado",
-              "score": 0.5158853530883789,
-              "snippet": "Yes, I think many of them actually do. All one has to do is look at how people responded to the [*exact same responses to Syria under Obama as well as under Trump*](http://nymag.com/daily/intelligencer/2017/04/gop-voters-love-same-attack-on-syria-they-hated-under-obama.html) to understand how much politics clouds people's thinking.   I think there is a percent of that population who never had to buy insurance before, and are not happy with having to now. I think there is a percent who had junk insurance before which wouldn't cover anything important and are upset that there is now a standard f",
+              "score": 0.4805615544319153,
+              "snippet": "I am not a tax accountant and the caveats about taking tax advice from random people on the internet stand. I have, however, had partial payment as in specie benefit in the past so have a good idea of how this is taxed. The chickens are taxed as in specie benefits (supposing you classify the chickens as beneficial) at the same rate as any other payment. That the chickens died soon after has no effect unless it was for a reason that meant that their value was lower at the time that you received them than was accounted for for tax reasons. If their value at that time was less than reported you c",
               "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 1201,
+              "text_length": 690,
               "title": ""
             },
             {
-              "doc_id": "209706",
+              "doc_id": "574417",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 10,
               "rank_status": "recuperado",
-              "score": 0.5116908550262451,
-              "snippet": "That is exactly how the insurance companies work. What you described here falls under P/L. If you are buying insurances you are betting that you might get sick. Same as when insurance companies sells you insurance they are betting that you won't get sick. No one will sell you insurance if you are oreads sick. That's why you have government to take of you. Of course there are pools of healthy and unhealthy people. The healthier the better for the company. No one is in it to loose money.",
-              "snippet_end": 490,
+              "score": 0.47727170586586,
+              "snippet": "\"When you do your taxes, you have two choices for your deductions. You can take the standard deduction, or you can choose to itemize your deductions. If you itemize your deductions, you use Form 1040 Schedule A.  By looking at Schedule A, you can see the list of deductions that are itemized: On Schedule A itself, you only list a total for each of these broad categories. In some cases, this is sufficient detail. However, for certain deductions, finer detail may be required, and you may have to submit additional forms showing this detail. For example, on the medical expense line, you generally o",
+              "snippet_end": 600,
               "snippet_start": 0,
-              "text_length": 490,
+              "text_length": 2220,
               "title": ""
             }
           ],
           "metrics": {
             "ap_at_1000": 1.0,
-            "precision": 0.1,
+            "precision": 0.2,
             "recall": 1.0
           },
           "n_retrieved": 1000,
-          "ranking_sha256": "8281980ea3da0abb3b926978dd93d4dff770bfeb061a22e8f7df191005322542"
+          "ranking_sha256": "85b030757c752532ece9e2ef36c42718a19fa5ca4a637ea5276a551017a05880"
         }
       },
       "relevant_doc_ids": [
-        "443960"
+        "184646",
+        "278824"
       ]
     },
     "dense_worsens": {
@@ -320,7 +334,7 @@
               "qrel_score": 1,
               "rank": 1,
               "rank_status": "recuperado",
-              "score": 19.04590543068592,
+              "score": 19.31316490268515,
               "snippet": "This doesn't make any sense. For the people who ask you this, suggest that they borrow the money to invest with you. They can use their bitcoins as collateral for the loan. That way, they get the same benefit and your company doesn't go out of business if the price of bitcoin drops, even temporarily, because the loan becomes unsecured. If they want to try to use a volatile asset as collateral and have to figure out how to cover when the price drops temporarily, great. But why should they put that risk on your other investors who may not be so crazy? Also, this obviously won't meet the investor",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -333,7 +347,7 @@
               "qrel_score": null,
               "rank": 2,
               "rank_status": "recuperado",
-              "score": 18.280576953546216,
+              "score": 18.567990092894114,
               "snippet": "\"Not unless you have something else to put up as collateral. The bank wants a basic assurance that you're not going to immediately move the money to the Caymans and disappear. 999 times out of 1000, the collateral for a home mortgage is the home itself (which you wouldn't be able to take with you if you decided to disappear), so signing up for a 30 year mortgage on a nonexistent house is probably going to get you laughed out of the bank. It's sometimes possible to negotiate something else as collateral; you may, for instance, have a portfolio of securities worth the loan principal, that you ca",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -346,7 +360,7 @@
               "qrel_score": null,
               "rank": 3,
               "rank_status": "recuperado",
-              "score": 18.141279294431225,
+              "score": 18.470684421187514,
               "snippet": "\"That is called \"\"substitution of collateral.\"\" And yes, it can be done, but only with consent of the lender. The \"\"best case\"\" for this kind of maneuver is if the second house is larger and more valuable than the first. Another possibility is that you have two mortgages on the first house and none on the second, and you want to move the second mortgage on the first house to the second one, effectively making it a \"\"first\"\" mortgage. In these instances, the lender has a clear incentive to allow a substitution of collateral, because the second one is actually better than the first one. The pote",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -359,7 +373,7 @@
               "qrel_score": null,
               "rank": 4,
               "rank_status": "recuperado",
-              "score": 17.623764217173328,
+              "score": 17.78119526642279,
               "snippet": "\"As a legal contract, a mortgage is a form of secured debt. In the case of a mortgage, the debt is secured using the property asset as collateral. So \"\"no\"\", there is no such thing as a mortgage contract without a property to act as collateral. Is it a good idea?  In the current low interest rate environment, people with good income and credit can obtain a creditline from their bank at a rate comparable to current mortgage rates.  However, if you wish to setup a credit line for an amount comparable to a mortgage, then you will need to secure it with some form of collateral.\"",
               "snippet_end": 581,
               "snippet_start": 0,
@@ -372,7 +386,7 @@
               "qrel_score": null,
               "rank": 5,
               "rank_status": "recuperado",
-              "score": 16.441915490811024,
+              "score": 16.652608341992746,
               "snippet": "\"The current mortgaged owner would typically not have the right to sell any portion of the house without approval from the bank. The bank doesn't \"\"own\"\" the house through the mortgage, but they do have a series of rights that, in some cases, look similar to ownership.  Remember that a mortgage is just a loan that uses a house as collateral, to reduce the risk to the lender in the event of default. If it was just a personal loan, without collateral, then there would be a much higher risk of default (and therefore the interest rate would be closer to 20% than 2%). But because the loan was taken",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -380,29 +394,29 @@
               "title": ""
             },
             {
-              "doc_id": "165710",
+              "doc_id": "84630",
               "judgment": "no juzgado",
               "qrel_score": null,
               "rank": 6,
               "rank_status": "recuperado",
-              "score": 15.773213616657706,
-              "snippet": "Crazy idea but... on the offchance your friend is near one of Europe's few bitcoin ATM's ... buy some bitcoin, transfer them to your friend, and they can presumably cash them in at the ATM.  I've no idea how much bid-offer spreads will eat into the transfer or whether you can tolerate bitcoin volatility though. Unless there are money laundering regulations that mean anyone wanting to use one of these ATM's has to agree some ID checks that your friend can't satisfy (I don't actually know much about bitcoin at all). If not a bitcoin ATM, maybe there are other ways your friend can convert bitcoin",
-              "snippet_end": 600,
-              "snippet_start": 0,
-              "text_length": 699,
-              "title": ""
-            },
-            {
-              "doc_id": "84630",
-              "judgment": "no juzgado",
-              "qrel_score": null,
-              "rank": 7,
-              "rank_status": "recuperado",
-              "score": 15.641585128756162,
+              "score": 15.939440445686131,
               "snippet": "It depends on how much equity you have in your home. Scenario 1: Your home is worth $100K, and your current mortgage is for $100K (or more which means you are underwater.) In this case you can't get a 2nd mortgage because: That being said, you can use different portions of equity in your home as collateral for multiple mortgages, as long as none of the equity overlaps, but you may need permission from the primary mortgage bank first, for example: Scenario 2: Your home is worth $100K, and your current mortgage is for $80K meaning you currently have $20K in equity. It is possible to get a 2nd mo",
               "snippet_end": 600,
               "snippet_start": 0,
               "text_length": 835,
+              "title": ""
+            },
+            {
+              "doc_id": "165710",
+              "judgment": "no juzgado",
+              "qrel_score": null,
+              "rank": 7,
+              "rank_status": "recuperado",
+              "score": 15.616704223184149,
+              "snippet": "Crazy idea but... on the offchance your friend is near one of Europe's few bitcoin ATM's ... buy some bitcoin, transfer them to your friend, and they can presumably cash them in at the ATM.  I've no idea how much bid-offer spreads will eat into the transfer or whether you can tolerate bitcoin volatility though. Unless there are money laundering regulations that mean anyone wanting to use one of these ATM's has to agree some ID checks that your friend can't satisfy (I don't actually know much about bitcoin at all). If not a bitcoin ATM, maybe there are other ways your friend can convert bitcoin",
+              "snippet_end": 600,
+              "snippet_start": 0,
+              "text_length": 699,
               "title": ""
             },
             {
@@ -411,7 +425,7 @@
               "qrel_score": null,
               "rank": 8,
               "rank_status": "recuperado",
-              "score": 15.636921721583105,
+              "score": 15.552042617762694,
               "snippet": "You can. You can take out a conventional mortgage and keep the cash.  A mortgage is nothing but a secured loan against your home. You can open a HELOC and treat it as a negative-equity bank-account. Note that both a mortgage and a HELOC tend to have significant up-front or administrative costs attached to them.  It costs the loaning institution some money to ensure they are in a safe position, and they will want to pass it on to you. They don't want you taking out such a loan and not using it. On the other hand, the interest rates on such a loan are often much lower than interest rates on othe",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -424,7 +438,7 @@
               "qrel_score": null,
               "rank": 9,
               "rank_status": "recuperado",
-              "score": 14.602982572464256,
+              "score": 14.87314927918672,
               "snippet": "Jamie Dimon, calling bitcoin a fraud for price bubbling is hilarious considering JP Morgan literally got bailed out by US tax dollars for investing in trash mortgage loans. Ok.  Knocks aside, I'm just buying low. The problem with financial analysis on bitcoin is that inevitably, financiers don't know anything about computer science, and they aren't in the business of making applications. Bitcoin is an application of an interesting concept: the distributed ledger, and the ability to have a distributed ledger verify and lock the ledger. The problem with this analysis is that he doesn't have appl",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -437,7 +451,7 @@
               "qrel_score": null,
               "rank": 10,
               "rank_status": "recuperado",
-              "score": 14.588711440296017,
+              "score": 14.553591474954679,
               "snippet": "I'd take a look at some graphs and chart the price of bitcoins and its value. You'll be surprised that it follows basically any other vehicle for money. There were several times where the price of bitcoin dropped drastically and ontop of that, there is a wide margin of error that could cost you your entire wallet with no equivalent to a FDIC insurance or possibility of government/federal intervention in the event of theft.",
               "snippet_end": 426,
               "snippet_start": 0,
@@ -451,7 +465,7 @@
             "recall": 1.0
           },
           "n_retrieved": 1000,
-          "ranking_sha256": "c2cf31bcc71caa7513944f3fb899910146b6d7fe56fda5d84df389760bdc3f77"
+          "ranking_sha256": "159a8caef8711b045ce9678b8d5c2bea5b7806c218c60460a51d56191ccd7c8c"
         },
         "dense_na": {
           "documents": [
@@ -461,7 +475,7 @@
               "qrel_score": null,
               "rank": 1,
               "rank_status": "recuperado",
-              "score": 0.7127747535705566,
+              "score": 0.7127748131752014,
               "snippet": "\"As a legal contract, a mortgage is a form of secured debt. In the case of a mortgage, the debt is secured using the property asset as collateral. So \"\"no\"\", there is no such thing as a mortgage contract without a property to act as collateral. Is it a good idea?  In the current low interest rate environment, people with good income and credit can obtain a creditline from their bank at a rate comparable to current mortgage rates.  However, if you wish to setup a credit line for an amount comparable to a mortgage, then you will need to secure it with some form of collateral.\"",
               "snippet_end": 581,
               "snippet_start": 0,
@@ -474,7 +488,7 @@
               "qrel_score": null,
               "rank": 2,
               "rank_status": "recuperado",
-              "score": 0.6498204469680786,
+              "score": 0.6498205661773682,
               "snippet": "Yes you can. Buy to let mortgages are typically lent on a combination of expected rental income, plus a part of the applicants other income. They also (at the moment) usually require a fairly hefty deposit.  The exact requirements are likely to have changed by the time you apply, but in basic, yes. There is another option. You can increase your mortgage on your currently property, and buy the BTL with cash. This gives some more flexibility, as you can move faster, so is great for an auction purchase. It is also often cheaper to mortgage your main property, and you will get a lower rate. Of cou",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -487,7 +501,7 @@
               "qrel_score": null,
               "rank": 3,
               "rank_status": "recuperado",
-              "score": 0.6452385187149048,
+              "score": 0.6452387571334839,
               "snippet": "\"It's legal. That's what a home equity loan is, for example. More generally, what you're talking about is a \"\"second mortgage\"\". It has no effect on the primary mortgage that you've already made to your bank; they're still secured, and if you get foreclosed, they get paid, and only if there's something left over does the second mortgage holder get anything. That's why second mortgages are more risky than first mortgages, and why you might have trouble finding someone willing to do it.\"",
               "snippet_end": 490,
               "snippet_start": 0,
@@ -500,7 +514,7 @@
               "qrel_score": null,
               "rank": 4,
               "rank_status": "recuperado",
-              "score": 0.6367640495300293,
+              "score": 0.6367641687393188,
               "snippet": "Yes.   A mortgage is a kind of debt.  Someone lends you money to buy your house, and you owe them the money, so you have debt.",
               "snippet_end": 126,
               "snippet_start": 0,
@@ -513,7 +527,7 @@
               "qrel_score": null,
               "rank": 5,
               "rank_status": "recuperado",
-              "score": 0.6274471282958984,
+              "score": 0.627447247505188,
               "snippet": "You definitely used to be able to (see this BBC article from 2006), and I would imagine that you still can, although I also imagine that it would be more difficult than it used to be, as with all mortgages. EDIT: And here's an article from last year about Chinese banks targeting the UK mortgage market.",
               "snippet_end": 303,
               "snippet_start": 0,
@@ -539,7 +553,7 @@
               "qrel_score": null,
               "rank": 7,
               "rank_status": "recuperado",
-              "score": 0.6143860220909119,
+              "score": 0.6143860816955566,
               "snippet": "This is one way in which the scheme could work: You put your own property (home, car, piece of land) as a collateral and get a loan from a bank. You can also try to use the purchased property as security, but it may be difficult to get 100% loan-to-value. You use the money to buy a property that you expect will rise in value and/or provide rent income that is larger than the mortgage payment. Doing some renovations can help the value rise. You sell the property, pay back the loan and get the profits. If you are fast, you might be able to do this even before the first mortgage payment is due. S",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -552,7 +566,7 @@
               "qrel_score": null,
               "rank": 8,
               "rank_status": "recuperado",
-              "score": 0.613176167011261,
+              "score": 0.6131761074066162,
               "snippet": "First, many banks do not keep the loan. Even if they send you a payment notice and process the monthly payment, there's still a good chance the loan itself was packed up and sold to investors. Collateralizing mortgages, in and of itself, is not inherently dangerous. But the loan definitely needs a house behind it. If you found a bank that keeps its loans, it would be a tough sell. You'd be asking them to trust that you've chosen the right number to match up with the house you intend to buy. And then they'd need to have another round of processing to turn this into a loan with normal collateral",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -565,7 +579,7 @@
               "qrel_score": null,
               "rank": 9,
               "rank_status": "recuperado",
-              "score": 0.597099781036377,
+              "score": 0.5970999002456665,
               "snippet": "Impossible. There is no such thing as a business loan without proper collateral.  There are a couple of exceptions: Friends, and Family members.  But you want to be absolutely 100% sure your business plan can be executed successfully, and that your business plan is awesome.  You don't have a business plan? Then you're just going to be stealing money from your family and friends.",
               "snippet_end": 381,
               "snippet_start": 0,
@@ -578,7 +592,7 @@
               "qrel_score": null,
               "rank": 10,
               "rank_status": "recuperado",
-              "score": 0.5964081883430481,
+              "score": 0.5964083671569824,
               "snippet": "Since you only own half of the house, you would most likely need the cooperation of whoever owns the other half in order to use it as collateral for a loan, but if you can do that, there's no reason you couldn't do what you're talking about.  The complication is that if you default on the loan, the bank isn't going to seize half of the house.  They'll repossess the entire house, sell it, and take what they're owed out of the proceeds, leaving you and whoever owns the other 50% to fight over the remnants. Even if the owner of the other half is family, they may be hesitant to risk losing the hou",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -591,7 +605,7 @@
               "qrel_score": 1,
               "rank": 113,
               "rank_status": "recuperado",
-              "score": 0.48065871000289917,
+              "score": 0.4806586802005768,
               "snippet": "This doesn't make any sense. For the people who ask you this, suggest that they borrow the money to invest with you. They can use their bitcoins as collateral for the loan. That way, they get the same benefit and your company doesn't go out of business if the price of bitcoin drops, even temporarily, because the loan becomes unsecured. If they want to try to use a volatile asset as collateral and have to figure out how to cover when the price drops temporarily, great. But why should they put that risk on your other investors who may not be so crazy? Also, this obviously won't meet the investor",
               "snippet_end": 600,
               "snippet_start": 0,
@@ -605,7 +619,7 @@
             "recall": 0.0
           },
           "n_retrieved": 1000,
-          "ranking_sha256": "f94fe3ef5298e1ff144ce0967ec6bbd4e8058c261b16b4b8bb7072ad6409a7c0"
+          "ranking_sha256": "176449059d3e32dfaacb50b20e7f58ee8fc2a899dd5e79bf81c66d57d7b57d60"
         }
       },
       "relevant_doc_ids": [
@@ -627,51 +641,51 @@
     "digits_no": {
       "means": [
         {
-          "ap_at_1000": 0.038826755346865825,
+          "ap_at_1000": 0.03935231563310593,
           "model": "jaccard",
           "n": 575,
-          "precision": 0.014782608695652174,
-          "recall": 0.06110824441259224,
+          "precision": 0.015478260869565217,
+          "recall": 0.06659616711790625,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.0358303306633255,
+          "ap_at_1000": 0.03893268998735567,
           "model": "jaccard",
           "n": 575,
-          "precision": 0.014956521739130434,
-          "recall": 0.06168105324627064,
+          "precision": 0.015130434782608698,
+          "recall": 0.06296814779423475,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.12358883902911096,
+          "ap_at_1000": 0.130063442724001,
           "model": "tfidf",
           "n": 575,
-          "precision": 0.0462608695652174,
-          "recall": 0.20235934596804162,
+          "precision": 0.04834782608695652,
+          "recall": 0.21640696501566065,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.1303712701243352,
+          "ap_at_1000": 0.13797113839418654,
           "model": "tfidf",
           "n": 575,
-          "precision": 0.04730434782608696,
-          "recall": 0.2046712852365026,
+          "precision": 0.04973913043478261,
+          "recall": 0.21853325901151988,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.17996092217146495,
+          "ap_at_1000": 0.18129921176592229,
           "model": "bm25",
           "n": 575,
-          "precision": 0.06295652173913044,
-          "recall": 0.28437038806604026,
+          "precision": 0.06452173913043478,
+          "recall": 0.2920418856505813,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.19975608123174782,
+          "ap_at_1000": 0.20687265033596713,
           "model": "bm25",
           "n": 575,
-          "precision": 0.06869565217391305,
-          "recall": 0.3110591389287042,
+          "precision": 0.06956521739130435,
+          "recall": 0.31874788979136803,
           "stem": "true"
         },
         {
@@ -1265,51 +1279,51 @@
     "digits_yes": {
       "means": [
         {
-          "ap_at_1000": 0.027806682228697373,
+          "ap_at_1000": 0.03196002457798468,
           "model": "jaccard",
           "n": 73,
-          "precision": 0.012328767123287671,
-          "recall": 0.032986419972721344,
+          "precision": 0.015068493150684932,
+          "recall": 0.03537330249659017,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.0304449494614418,
+          "ap_at_1000": 0.034746375949526564,
           "model": "jaccard",
           "n": 73,
-          "precision": 0.01643835616438356,
-          "recall": 0.04564727509932989,
+          "precision": 0.015068493150684932,
+          "recall": 0.04108106505366779,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.13628845042031337,
+          "ap_at_1000": 0.15638208416907973,
           "model": "tfidf",
-          "n": 73,
-          "precision": 0.050684931506849315,
-          "recall": 0.2094437525944375,
-          "stem": "false"
-        },
-        {
-          "ap_at_1000": 0.14965427805067824,
-          "model": "tfidf",
-          "n": 73,
-          "precision": 0.049315068493150684,
-          "recall": 0.21938563719385637,
-          "stem": "true"
-        },
-        {
-          "ap_at_1000": 0.1630501116451896,
-          "model": "bm25",
           "n": 73,
           "precision": 0.0547945205479452,
-          "recall": 0.21548360315483603,
+          "recall": 0.2257516456146593,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.19070131736747126,
+          "ap_at_1000": 0.15347503179451957,
+          "model": "tfidf",
+          "n": 73,
+          "precision": 0.05616438356164384,
+          "recall": 0.2275840597758406,
+          "stem": "true"
+        },
+        {
+          "ap_at_1000": 0.17857755562637548,
           "model": "bm25",
           "n": 73,
-          "precision": 0.06027397260273973,
-          "recall": 0.24222854770799976,
+          "precision": 0.057534246575342465,
+          "recall": 0.22804068078040682,
+          "stem": "false"
+        },
+        {
+          "ap_at_1000": 0.20107193279297014,
+          "model": "bm25",
+          "n": 73,
+          "precision": 0.0684931506849315,
+          "recall": 0.2679134792148491,
           "stem": "true"
         },
         {
@@ -1401,98 +1415,87 @@
     "length_0_3": {
       "means": [
         {
-          "ap_at_1000": 0.016846146520436884,
+          "ap_at_1000": 0.01263126512826973,
           "model": "jaccard",
-          "n": 81,
-          "precision": 0.0074074074074074086,
-          "recall": 0.02686654908877131,
+          "n": 62,
+          "precision": 0.009677419354838712,
+          "recall": 0.034562211981566816,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.01490395231186118,
+          "ap_at_1000": 0.00872916633259988,
           "model": "jaccard",
-          "n": 81,
-          "precision": 0.008641975308641976,
-          "recall": 0.03201058201058201,
+          "n": 62,
+          "precision": 0.0064516129032258064,
+          "recall": 0.022465437788018433,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.06239627697820969,
+          "ap_at_1000": 0.07292863584292941,
           "model": "tfidf",
-          "n": 81,
-          "precision": 0.03333333333333333,
-          "recall": 0.12760141093474425,
+          "n": 62,
+          "precision": 0.035483870967741936,
+          "recall": 0.1402073732718894,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.056483571231415,
+          "ap_at_1000": 0.0564093887779558,
           "model": "tfidf",
-          "n": 81,
-          "precision": 0.028395061728395066,
-          "recall": 0.10393885949441506,
+          "n": 62,
+          "precision": 0.030645161290322583,
+          "recall": 0.10353302611367128,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.11049899467076733,
+          "ap_at_1000": 0.11189896634436385,
           "model": "bm25",
-          "n": 81,
-          "precision": 0.04567901234567901,
-          "recall": 0.18859494415049968,
+          "n": 62,
+          "precision": 0.04838709677419355,
+          "recall": 0.19800307219662056,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.12089338465169865,
+          "ap_at_1000": 0.10580177961927566,
           "model": "bm25",
-          "n": 81,
-          "precision": 0.04938271604938271,
-          "recall": 0.2060846560846561,
+          "n": 62,
+          "precision": 0.05,
+          "recall": 0.19262672811059908,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.22231114088302412,
+          "ap_at_1000": 0.192947426822207,
           "model": "dense",
-          "n": 81,
-          "precision": 0.08395061728395062,
-          "recall": 0.3122574955908289,
+          "n": 62,
+          "precision": 0.08387096774193549,
+          "recall": 0.2773041474654378,
           "stem": "na"
         }
       ],
-      "n": 81,
+      "n": 62,
       "qids": [
         "10122",
-        "104",
-        "1074",
         "10912",
         "10979",
         "1783",
-        "2383",
-        "2385",
         "2398",
         "2400",
         "2416",
-        "2516",
         "2648",
         "2713",
         "2790",
         "2856",
         "2903",
-        "3051",
-        "3125",
-        "3149",
         "3500",
         "3534",
         "3625",
         "3683",
         "3759",
         "3767",
-        "3995",
         "4153",
         "4335",
         "4415",
-        "4641",
         "4678",
         "4845",
-        "5030",
         "5083",
         "529",
         "5534",
@@ -1510,31 +1513,23 @@
         "7109",
         "715",
         "7178",
-        "7295",
-        "7311",
         "7344",
         "7345",
         "7533",
-        "7758",
         "7876",
         "7911",
         "7925",
         "7992",
-        "8116",
         "813",
         "8247",
-        "8271",
         "8507",
         "853",
         "8537",
         "8635",
-        "8937",
-        "8959",
         "9088",
         "9381",
         "9385",
         "9403",
-        "9556",
         "957",
         "9733",
         "9735",
@@ -1545,63 +1540,63 @@
     "length_4_7": {
       "means": [
         {
-          "ap_at_1000": 0.032949150374654256,
+          "ap_at_1000": 0.0350970389964272,
           "model": "jaccard",
-          "n": 409,
-          "precision": 0.012958435207823962,
-          "recall": 0.051232046953318344,
+          "n": 402,
+          "precision": 0.013681592039800995,
+          "recall": 0.055595040669667535,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.02918077442181213,
+          "ap_at_1000": 0.032104139282802195,
           "model": "jaccard",
-          "n": 409,
-          "precision": 0.012224938875305624,
-          "recall": 0.0491848548083267,
+          "n": 402,
+          "precision": 0.013184079601990051,
+          "recall": 0.05343224354418384,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.1295123935499404,
+          "ap_at_1000": 0.1335153637665546,
           "model": "tfidf",
-          "n": 409,
-          "precision": 0.045965770171149146,
-          "recall": 0.20516231255840056,
+          "n": 402,
+          "precision": 0.04875621890547264,
+          "recall": 0.2175827213140646,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.13695266809522427,
+          "ap_at_1000": 0.13895781383271155,
           "model": "tfidf",
-          "n": 409,
-          "precision": 0.04792176039119805,
-          "recall": 0.2112883652614704,
+          "n": 402,
+          "precision": 0.05149253731343283,
+          "recall": 0.22371574666350785,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.18141617734045098,
+          "ap_at_1000": 0.18357960192928952,
           "model": "bm25",
-          "n": 409,
-          "precision": 0.06283618581907091,
-          "recall": 0.2813217412850665,
+          "n": 402,
+          "precision": 0.06467661691542288,
+          "recall": 0.2871090973702914,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.20382165952704615,
+          "ap_at_1000": 0.21401169453350316,
           "model": "bm25",
-          "n": 409,
-          "precision": 0.06845965770171149,
-          "recall": 0.3088006872236701,
+          "n": 402,
+          "precision": 0.07139303482587066,
+          "recall": 0.32272269604359155,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.3075116038579401,
+          "ap_at_1000": 0.3085517830541546,
           "model": "dense",
-          "n": 409,
-          "precision": 0.1017114914425428,
-          "recall": 0.4367909460818996,
+          "n": 402,
+          "precision": 0.10223880597014925,
+          "recall": 0.4438482192213536,
           "stem": "na"
         }
       ],
-      "n": 409,
+      "n": 402,
       "qids": [
         "10039",
         "10109",
@@ -1610,8 +1605,8 @@
         "10213",
         "10246",
         "10267",
+        "104",
         "10414",
-        "10447",
         "10462",
         "10482",
         "10547",
@@ -1622,7 +1617,7 @@
         "10639",
         "10645",
         "10674",
-        "10734",
+        "1074",
         "10792",
         "10809",
         "10812",
@@ -1650,11 +1645,9 @@
         "1670",
         "1676",
         "1736",
-        "1748",
         "18",
         "1812",
         "1815",
-        "1819",
         "1824",
         "1832",
         "1871",
@@ -1666,9 +1659,7 @@
         "2051",
         "2075",
         "2088",
-        "2108",
         "2118",
-        "2181",
         "2183",
         "2204",
         "2264",
@@ -1678,7 +1669,9 @@
         "2330",
         "2348",
         "2376",
+        "2383",
         "2384",
+        "2385",
         "2388",
         "2395",
         "2407",
@@ -1688,17 +1681,16 @@
         "2465",
         "2486",
         "2498",
+        "2516",
         "2551",
         "2568",
         "2579",
         "2580",
         "2587",
         "2589",
-        "2590",
         "26",
         "2676",
         "2685",
-        "2695",
         "2724",
         "2737",
         "2747",
@@ -1716,11 +1708,14 @@
         "3014",
         "3033",
         "3049",
+        "3051",
         "3067",
         "3085",
         "3091",
         "3103",
         "3115",
+        "3125",
+        "3149",
         "3177",
         "3179",
         "3186",
@@ -1738,7 +1733,6 @@
         "3453",
         "3480",
         "3490",
-        "3512",
         "3528",
         "3530",
         "3569",
@@ -1753,6 +1747,7 @@
         "3829",
         "3888",
         "3909",
+        "3995",
         "4007",
         "4011",
         "4037",
@@ -1775,7 +1770,6 @@
         "4447",
         "4464",
         "4465",
-        "4499",
         "4500",
         "4504",
         "4514",
@@ -1784,6 +1778,7 @@
         "4605",
         "4615",
         "4640",
+        "4641",
         "4681",
         "4714",
         "475",
@@ -1806,6 +1801,7 @@
         "4981",
         "4999",
         "503",
+        "5030",
         "504",
         "5045",
         "5054",
@@ -1815,7 +1811,6 @@
         "5085",
         "5090",
         "5125",
-        "5155",
         "5172",
         "5196",
         "5241",
@@ -1827,7 +1822,6 @@
         "5347",
         "5374",
         "5410",
-        "5427",
         "5460",
         "5464",
         "547",
@@ -1844,7 +1838,6 @@
         "570",
         "5710",
         "5741",
-        "5790",
         "5808",
         "585",
         "5853",
@@ -1857,7 +1850,6 @@
         "5970",
         "5981",
         "6004",
-        "6005",
         "6009",
         "6041",
         "6080",
@@ -1888,23 +1880,19 @@
         "6807",
         "6832",
         "6849",
-        "6862",
         "6867",
         "6875",
         "6890",
         "6896",
         "6901",
-        "6909",
         "691",
         "6985",
         "699",
-        "701",
         "7017",
         "7071",
         "7080",
         "7096",
         "7105",
-        "7124",
         "7145",
         "7205",
         "7206",
@@ -1912,6 +1900,8 @@
         "7218",
         "7221",
         "7269",
+        "7295",
+        "7311",
         "7326",
         "7329",
         "7377",
@@ -1922,7 +1912,6 @@
         "7509",
         "7512",
         "7513",
-        "7529",
         "753",
         "7534",
         "7592",
@@ -1937,6 +1926,7 @@
         "7734",
         "7747",
         "7754",
+        "7758",
         "7801",
         "7928",
         "7936",
@@ -1950,10 +1940,10 @@
         "8072",
         "8079",
         "8102",
+        "8116",
         "8202",
         "8230",
-        "8275",
-        "8296",
+        "8271",
         "8351",
         "8378",
         "8456",
@@ -1970,18 +1960,17 @@
         "8789",
         "879",
         "8795",
-        "8832",
         "8834",
         "885",
         "8855",
-        "8874",
         "89",
         "8934",
+        "8937",
         "8947",
         "895",
+        "8959",
         "8970",
         "8974",
-        "8982",
         "90",
         "9060",
         "9108",
@@ -1997,6 +1986,7 @@
         "9391",
         "945",
         "9481",
+        "9556",
         "9565",
         "9598",
         "9617",
@@ -2006,10 +1996,8 @@
         "9701",
         "9737",
         "9771",
-        "98",
         "9824",
         "9871",
-        "9882",
         "9929",
         "9961"
       ]
@@ -2017,71 +2005,73 @@
     "length_8_plus": {
       "means": [
         {
-          "ap_at_1000": 0.06021855541616317,
+          "ap_at_1000": 0.05472019113430614,
           "model": "jaccard",
-          "n": 158,
-          "precision": 0.022151898734177215,
-          "recall": 0.09123513617184503,
+          "n": 184,
+          "precision": 0.021195652173913046,
+          "recall": 0.08903795479882436,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.061283320039971494,
+          "ap_at_1000": 0.06236798849313735,
           "model": "jaccard",
-          "n": 158,
-          "precision": 0.025949367088607598,
-          "recall": 0.10183160721135405,
+          "n": 184,
+          "precision": 0.022282608695652177,
+          "recall": 0.08876621566838959,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.14549349319785487,
+          "ap_at_1000": 0.1522153263816675,
           "model": "tfidf",
-          "n": 158,
-          "precision": 0.055696202531645575,
-          "recall": 0.23670201106909966,
+          "n": 184,
+          "precision": 0.05434782608695652,
+          "recall": 0.24322154294980383,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.1601229879651956,
+          "ap_at_1000": 0.16944923169931453,
           "model": "tfidf",
-          "n": 158,
-          "precision": 0.056329113924050635,
-          "recall": 0.24598197161488303,
+          "n": 184,
+          "precision": 0.054891304347826096,
+          "recall": 0.24955153542110065,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.20399084365895298,
+          "ap_at_1000": 0.19862213281090096,
           "model": "bm25",
-          "n": 158,
-          "precision": 0.06835443037974684,
-          "recall": 0.3095347690284399,
+          "n": 184,
+          "precision": 0.06684782608695652,
+          "recall": 0.30911416482068654,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.22547797451095533,
+          "ap_at_1000": 0.22303050814241607,
           "model": "bm25",
-          "n": 158,
-          "precision": 0.07531645569620253,
-          "recall": 0.338919940818675,
+          "n": 184,
+          "precision": 0.07173913043478261,
+          "recall": 0.33239315032793293,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.3679019215075732,
+          "ap_at_1000": 0.3581923627003915,
           "model": "dense",
-          "n": 158,
-          "precision": 0.12215189873417721,
-          "recall": 0.5191496794344895,
+          "n": 184,
+          "precision": 0.11630434782608697,
+          "recall": 0.49101175093022925,
           "stem": "na"
         }
       ],
-      "n": 158,
+      "n": 184,
       "qids": [
         "10034",
         "10136",
         "10152",
+        "10447",
         "10497",
         "10526",
         "10628",
         "10710",
+        "10734",
         "10808",
         "10845",
         "109",
@@ -2095,13 +2085,17 @@
         "1415",
         "1469",
         "1530",
+        "1748",
+        "1819",
         "1826",
         "1877",
         "1915",
         "1933",
         "2070",
         "2076",
+        "2108",
         "2154",
+        "2181",
         "2316",
         "2334",
         "2399",
@@ -2109,13 +2103,16 @@
         "2472",
         "2513",
         "2549",
+        "2590",
         "2593",
         "2598",
+        "2695",
         "2749",
         "3006",
         "3039",
         "3148",
         "3503",
+        "3512",
         "3566",
         "3594",
         "3615",
@@ -2140,6 +2137,7 @@
         "4411",
         "4414",
         "4484",
+        "4499",
         "4571",
         "4600",
         "4700",
@@ -2153,6 +2151,7 @@
         "5134",
         "515",
         "5150",
+        "5155",
         "5178",
         "5185",
         "5206",
@@ -2164,15 +2163,18 @@
         "5380",
         "5402",
         "5422",
+        "5427",
         "549",
         "5511",
         "5683",
         "5763",
         "5782",
+        "5790",
         "5903",
         "5906",
         "5993",
         "6002",
+        "6005",
         "603",
         "604",
         "6146",
@@ -2191,11 +2193,15 @@
         "6803",
         "6835",
         "684",
+        "6862",
         "687",
         "689",
         "6891",
+        "6909",
         "6959",
+        "701",
         "7098",
+        "7124",
         "7141",
         "7188",
         "7279",
@@ -2205,6 +2211,7 @@
         "7448",
         "7463",
         "750",
+        "7529",
         "7590",
         "776",
         "7803",
@@ -2213,12 +2220,17 @@
         "7880",
         "810",
         "8121",
+        "8275",
+        "8296",
         "8332",
         "8512",
         "8544",
         "858",
         "8592",
         "864",
+        "8832",
+        "8874",
+        "8982",
         "904",
         "9115",
         "9188",
@@ -2231,6 +2243,8 @@
         "9548",
         "9644",
         "9646",
+        "98",
+        "9882",
         "9925",
         "9979"
       ]
@@ -2238,51 +2252,51 @@
     "uppercase_no": {
       "means": [
         {
-          "ap_at_1000": 0.03046257811697313,
+          "ap_at_1000": 0.032628116016267306,
           "model": "jaccard",
           "n": 530,
-          "precision": 0.013207547169811321,
-          "recall": 0.04824350701709192,
+          "precision": 0.013773584905660378,
+          "recall": 0.05169595603557867,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.02934074542228842,
+          "ap_at_1000": 0.03200823772582466,
           "model": "jaccard",
           "n": 530,
-          "precision": 0.013584905660377358,
-          "recall": 0.0510805023069174,
+          "precision": 0.01339622641509434,
+          "recall": 0.051376249536626895,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.10920893226382017,
+          "ap_at_1000": 0.11661167314041031,
           "model": "tfidf",
           "n": 530,
-          "precision": 0.0439622641509434,
-          "recall": 0.17930066264971925,
+          "precision": 0.04660377358490566,
+          "recall": 0.19370542455448117,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.11334013474639067,
+          "ap_at_1000": 0.1197169066250677,
           "model": "tfidf",
           "n": 530,
-          "precision": 0.0439622641509434,
-          "recall": 0.17959334690466766,
+          "precision": 0.046037735849056606,
+          "recall": 0.18491244080866723,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.16030702461081708,
+          "ap_at_1000": 0.165810951254813,
           "model": "bm25",
           "n": 530,
-          "precision": 0.059622641509433964,
-          "recall": 0.25149674748731354,
+          "precision": 0.062075471698113206,
+          "recall": 0.26044852945796343,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.17901212760288354,
+          "ap_at_1000": 0.18336091087952747,
           "model": "bm25",
           "n": 530,
-          "precision": 0.06471698113207548,
-          "recall": 0.2739465827673375,
+          "precision": 0.06679245283018867,
+          "recall": 0.28387620241393824,
           "stem": "true"
         },
         {
@@ -2831,51 +2845,51 @@
     "uppercase_yes": {
       "means": [
         {
-          "ap_at_1000": 0.0695771671622627,
+          "ap_at_1000": 0.06498103215768741,
           "model": "jaccard",
           "n": 118,
-          "precision": 0.02033898305084746,
+          "precision": 0.02288135593220339,
+          "recall": 0.11420500403551251,
+          "stem": "false"
+        },
+        {
+          "ap_at_1000": 0.06744420501998204,
+          "model": "jaccard",
+          "n": 118,
+          "precision": 0.02288135593220339,
           "recall": 0.10149313962873285,
-          "stem": "false"
-        },
-        {
-          "ap_at_1000": 0.0616468336295301,
-          "model": "jaccard",
-          "n": 118,
-          "precision": 0.022033898305084745,
-          "recall": 0.09937449556093624,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.1960330951067541,
+          "ap_at_1000": 0.2067642792053044,
           "model": "tfidf",
           "n": 118,
-          "precision": 0.059322033898305086,
-          "recall": 0.31031073446327684,
+          "precision": 0.06016949152542373,
+          "recall": 0.3241525423728814,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.21879636613224743,
+          "ap_at_1000": 0.22955187615568898,
           "model": "tfidf",
           "n": 118,
-          "precision": 0.0635593220338983,
-          "recall": 0.32641242937853104,
+          "precision": 0.07033898305084746,
+          "recall": 0.3751412429378531,
           "stem": "true"
         },
         {
-          "ap_at_1000": 0.2577751301267638,
+          "ap_at_1000": 0.24918139119559185,
           "model": "bm25",
           "n": 118,
-          "precision": 0.07288135593220339,
-          "recall": 0.389406779661017,
+          "precision": 0.0711864406779661,
+          "recall": 0.39435028248587567,
           "stem": "false"
         },
         {
-          "ap_at_1000": 0.2873264003945095,
+          "ap_at_1000": 0.30888764636371496,
           "model": "bm25",
           "n": 118,
           "precision": 0.08135593220338982,
-          "recall": 0.4351694915254237,
+          "recall": 0.44392655367231637,
           "stem": "true"
         },
         {
@@ -3034,51 +3048,51 @@
   },
   "overall": [
     {
-      "ap_at_1000": 0.03758529649250426,
+      "ap_at_1000": 0.03851954210374813,
       "model": "jaccard",
       "n": 648,
-      "precision": 0.014506172839506174,
-      "recall": 0.05794019937538457,
+      "precision": 0.015432098765432098,
+      "recall": 0.06307877650470242,
       "stem": "false"
     },
     {
-      "ap_at_1000": 0.03522364420076761,
+      "ap_at_1000": 0.038461083621982944,
       "model": "jaccard",
       "n": 648,
       "precision": 0.015123456790123458,
-      "recall": 0.05987477885626033,
+      "recall": 0.060502473349695565,
       "stem": "true"
     },
     {
-      "ap_at_1000": 0.12501950512719395,
+      "ap_at_1000": 0.13302835140531388,
       "model": "tfidf",
       "n": 648,
-      "precision": 0.04675925925925926,
-      "recall": 0.2031574349861387,
+      "precision": 0.049074074074074076,
+      "recall": 0.21745968366338736,
       "stem": "false"
     },
     {
-      "ap_at_1000": 0.13254358428887694,
+      "ap_at_1000": 0.13971771897786603,
       "model": "tfidf",
       "n": 648,
-      "precision": 0.047530864197530866,
-      "recall": 0.2063289205650317,
+      "precision": 0.050462962962962966,
+      "recall": 0.219552870826019,
       "stem": "true"
     },
     {
-      "ap_at_1000": 0.17805584629427654,
+      "ap_at_1000": 0.18099260544155976,
       "model": "bm25",
       "n": 648,
-      "precision": 0.06203703703703704,
-      "recall": 0.27660999408684595,
+      "precision": 0.06373456790123458,
+      "recall": 0.28483187337354005,
       "stem": "false"
     },
     {
-      "ap_at_1000": 0.19873602295691423,
+      "ap_at_1000": 0.20621917443991963,
       "model": "bm25",
       "n": 648,
-      "precision": 0.06774691358024691,
-      "recall": 0.3033050754115569,
+      "precision": 0.06944444444444445,
+      "recall": 0.31302117378506267,
       "stem": "true"
     },
     {
@@ -3093,37 +3107,37 @@
   "porter": [
     {
       "ap_at_1000": {
-        "improved": 190,
-        "mean_delta": -0.002361652291736644,
+        "improved": 198,
+        "mean_delta": -5.8458481765185906e-05,
         "percentiles": {
-          "max": 0.49173553719008267,
+          "max": 0.9901960784313726,
           "median": 0.0,
           "min": -0.8571428571428572,
-          "p25": -0.0014520458328445408,
-          "p75": 0.0006303250640115319
+          "p25": -0.0017739511874984221,
+          "p75": 0.0007902489810384546
         },
-        "relative_mean_delta": -0.06283447284252859,
-        "tied": 168,
-        "worsened": 290
+        "relative_mean_delta": -0.0015176317934344713,
+        "tied": 157,
+        "worsened": 293
       },
       "n": 648,
       "precision": {
-        "improved": 20,
-        "mean_delta": 0.0006172839506172839,
+        "improved": 19,
+        "mean_delta": -0.0003086419753086421,
         "percentiles": {
           "max": 0.19999999999999998,
           "median": 0.0,
-          "min": -0.1,
+          "min": -0.2,
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": 0.042553191489361694,
-        "tied": 611,
-        "worsened": 17
+        "relative_mean_delta": -0.020000000000000007,
+        "tied": 607,
+        "worsened": 22
       },
       "recall": {
-        "improved": 20,
-        "mean_delta": 0.0019345794808757772,
+        "improved": 19,
+        "mean_delta": -0.0025763031550068583,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
@@ -3131,9 +3145,9 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": 0.03338924445775497,
-        "tied": 611,
-        "worsened": 17
+        "relative_mean_delta": -0.04084263040223678,
+        "tied": 607,
+        "worsened": 22
       },
       "reference": [
         "jaccard",
@@ -3146,37 +3160,37 @@
     },
     {
       "ap_at_1000": {
-        "improved": 283,
-        "mean_delta": 0.0075240791616829825,
+        "improved": 278,
+        "mean_delta": 0.006689367572552154,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
           "min": -0.75,
-          "p25": -0.0055921905141710125,
-          "p75": 0.008386273698365027
+          "p25": -0.006395808205415044,
+          "p75": 0.00738489451724746
         },
-        "relative_mean_delta": 0.06018324223910532,
-        "tied": 90,
-        "worsened": 275
+        "relative_mean_delta": 0.05028527755087961,
+        "tied": 87,
+        "worsened": 283
       },
       "n": 648,
       "precision": {
-        "improved": 52,
-        "mean_delta": 0.0007716049382716049,
+        "improved": 59,
+        "mean_delta": 0.0013888888888888892,
         "percentiles": {
           "max": 0.4,
           "median": 0.0,
-          "min": -0.10000000000000003,
+          "min": -0.19999999999999998,
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": 0.0165016501650165,
-        "tied": 541,
-        "worsened": 55
+        "relative_mean_delta": 0.028301886792452834,
+        "tied": 532,
+        "worsened": 57
       },
       "recall": {
-        "improved": 52,
-        "mean_delta": 0.0031714855788929864,
+        "improved": 59,
+        "mean_delta": 0.0020931871626316072,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
@@ -3184,9 +3198,9 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": 0.015610974705943569,
-        "tied": 541,
-        "worsened": 55
+        "relative_mean_delta": 0.009625633254721905,
+        "tied": 532,
+        "worsened": 57
       },
       "reference": [
         "tfidf",
@@ -3199,22 +3213,22 @@
     },
     {
       "ap_at_1000": {
-        "improved": 277,
-        "mean_delta": 0.020680176662637693,
+        "improved": 287,
+        "mean_delta": 0.02522656899835986,
         "percentiles": {
-          "max": 0.9897959183673469,
+          "max": 0.9920634920634921,
           "median": 0.0,
-          "min": -0.9166666666666666,
-          "p25": -0.00726246451574448,
-          "p75": 0.014570195489904212
+          "min": -0.8888888888888888,
+          "p25": -0.00936728933451581,
+          "p75": 0.022220054379374122
         },
-        "relative_mean_delta": 0.11614432827136235,
-        "tied": 103,
-        "worsened": 268
+        "relative_mean_delta": 0.13937900356103333,
+        "tied": 96,
+        "worsened": 265
       },
       "n": 648,
       "precision": {
-        "improved": 84,
+        "improved": 92,
         "mean_delta": 0.005709876543209876,
         "percentiles": {
           "max": 0.2,
@@ -3223,13 +3237,13 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": 0.09203980099502486,
-        "tied": 514,
-        "worsened": 50
+        "relative_mean_delta": 0.08958837772397092,
+        "tied": 499,
+        "worsened": 57
       },
       "recall": {
-        "improved": 84,
-        "mean_delta": 0.02669508132471095,
+        "improved": 92,
+        "mean_delta": 0.028189300411522632,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
@@ -3237,9 +3251,9 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": 0.09650801451638664,
-        "tied": 514,
-        "worsened": 50
+        "relative_mean_delta": 0.09896820913210806,
+        "tied": 499,
+        "worsened": 57
       },
       "reference": [
         "bm25",
@@ -3260,14 +3274,14 @@
       "numpy": "2.5.4",
       "pandas": "3.1.1",
       "pyarrow": "26.0.1",
-      "python": "3.12.14",
+      "python": "3.12.10",
       "retrieval-information-system": "0.1.0",
       "sentence-transformers": "6.2.0",
       "torch": "2.15.0+cpu",
       "transformers": "5.22.2"
     },
     "artifact_bytes_equal_to_original": {
-      "dense/metadata.json": false,
+      "dense/metadata.json": true,
       "index_no_stem.json": true,
       "index_stem.json": true
     },
@@ -3342,9 +3356,9 @@
         "dense"
       ],
       "preprocessing": {
-        "classical": "ris.preprocessing.preprocess: minúsculas, nltk.word_tokenize, stopwords inglesas de NLTK, solo tokens str.isalnum(); Porter opcional; misma configuración en documentos y consulta",
+        "classical": "ris.preprocessing.preprocess: minúsculas, nltk.word_tokenize, trozos alfanuméricos de cada token (alnum_pieces), stopwords inglesas de NLTK; Porter opcional; misma configuración en documentos y consulta",
         "dense": "ninguno: título + ' ' + texto originales",
-        "known_limitation": "preprocess descarta tokens no estrictamente alfanuméricos (guiones, decimales, contracciones) en documentos y consultas; su efecto en las métricas no se ha medido (corresponde a la issue #3)"
+        "known_limitation": "desde el 16 de noviembre los tokens con guion, punto o barra se parten en trozos ('goog-stock' -> goog, stock; '1.000' -> 1, 000) en lugar de descartarse; se descarta n't. Un decimal se parte en dos números ('3.5' -> 3, 5)"
       },
       "query_order": "qid ascendente como cadena",
       "ranking_order": "score descendente; empate por doc_id ascendente",
@@ -3382,16 +3396,16 @@
     },
     "index_check": "500 documentos de BM25/Porter: muestra, no garantía completa",
     "local_artifacts_sha256": {
-      "dense/metadata.json": "27acbb04ee631a9065e12a2a784555823e2f452be363de6b4af8b9a103ea26ca",
-      "index_no_stem.json": "28068d698b8c1187cde6b62ec5df1c614dcd6d602cc994b95a6ee0ab7dc69f13",
-      "index_stem.json": "871839f0c9809fab425b5476429daffc259fbe9b5406c6f3e030940d3117329f"
+      "dense/metadata.json": "922b7c0dc4b9680c1e60fc935a4fefb3c7a245cfcc34e57ff483dda264f2bda0",
+      "index_no_stem.json": "d1d1951f35746c8ab41fcebfabef200e9e982ff8d143279703c08537023ce1b0",
+      "index_stem.json": "33f9ac24b03a682574a9c45deca67ea9d6282645acfc1d6908f791cef219b4e9"
     },
     "local_dense_build": {
       "batch_size": 32,
       "corpus_sha256": "78c669dba3430c37ca631b9c368311799d312f59d82bc850186be08012741bb0",
       "file_sha256": {
-        "embeddings.npy": "38295cedcd5c4cc779f09387807e6f5010a97d4f3a4a4bf47c14a02507e59858",
-        "index.faiss": "e95aa99c7c8b8f24a8eadac800830c42d7874478b9bf7c3b5705b429d2357718"
+        "embeddings.npy": "de04badf0b481a29f54cc5fce5c6ea990f655b5b6653b9860be59246ab5373d1",
+        "index.faiss": "4361de6cdcc0f87455e97726cb3b2858460ca70a7ff941a0e7116ad77f6aeef4"
       },
       "library_versions": {
         "faiss-cpu": "1.15.1",
@@ -3404,8 +3418,8 @@
       "model_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
       "threads": 8
     },
-    "metrics_per_query_sha256": "f4ba4752632369aafe5dd0c9c71e0e89a9efd84368445851d0bf89b91eb23302",
-    "metrics_summary_sha256": "6bc3b8d2b4fbf80c0453180d194ff6d4cc9889e40489d9acfdf1ee6b8e9a498f",
+    "metrics_per_query_sha256": "c9ad4f7a06de53512f65ea4ef7b5a97b3d3666b680727c5c3433e74f0161a2ea",
+    "metrics_summary_sha256": "97a4cd25f222d14068871df167b13490336aeddf83c9ef6dd1e67860df177832",
     "nltk_resources": {
       "files": {
         "corpora/stopwords/english": "f6d005956f407dbc6ea32e5ff0c7e8e6f71488d3239b9023efdc7fc139d6375b",
@@ -3441,26 +3455,26 @@
       "index_no_stem.json": {
         "format_version": 1,
         "n_docs": 57638,
-        "n_terms": 66796,
-        "sha256": "28068d698b8c1187cde6b62ec5df1c614dcd6d602cc994b95a6ee0ab7dc69f13",
+        "n_terms": 78115,
+        "sha256": "d1d1951f35746c8ab41fcebfabef200e9e982ff8d143279703c08537023ce1b0",
         "stem": false
       },
       "index_stem.json": {
         "format_version": 1,
         "n_docs": 57638,
-        "n_terms": 46821,
-        "sha256": "871839f0c9809fab425b5476429daffc259fbe9b5406c6f3e030940d3117329f",
+        "n_terms": 57620,
+        "sha256": "33f9ac24b03a682574a9c45deca67ea9d6282645acfc1d6908f791cef219b4e9",
         "stem": true
       }
     },
     "retrieval_evaluation_code_commit": "d8793aacbf964155b54d42745d913f010c2cb8a2",
     "source_sha256": {
-      "scripts/analyze_models.py": "fcf108e80064108310a72da32572eb25149b9006bdf15ac7ce7a4c3227e9263e",
-      "scripts/evaluate.py": "3f09bd9cbc462aeb2289bbe69b7ed9b7a01aee50d451fe11320c36a0cec8a31b",
-      "src/ris/comparison.py": "0a831efab36f52ea1fcef8ede5c4f93e57b85d75bfef5ae102b58448d97ed1c3",
+      "scripts/analyze_models.py": "17459ae65bd324505662c2bc090dabbd4a587933acf040d300816c9336e537e7",
+      "scripts/evaluate.py": "fcb2556a307a6a2c21aaf644e5a3f6274f2b9309c4a487a980870527b1bc0d4a",
+      "src/ris/comparison.py": "9adbe096cd45b78a21f38bf130e5a5713d07273158dbd3bd5077f5e9b3388545",
       "src/ris/data.py": "b4f7a729e8aa416d7e336e6e10f21ae09cc7bbd6a93892008e76b214e2ed5687",
       "src/ris/index.py": "31a83e45a4acce7771750134ae07307020516b7c55b264979f1ebc8cf3758955",
-      "src/ris/preprocessing.py": "ddb889b7ad6fbcc0e65595fe832d072f9c43e4afb5d81eebf4c470c1d17d8233",
+      "src/ris/preprocessing.py": "4a5e39af7e04273078776e5d37609e3fd6074f24d8d3e9182890684d09078573",
       "src/ris/retrievers/__init__.py": "8393629119dd8584e2e04d7aa7f940dc044fcb4ebff91db2677335b346f1ed02",
       "src/ris/retrievers/base.py": "38d867c35495c8b43f3b6b1df5bc0f067a52c34de615aeabc86f6dafd71b6984",
       "src/ris/retrievers/bm25.py": "af828039753e6983af20ea4a02305040e5fa5f5991ba04e5074c28b0376cd5ac",
@@ -3474,22 +3488,22 @@
     {
       "ap_at_1000": {
         "improved": 65,
-        "mean_delta": -0.16115072646440995,
+        "mean_delta": -0.1676996323361715,
         "percentiles": {
           "max": 0.8888888888888888,
-          "median": -0.035242436111032754,
+          "median": -0.037182175430364534,
           "min": -1.0,
-          "p25": -0.23837251616066696,
-          "p75": -0.0023906358214259393
+          "p25": -0.2478379735935706,
+          "p75": -0.0027042534536010545
         },
-        "relative_mean_delta": -0.8108782900387781,
-        "tied": 55,
-        "worsened": 528
+        "relative_mean_delta": -0.8132106667172673,
+        "tied": 54,
+        "worsened": 529
       },
       "n": 648,
       "precision": {
-        "improved": 11,
-        "mean_delta": -0.05324074074074074,
+        "improved": 14,
+        "mean_delta": -0.05401234567901234,
         "percentiles": {
           "max": 0.1,
           "median": 0.0,
@@ -3497,23 +3511,23 @@
           "p25": -0.1,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.785876993166287,
-        "tied": 367,
-        "worsened": 270
+        "relative_mean_delta": -0.7777777777777777,
+        "tied": 357,
+        "worsened": 277
       },
       "recall": {
-        "improved": 11,
-        "mean_delta": -0.24536487603617232,
+        "improved": 14,
+        "mean_delta": -0.24994239728036025,
         "percentiles": {
-          "max": 0.5,
+          "max": 1.0,
           "median": 0.0,
           "min": -1.0,
           "p25": -0.5,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.8089705577898257,
-        "tied": 367,
-        "worsened": 270
+        "relative_mean_delta": -0.7984839947344401,
+        "tied": 357,
+        "worsened": 277
       },
       "reference": [
         "bm25",
@@ -3526,23 +3540,23 @@
     },
     {
       "ap_at_1000": {
-        "improved": 63,
-        "mean_delta": -0.1635123787561466,
+        "improved": 65,
+        "mean_delta": -0.1677580908179367,
         "percentiles": {
-          "max": 0.48234115792207605,
-          "median": -0.034482758620689655,
+          "max": 0.9705882352941176,
+          "median": -0.03719768469968951,
           "min": -1.0,
-          "p25": -0.2336857664588757,
-          "p75": -0.0020783999185190844
+          "p25": -0.24633579436696745,
+          "p75": -0.0022477565606933234
         },
-        "relative_mean_delta": -0.8227616529872691,
+        "relative_mean_delta": -0.8134941441481317,
         "tied": 58,
-        "worsened": 527
+        "worsened": 525
       },
       "n": 648,
       "precision": {
-        "improved": 14,
-        "mean_delta": -0.05262345679012346,
+        "improved": 15,
+        "mean_delta": -0.054320987654320994,
         "percentiles": {
           "max": 0.1,
           "median": 0.0,
@@ -3550,13 +3564,13 @@
           "p25": -0.1,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.7767653758542141,
-        "tied": 360,
-        "worsened": 274
+        "relative_mean_delta": -0.7822222222222223,
+        "tied": 353,
+        "worsened": 280
       },
       "recall": {
-        "improved": 14,
-        "mean_delta": -0.24343029655529658,
+        "improved": 15,
+        "mean_delta": -0.2525187004353671,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
@@ -3564,9 +3578,9 @@
           "p25": -0.5,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.8025922290452417,
-        "tied": 360,
-        "worsened": 274
+        "relative_mean_delta": -0.8067144384576366,
+        "tied": 353,
+        "worsened": 280
       },
       "reference": [
         "bm25",
@@ -3579,23 +3593,23 @@
     },
     {
       "ap_at_1000": {
-        "improved": 182,
-        "mean_delta": -0.07371651782972026,
+        "improved": 172,
+        "mean_delta": -0.07319082303460576,
         "percentiles": {
-          "max": 0.8888888888888888,
-          "median": -0.0035830854616580835,
-          "min": -0.99609375,
-          "p25": -0.0781514158918005,
-          "p75": 0.000623831795186224
+          "max": 0.96875,
+          "median": -0.006532007503016338,
+          "min": -0.9965753424657534,
+          "p25": -0.09786864931846344,
+          "p75": 0.00035839744289179067
         },
-        "relative_mean_delta": -0.3709268039730368,
-        "tied": 77,
-        "worsened": 389
+        "relative_mean_delta": -0.354917641550007,
+        "tied": 72,
+        "worsened": 404
       },
       "n": 648,
       "precision": {
-        "improved": 35,
-        "mean_delta": -0.020987654320987658,
+        "improved": 44,
+        "mean_delta": -0.020370370370370372,
         "percentiles": {
           "max": 0.2,
           "median": 0.0,
@@ -3603,13 +3617,13 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.30979498861047844,
-        "tied": 464,
-        "worsened": 149
+        "relative_mean_delta": -0.29333333333333333,
+        "tied": 445,
+        "worsened": 159
       },
       "recall": {
-        "improved": 35,
-        "mean_delta": -0.10014764042541821,
+        "improved": 44,
+        "mean_delta": -0.09556149012167531,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
@@ -3617,9 +3631,9 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.33018781597877034,
-        "tied": 464,
-        "worsened": 149
+        "relative_mean_delta": -0.3052876230899735,
+        "tied": 445,
+        "worsened": 159
       },
       "reference": [
         "bm25",
@@ -3632,23 +3646,23 @@
     },
     {
       "ap_at_1000": {
-        "improved": 149,
-        "mean_delta": -0.06619243866803728,
+        "improved": 141,
+        "mean_delta": -0.06650145546205362,
         "percentiles": {
-          "max": 0.8,
-          "median": -0.005646707887272828,
-          "min": -0.9642857142857143,
-          "p25": -0.07500000000000001,
+          "max": 0.96875,
+          "median": -0.006415580748838799,
+          "min": -0.96,
+          "p25": -0.08091929633878993,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.3330671394304179,
-        "tied": 81,
-        "worsened": 418
+        "relative_mean_delta": -0.32247949611217314,
+        "tied": 83,
+        "worsened": 424
       },
       "n": 648,
       "precision": {
-        "improved": 21,
-        "mean_delta": -0.020216049382716053,
+        "improved": 26,
+        "mean_delta": -0.01898148148148148,
         "percentiles": {
           "max": 0.19999999999999998,
           "median": 0.0,
@@ -3656,13 +3670,13 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.2984054669703873,
-        "tied": 491,
-        "worsened": 136
+        "relative_mean_delta": -0.2733333333333333,
+        "tied": 485,
+        "worsened": 137
       },
       "recall": {
-        "improved": 21,
-        "mean_delta": -0.09697615484652522,
+        "improved": 26,
+        "mean_delta": -0.0934683029590437,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
@@ -3670,9 +3684,9 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.3197313949162821,
-        "tied": 491,
-        "worsened": 136
+        "relative_mean_delta": -0.2986005765323214,
+        "tied": 485,
+        "worsened": 137
       },
       "reference": [
         "bm25",
@@ -3685,22 +3699,22 @@
     },
     {
       "ap_at_1000": {
-        "improved": 268,
-        "mean_delta": -0.020680176662637693,
+        "improved": 265,
+        "mean_delta": -0.02522656899835986,
         "percentiles": {
-          "max": 0.9166666666666666,
+          "max": 0.8888888888888888,
           "median": 0.0,
-          "min": -0.9897959183673469,
-          "p25": -0.014570195489904212,
-          "p75": 0.00726246451574448
+          "min": -0.9920634920634921,
+          "p25": -0.022220054379374122,
+          "p75": 0.00936728933451581
         },
-        "relative_mean_delta": -0.10405852122300513,
-        "tied": 103,
-        "worsened": 277
+        "relative_mean_delta": -0.12232892051320586,
+        "tied": 96,
+        "worsened": 287
       },
       "n": 648,
       "precision": {
-        "improved": 50,
+        "improved": 57,
         "mean_delta": -0.005709876543209876,
         "percentiles": {
           "max": 0.2,
@@ -3709,13 +3723,13 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.08428246013667426,
-        "tied": 514,
-        "worsened": 84
+        "relative_mean_delta": -0.08222222222222221,
+        "tied": 499,
+        "worsened": 92
       },
       "recall": {
-        "improved": 50,
-        "mean_delta": -0.02669508132471095,
+        "improved": 57,
+        "mean_delta": -0.028189300411522632,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
@@ -3723,9 +3737,9 @@
           "p25": 0.0,
           "p75": 0.0
         },
-        "relative_mean_delta": -0.08801396181217278,
-        "tied": 514,
-        "worsened": 84
+        "relative_mean_delta": -0.0900555705885856,
+        "tied": 499,
+        "worsened": 92
       },
       "reference": [
         "bm25",
@@ -3738,23 +3752,23 @@
     },
     {
       "ap_at_1000": {
-        "improved": 456,
-        "mean_delta": 0.11285032270299168,
+        "improved": 443,
+        "mean_delta": 0.10536717121998627,
         "percentiles": {
-          "max": 1.0,
-          "median": 0.036900871459694985,
+          "max": 0.9993718592964824,
+          "median": 0.031843140131615114,
           "min": -0.9911504424778761,
           "p25": 0.0,
-          "p75": 0.2438080832390044
+          "p75": 0.2190580494001257
         },
-        "relative_mean_delta": 0.5678402990254944,
-        "tied": 44,
-        "worsened": 148
+        "relative_mean_delta": 0.5109474980013762,
+        "tied": 49,
+        "worsened": 156
       },
       "n": 648,
       "precision": {
-        "improved": 227,
-        "mean_delta": 0.0367283950617284,
+        "improved": 219,
+        "mean_delta": 0.03503086419753086,
         "percentiles": {
           "max": 0.5,
           "median": 0.0,
@@ -3762,23 +3776,23 @@
           "p25": 0.0,
           "p75": 0.1
         },
-        "relative_mean_delta": 0.5421412300683371,
-        "tied": 362,
-        "worsened": 59
+        "relative_mean_delta": 0.5044444444444444,
+        "tied": 369,
+        "worsened": 60
       },
       "recall": {
-        "improved": 227,
-        "mean_delta": 0.13800048545418916,
+        "improved": 219,
+        "mean_delta": 0.12828438708068338,
         "percentiles": {
           "max": 1.0,
           "median": 0.0,
           "min": -1.0,
           "p25": 0.0,
-          "p75": 0.3333333333333333
+          "p75": 0.3
         },
-        "relative_mean_delta": 0.4549890412052462,
-        "tied": 362,
-        "worsened": 59
+        "relative_mean_delta": 0.40982654792793793,
+        "tied": 369,
+        "worsened": 60
       },
       "reference": [
         "bm25",

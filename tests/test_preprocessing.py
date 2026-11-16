@@ -70,3 +70,23 @@ def test_setup_nltk_downloads_only_missing_resources(monkeypatch):
 
     assert downloaded == [("punkt_tab", True)]
     assert hasattr(preprocessing, "preprocess")
+
+
+def test_preprocess_splits_hyphens_decimals_and_slashes_instead_of_dropping_them():
+    text = "What happened to GOOG-stock? Why isn't it 1.000 USD?"
+    assert preprocess(text) == ["happened", "goog", "stock", "1", "000", "usd"]
+    assert preprocess("long-term self-employed pros/cons") == [
+        "long", "term", "self", "employed", "pros", "cons",
+    ]
+
+
+def test_preprocess_drops_contractions_and_stopword_pieces():
+    assert preprocess("isn't s-corp they'll") == ["corp"]
+
+
+def test_preprocess_keeps_non_ascii_alphanumeric_tokens():
+    assert preprocess("café au_lait") == ["café", "au", "lait"]
+
+
+def test_preprocess_pieces_are_stemmed_like_whole_words():
+    assert preprocess("self-employed investors", stem=True) == ["self", "employ", "investor"]
