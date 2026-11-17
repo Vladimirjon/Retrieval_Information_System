@@ -307,7 +307,7 @@ def test_verifier_reason_is_preserved(reports, monkeypatch):
         data.load_reports(directory)
 
 
-def test_reload_resets_qid_when_new_report_pair_has_different_qids(reports, tmp_path):
+def test_rerun_resets_qid_when_new_report_pair_has_different_qids(reports, tmp_path):
     directory, rows, summary = reports
     other = tmp_path / "other"
     other.mkdir()
@@ -322,7 +322,7 @@ def test_reload_resets_qid_when_new_report_pair_has_different_qids(reports, tmp_
     assert not app.exception and app.selectbox[0].value == "02"
     for name in (evaluate.CSV_NAME, evaluate.SUMMARY_NAME):
         (directory / name).write_bytes((other / name).read_bytes())
-    app.button[0].click().run()
+    app.run()
     assert not app.exception
     assert app.selectbox[0].options == ["20", "30"]
     assert app.selectbox[0].value == "20"
@@ -357,7 +357,9 @@ def test_streamlit_shows_global_map_and_query_ap_without_query_or_engine(reports
     assert spec["encoding"]["x"]["title"] == "R@10"
     chart_data = convert_arrow_bytes_to_pandas_df(charts[0].proto.data.data)
     assert chart_data.Valor.tolist() == before.recall.tolist()
-    assert "independientes del buscador" in app.caption[0].value
+    assert "FiQA en test" in app.header[0].proto.help
+    assert not any(text.value.startswith(("FiQA ·", "P@10 · R@10", "Mostrando:",
+                                          "Embeddings: referencia única")) for text in app.caption)
     assert not [record for record in caplog.records
                 if record.name == "streamlit.elements.vega_charts" and record.levelno >= 30]
 
@@ -385,22 +387,24 @@ def test_streamlit_removes_stale_results_and_restores_them_after_error(reports):
     directory, _, summary = reports
     app = view_app(directory)
     assert len(app.dataframe) == 2
+    assert not any(button.label in {"Volver a leer reportes", "Reintentar carga"} for button in app.button)
     csv_path = directory / evaluate.CSV_NAME
     csv_bytes = csv_path.read_bytes()
     csv_path.unlink()
-    app.button[0].click().run()
+    app.run()
     assert not app.exception and len(app.error) == 1
     assert not app.dataframe and not app.get("vega_lite_chart")
     assert "Restaure juntos" in app.info[0].value
     csv_path.write_bytes(csv_bytes)
     summary["schema_version"] = 2
     write_summary(directory, summary)
-    app.button[0].click().run()
+    app.button(key="metrics_retry").click().run()
     assert not app.exception and app.error and not app.dataframe
     summary["schema_version"] = 1
     write_summary(directory, summary)
-    app.button[0].click().run()
+    app.button(key="metrics_retry").click().run()
     assert not app.exception and not app.error and len(app.dataframe) == 2
+    assert not any(button.label in {"Volver a leer reportes", "Reintentar carga"} for button in app.button)
 
 
 def test_versioned_reports_are_displayed_exactly():
@@ -489,11 +493,11 @@ def test_method_filters_empty_state_and_reset(reports, monkeypatch, caplog):
     monkeypatch.setattr(policies, "_shown_default_value_warning", False)
     app = view_app(reports[0])
     app.segmented_control[0].set_value("Con Porter").run()
-    app.multiselect[0].set_value(["BM25"]).run()
+    app.pills(key="metrics_methods").set_value(["BM25"]).run()
     assert app.metric[2].value == "1"
     assert app.dataframe[0].value.Modelo.tolist() == ["BM25"]
     assert app.dataframe[0].value.Porter.tolist() == ["Con Porter"]
-    app.multiselect[0].set_value([]).run()
+    app.pills(key="metrics_methods").set_value([]).run()
     assert not app.exception and app.metric[2].value == "0"
     assert not app.dataframe and not app.get("vega_lite_chart")
     assert any("No hay métodos" in message.value for message in app.info)
@@ -546,7 +550,7 @@ def test_query_explorer_uses_shared_filters_and_literal_search(reports):
 def test_filters_survive_navigation_and_reset_restores_defaults(reports):
     app = view_app(reports[0], with_navigation=True)
     app.segmented_control[0].set_value("Con Porter").run()
-    app.multiselect[0].set_value(["BM25"]).run()
+    app.pills(key="metrics_methods").set_value(["BM25"]).run()
     app.radio[0].set_value("recall").run()
     app.selectbox[0].select("10").run()
     app.toggle[0].set_value(True).run()
@@ -554,12 +558,12 @@ def test_filters_survive_navigation_and_reset_restores_defaults(reports):
     app.toggle[0].set_value(False).run()
     assert not app.exception
     assert app.segmented_control[0].value == "Con Porter"
-    assert app.multiselect[0].value == ["BM25"]
+    assert app.pills(key="metrics_methods").value == ["BM25"]
     assert app.radio[0].value == "recall"
     assert app.selectbox[0].value == "10"
     app.button(key="metrics_reset").click().run()
     assert app.segmented_control[0].value == "Comparar"
-    assert app.multiselect[0].value == list(metrics.MODEL_NAMES.values())
+    assert app.pills(key="metrics_methods").value == list(metrics.MODEL_NAMES.values())
     assert app.radio[0].value == "ap_at_1000"
     assert app.selectbox[0].value == "02"
 
@@ -576,3 +580,80 @@ def test_chart_tooltips_name_the_metric_method_and_variant_and_keep_common_scale
             }
             assert all(row["Métrica"] == label for row in spec["data"]["values"])
             assert spec["encoding"]["color"]["scale"]["range"] == list(metrics.VARIANT_COLORS)
+
+
+@pytest.mark.parametrize("case", ["empty", "zero", "tie", "close"])
+def test_metric_summary_handles_empty_zero_ties_and_full_precision(case):
+    values = {"empty": [], "zero": [0., 0.], "tie": [.3, .3],
+              "close": [.3000003, .3000004]}[case]
+    table = pd.DataFrame([
+        {"Modelo": method, "Porter": "Sin Porter", "precision": value}
+        for method, value in zip(("Jaccard", "BM25"), values, strict=False)
+    ], columns=["Modelo", "Porter", "precision"])
+    text = metrics.metric_summary(table, "precision", "P@10")
+    if case == "empty":
+        assert "No hay configuraciones" in text
+    elif case == "zero":
+        assert "P@10 = 0" in text and "Mayor" not in text
+    elif case == "tie":
+        assert "empate" in text and "Jaccard" in text and "BM25" in text
+        assert "0.300000" in text
+    else:
+        assert "BM25" in text and "Jaccard" not in text and "empate" not in text
+
+
+def test_empty_methods_recover_without_resetting_other_filters(reports):
+    app = view_app(reports[0])
+    app.segmented_control[0].set_value("Con Porter").run()
+    app.radio[0].set_value("recall").run()
+    app.selectbox[0].select("10").run()
+    app.pills(key="metrics_methods").set_value([]).run()
+    assert not app.dataframe
+    app.button(key="metrics_restore_methods").click().run()
+    assert not app.exception
+    assert app.segmented_control[0].value == "Con Porter"
+    assert app.radio[0].value == "recall" and app.selectbox[0].value == "10"
+    assert app.pills(key="metrics_methods").value == list(metrics.MODEL_NAMES.values())
+    assert len(app.dataframe[0].value) == 4
+
+
+def test_empty_query_filter_clears_without_resetting_selection(reports):
+    app = view_app(reports[0])
+    app.segmented_control[0].set_value("Con Porter").run()
+    app.pills(key="metrics_methods").set_value(["BM25"]).run()
+    app.radio[0].set_value("recall").run()
+    app.selectbox[0].select("10").run()
+    before = app.dataframe[0].value.copy()
+    app.checkbox(key="metrics_explore").check().run()
+    app.text_input[0].set_value("does not exist").run()
+    assert len(app.dataframe) == 2
+    app.button(key="metrics_clear_query_filter").click().run()
+    assert not app.exception and app.text_input[0].value == ""
+    assert app.selectbox[0].value == "10" and app.radio[0].value == "recall"
+    assert app.segmented_control[0].value == "Con Porter"
+    assert app.pills(key="metrics_methods").value == ["BM25"]
+    assert len(app.dataframe[2].value) == 2
+    pd.testing.assert_frame_equal(app.dataframe[0].value, before)
+
+
+def test_tables_keep_one_context_column_fixed_for_horizontal_scroll(reports):
+    app = view_app(reports[0])
+    app.checkbox(key="metrics_explore").check().run()
+    for element in app.dataframe:
+        columns = json.loads(element.proto.columns)
+        active_pinned = [name for name in element.value.columns if columns.get(name, {}).get("pinned")]
+        assert active_pinned == (["qid"] if "qid" in element.value.columns else ["Modelo"])
+
+
+def test_global_summary_follows_visible_methods_and_metric_without_changing_data(reports):
+    app = view_app(reports[0])
+    app.selectbox[0].select("10").run()
+    app.segmented_control[0].set_value("Con Porter").run()
+    app.pills(key="metrics_methods").set_value(["BM25"]).run()
+    before = app.dataframe[0].value.copy()
+    app.radio[0].set_value("precision").run()
+    summaries = [text.value for text in app.caption if text.value.startswith("Mayor **")]
+    assert len(summaries) == 1
+    assert all("P@10" in text and "BM25" in text and "Con Porter" in text for text in summaries)
+    assert any("0.150000" in text for text in summaries)
+    pd.testing.assert_frame_equal(app.dataframe[0].value, before)

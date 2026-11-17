@@ -23,17 +23,18 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 | #17 | docs: informe técnico de hasta cinco páginas | Jorge Torres | M5 Informe y entrega | #4, #12, #16 | pendiente |
 | #18 | docs: QA final, README y entrega completa | Vladimirjon | M5 Informe y entrega | #16, #17 | pendiente |
 
-Seguimiento de #15 solicitado el 17 de noviembre: correcciones locales en
-`fix/15-interacciones-metricas`, desde `main` actualizada (`fa2d3ec`). Actualización
-por secciones y rediseño HCI: selector Sin Porter / Con Porter / Comparar,
-filtro de métodos persistente, ayudas nativas, diferencias absolutas equivalentes
-y exploración de consultas. Sin iconos de ancla ni fragmentos antiguos en la URL.
-376 pruebas locales aprobadas y Ruff sin errores; revisión visual local en Chrome
-de escritorio y móvil emulado a 390 px completada. Revisión adicional: encabezados
-fijos, filtro en vivo y restablecimiento comprobados en Chrome; ceros sin resaltado
-y restablecimiento sin aviso de estado, cubiertos por pruebas. En curso: revisión e integración
-de estos cambios; sin commit, PR, CI nuevo ni despliegue. La integración anterior
-de #15 se conserva.
-Evidencia y límites en [STATE](STATE.md).
+Seguimiento de #15: rama `fix/15-interacciones-metricas` preparada para revisión
+contra `main` (`fa2d3ec`). La issue original sigue cerrada con el PR #37.
+Incluye filtros persistentes, diferencias absolutas de Porter, exploración de qids,
+botones múltiples de métodos, recuperación de estados vacíos, tablas más legibles,
+ayudas y transiciones entre pestañas. Los colores de las barras identifican la
+variante experimental; el tema gris y la navegación son ampliaciones de alcance
+justificadas en [app/README](app/README.md).
+
+Validación local: 384 pruebas, incluidas 98 de Métricas, Ruff y diff sin errores;
+diagnósticos auxiliares de navegación y migración del selector. Se mantienen
+reportes, fórmulas, motor, contrato y dependencias. **En revisión:** recorrido
+visual final, CI del PR y aprobación del equipo antes de integrar. No hay despliegue
+comprobado del seguimiento. Evidencia y límites en [STATE](STATE.md).
 
 Actualizar junto con [STATE](STATE.md) al terminar cada tarea. Estados: pendiente, en curso, hecho, bloqueado. Ismael Freire = @BrandonFreire; Jorge Torres = @Almejandro04.

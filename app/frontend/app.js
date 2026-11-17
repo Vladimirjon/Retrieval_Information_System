@@ -59,20 +59,29 @@ function mount(root, data) {
   } catch { /* sin almacenamiento: animación normal */ }
 
   // ---------- Modo: inicio ↔ resultados ----------
-  let moving = false;
+  let moving = false, layoutVersion = 0, layoutTransition = null;
   const placeBar = (mode) => root.querySelector(`[data-slot="${mode}"]`).append(bar);
   function setMode(mode) {
-    if (root.dataset.mode === mode) return;
+    const view = state.view, version = ++layoutVersion;
+    layoutTransition?.skipTransition(); layoutTransition = null;
+    if (root.dataset.mode === mode && root.dataset.view === view) return;
     const focused = document.activeElement === input, reopen = !suggest.hidden;
     const apply = () => {
+      if (version !== layoutVersion) return;  // prevalece la última pestaña pulsada
       moving = true;
-      root.dataset.mode = mode; placeBar(mode);
-      if (focused) input.focus({ preventScroll: true });
-      if (reopen) showSuggest(input.value);
+      root.dataset.view = view; root.dataset.mode = mode; placeBar(mode);
+      if (focused && view !== "metricas") input.focus({ preventScroll: true });
+      if (reopen && view !== "metricas") showSuggest(input.value);
       moving = false;
     };
-    if (document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) document.startViewTransition(apply);
-    else apply();
+    if (document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const transition = document.startViewTransition(apply);
+      layoutTransition = transition;
+      transition.ready.catch(() => {});  // cancelar una transición rápida es normal
+      transition.finished.finally(() => {
+        if (layoutTransition === transition) layoutTransition = null;
+      }).catch(() => {});
+    } else apply();
   }
 
   // ---------- Búsqueda: Python responde con el mismo seq ----------
@@ -348,9 +357,9 @@ function mount(root, data) {
   function setView(view) {
     clearSectionAnchor();
     if (state.view === view) return;
-    state.view = view; root.dataset.view = view;
+    state.view = view;
     markView();
-    if (view !== "buscar") setMode("results"); else if (!state.q.trim()) setMode("home");
+    setMode(view === "buscar" && !state.q.trim() ? "home" : "results");
     state.seq += 1; send("request", currentRequest());
   }
   root.querySelectorAll("[data-view-link]").forEach((a) => on(a, "click", (e) => { e.preventDefault(); setView(a.dataset.viewLink); }));

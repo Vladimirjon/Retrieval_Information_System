@@ -15,16 +15,23 @@ from ris.comparison import CONFIGURATIONS
 MODEL_NAMES = {"jaccard": "Jaccard", "tfidf": "TF-IDF", "bm25": "BM25", "dense": "Embeddings"}
 PORTER_NAMES = {"false": "Sin Porter", "true": "Con Porter", "na": "No aplica"}
 PORTER_MODES = ("Sin Porter", "Con Porter", "Comparar")
+TABLE_ROW_HEIGHT = 40
 VARIANT_COLORS = ("#7A2E5E", "#246477", "#5E5560")
 METHOD_HELP = (
     "Jaccard: coincidencia de palabras distintas. TF-IDF: coseno de palabras ponderadas. "
     "BM25: coincidencia léxica con ajuste de frecuencia y longitud. "
     "Embeddings: similitud semántica con MiniLM; Porter no aplica."
 )
+TABLE_HELP = (
+    "Pulse un encabezado para ordenar. La negrita señala los máximos positivos, incluidos los empates. "
+    "En pantallas pequeñas, deslice la tabla horizontalmente o abra su vista de pantalla completa."
+)
 ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_THEME = {
     "primaryColor": "#7A2E5E", "backgroundColor": "#FBFAF9",
-    "secondaryBackgroundColor": "#F3F1F2", "textColor": "#201A1F",
+    "secondaryBackgroundColor": "#DCD8DC", "textColor": "#201A1F",
+    "dataframeBorderColor": "#D4CFD3", "dataframeHeaderBackgroundColor": "#ECE9EC",
+    "dataframeHeaderTextColor": "#201A1F",
 }
 try:
     with (ROOT / ".streamlit/config.toml").open("rb") as _theme_file:
@@ -60,6 +67,19 @@ def filter_table(table: pd.DataFrame, porter: str, methods: list[str]) -> pd.Dat
     """Filtra configuraciones sin alterar valores ni duplicar el denso."""
     variants = list(PORTER_NAMES.values()) if porter == "Comparar" else [porter, "No aplica"]
     return table[table.Modelo.isin(methods) & table.Porter.isin(variants)].reset_index(drop=True)
+
+
+def metric_summary(table: pd.DataFrame, metric: str, label: str) -> str:
+    """Resumen legible del máximo visible, usando los valores sin redondear."""
+    if table.empty:
+        return "No hay configuraciones visibles."
+    maximum = table[metric].max()
+    if maximum == 0:
+        return f"Todas las configuraciones visibles tienen {label} = 0."
+    leaders = table.loc[table[metric] == maximum, ["Modelo", "Porter"]]
+    names = ", ".join(f"{row.Modelo} ({row.Porter})" for row in leaders.itertuples(index=False))
+    tie = " · empate" if len(leaders) > 1 else ""
+    return f"Mayor **{label}** visible: **{maximum:.6f}** · {names}{tie}."
 
 
 def porter_differences(table: pd.DataFrame, metric: str) -> pd.DataFrame:
@@ -136,16 +156,18 @@ def _show_table(
     table: pd.DataFrame, labels: dict[str, str], *, description: str,
     help_text: dict[str, str], key: str,
 ) -> None:
-    styled = table.style
+    # Los fondos quedan a cargo del grid para conservar su hover transitorio.
+    styled = table.style.set_properties(color=THEME["textColor"])
     positive_metrics = [name for name in labels if table[name].max() > 0]
     if positive_metrics:
         styled = styled.highlight_max(subset=positive_metrics, props="font-weight: 700;")
     st.dataframe(
         styled, hide_index=True, width="stretch", alt=description, key=key,
-        height=min(360, 36 * (len(table) + 1) + 4),
+        height=min(360, TABLE_ROW_HEIGHT * (len(table) + 1) + 4), row_height=TABLE_ROW_HEIGHT,
         column_config={
             "qid": st.column_config.TextColumn("Consulta (qid)", width=110, pinned=True),
-            "Modelo": st.column_config.TextColumn("Método", width=115, help=METHOD_HELP, pinned=True),
+            "Modelo": st.column_config.TextColumn("Método", width=115, help=METHOD_HELP,
+                                                  pinned="qid" not in table.columns),
             "Porter": st.column_config.TextColumn("Variante", width=115,
                                                   help="Porter solo se aplica a los métodos clásicos."),
             **{name: st.column_config.NumberColumn(f"{label} ↑", format="%.6f", width=125,
@@ -157,14 +179,15 @@ def _show_table(
 
 def _provenance(report: MetricsReport) -> None:
     summary = report.summary
+    config = summary["config"]
     with st.expander("Procedencia y configuración"):
         st.caption(
             "Datos declarados en la evaluación guardada. Se comprueban los reportes; "
             "esta pantalla no vuelve a verificar el corpus ni los índices."
         )
         st.markdown(
-            f"Esquema **{summary['schema_version']}** · profundidad recuperada "
-            f"**{summary['config']['depth']}** · corte de AP **{summary['config']['ap_cutoff']}**."
+            f"Esquema **{summary['schema_version']}** · P@{config['k']} · R@{config['k']} · "
+            f"AP/MAP@{config['ap_cutoff']} · profundidad evaluada **{config['depth']}**."
         )
         st.markdown("**Conteos**")
         st.json(summary["counts"], expanded=True)
@@ -215,6 +238,14 @@ def _reset_filters(first_qid: str) -> None:
         st.session_state[key] = value
 
 
+def _restore_methods() -> None:
+    st.session_state["metrics_methods"] = list(MODEL_NAMES.values())
+
+
+def _clear_query_filter() -> None:
+    st.session_state["metrics_qid_filter"] = ""
+
+
 def _show_differences(table: pd.DataFrame, metric: str, label: str, *, key: str) -> None:
     with st.expander(f"Diferencias con Porter · {label}", key=f"{key}_panel", on_change="rerun") as panel:
         if not panel.open:
@@ -225,7 +256,9 @@ def _show_differences(table: pd.DataFrame, metric: str, label: str, *, key: str)
             st.info("No hay pares clásicos que comparar. Porter no se aplica a Embeddings.")
             return
         st.dataframe(
-            differences, hide_index=True, width="stretch", key=key,
+            differences.style.set_properties(color=THEME["textColor"]),
+            hide_index=True, width="stretch", key=key, row_height=TABLE_ROW_HEIGHT,
+            height=min(360, TABLE_ROW_HEIGHT * (len(differences) + 1) + 4),
             alt=f"Cambio absoluto de {label} entre variantes del mismo método; Embeddings no aplica.",
             column_config={
                 "Modelo": st.column_config.TextColumn("Método", help=METHOD_HELP, width=115, pinned=True),
@@ -246,24 +279,26 @@ def _query_detail(
     directory: Path, report: MetricsReport, porter: str, methods: list[str], metric: str,
 ) -> None:
     _check_report_unchanged(directory, report)
-    st.subheader("Detalle por consulta", anchor=False,
-                 help="Elija un qid para ver P, R y AP de esa consulta. MAP es la media global.")
-    if st.session_state.get("metrics_qid") not in report.qids:
-        st.session_state["metrics_qid"] = report.qids[0]
-    qid = st.selectbox("Consulta evaluada (qid)", report.qids, key="metrics_qid",
-                       persist_state="session",
-                       help="Busque un identificador de test. El reporte guarda ids, no el texto de las consultas.")
-    labels = metric_labels(report, per_query=True)
-    query_table = filter_table(metric_table(report, qid), porter, methods)
-    with st.container(key=f"jab_query_{qid}"):
-        st.markdown(f"**Resultados de la consulta {qid}** · {porter}")
-        _show_table(query_table, labels, description=f"Resultados de la consulta {qid}: {porter}.",
-                    help_text=metric_help(report, per_query=True), key="metrics_query_table")
-    if porter == "Comparar":
-        _show_differences(query_table, metric, labels[metric], key="metrics_query_differences")
+    with st.container(border=True, key="metrics_query_detail"):
+        st.subheader("Detalle por consulta", anchor=False,
+                     help="Elija un qid para ver P, R y AP de esa consulta. MAP es la media global. " + TABLE_HELP)
+        if st.session_state.get("metrics_qid") not in report.qids:
+            st.session_state["metrics_qid"] = report.qids[0]
+        qid = st.selectbox("Consulta evaluada (qid)", report.qids, key="metrics_qid",
+                           persist_state="session",
+                           help="Busque un identificador de test. El reporte guarda ids, no el texto de las consultas.")
+        labels = metric_labels(report, per_query=True)
+        query_table = filter_table(metric_table(report, qid), porter, methods)
+        with st.container(key=f"jab_query_{qid}"):
+            st.markdown(f"**Resultados de la consulta {qid}** · {porter}")
+            _show_table(query_table, labels, description=f"Resultados de la consulta {qid}: {porter}.",
+                        help_text=metric_help(report, per_query=True), key="metrics_query_table")
+        if porter == "Comparar":
+            _show_differences(query_table, metric, labels[metric], key="metrics_query_differences")
 
     if st.checkbox("Explorar todas las consultas", key="metrics_explore", persist_state="session",
-                   help="Abre un listado ordenable. Conserva los métodos y variantes seleccionados arriba."):
+                   help="Abre un listado ordenable. Conserva los métodos y variantes seleccionados arriba. "
+                   "El qid queda fijo al desplazar la tabla horizontalmente."):
         search = st.text_input("Filtrar identificadores de consulta", key="metrics_qid_filter",
                                persist_state="session", live=True, placeholder="Por ejemplo: 100",
                                help="Coincidencia literal en el qid. Solo filtra este listado; no cambia las medias.")
@@ -277,6 +312,8 @@ def _query_detail(
                    f"{n_rows} fila{'s' if n_rows != 1 else ''} · {porter}.")
         if all_rows.empty:
             st.info("No hay consultas que coincidan con ese filtro. Bórrelo para ver el listado completo.")
+            st.button("Limpiar filtro de consultas", key="metrics_clear_query_filter",
+                      on_click=_clear_query_filter)
         else:
             _show_table(all_rows[["qid", "Modelo", "Porter", *labels]], labels,
                         description=f"Consultas filtradas: {porter}; ordenar pulsando los encabezados.",
@@ -295,18 +332,18 @@ def _dashboard(directory: Path, report: MetricsReport) -> None:
             help="Porter agrupa variantes de palabras recortando terminaciones. Comparar usa el mismo test. "
                  "Embeddings es una referencia única, sin Porter, en las tres opciones.",
         )
-        methods = st.multiselect("Métodos visibles", list(MODEL_NAMES.values()),
-                                 default=None if "metrics_methods" in st.session_state else list(MODEL_NAMES.values()),
-                                 key="metrics_methods",
-                                 persist_state="session", help=METHOD_HELP,
-                                 placeholder="Seleccione al menos un método")
+        methods = st.pills("Métodos visibles", list(MODEL_NAMES.values()), selection_mode="multi",
+                           default=None if "metrics_methods" in st.session_state else list(MODEL_NAMES.values()),
+                           key="metrics_methods", persist_state="session", help=METHOD_HELP,
+                           wrap=True)
         metric_names = {"precision": "Precisión", "recall": "Recall", "ap_at_1000": "Promedio AP"}
-        metric = st.radio("Métrica del gráfico y de las diferencias", list(labels),
+        metric = st.radio("Métrica destacada", list(labels),
                           index=None if "metrics_metric" in st.session_state else 2,
                           horizontal=True, format_func=lambda name: f"{labels[name]} · {metric_names[name]}",
                           key="metrics_metric",
-                          persist_state="session", help="P: precisión. R: recall. MAP: promedio de AP. "
-                          "Las ayudas de los encabezados explican cada cálculo. Más es mejor, de 0 a 1.")
+                          persist_state="session", help="Elige la métrica del gráfico, el resumen global y las diferencias. "
+                          "Las tablas conservan las tres métricas. P: precisión; R: recall; MAP: promedio de AP. "
+                          "Más es mejor, de 0 a 1.")
         st.button("Restablecer filtros", key="metrics_reset", icon=":material/restart_alt:",
                   on_click=_reset_filters, args=(report.qids[0],))
 
@@ -318,21 +355,20 @@ def _dashboard(directory: Path, report: MetricsReport) -> None:
         ("Configuraciones visibles", len(table)),
     ), strict=True):
         column.metric(label, f"{value:,}".replace(",", " "))
-    st.caption(f"Mostrando: **{porter}** · **{labels[metric]}** · ↑ Mayor es mejor (0–1).")
     if table.empty:
-        st.info("No hay métodos seleccionados. Elija uno arriba o restablezca los filtros.")
+        st.info("No hay métodos seleccionados. Elija uno arriba o muestre todos los métodos.")
+        st.button("Mostrar todos los métodos", key="metrics_restore_methods", on_click=_restore_methods)
         return
-    if "Embeddings" in methods:
-        st.caption("Embeddings: referencia única · Porter no aplica.")
 
-    st.subheader("Resultados globales", anchor=False, help=metric_help(report)[metric])
+    st.subheader("Resultados globales", anchor=False, help=metric_help(report)[metric] + " " + TABLE_HELP)
+    st.caption(metric_summary(table, metric, labels[metric]))
     st.vega_lite_chart(spec=chart_spec(table, metric, labels[metric]), width="stretch",
                        height=max(280, 44 * len(table) + 70),
                        key="metrics_chart",
                        alt=f"{labels[metric]}: {porter}; {len(table)} configuraciones; escala de 0 a 1.")
     _show_table(table, labels, description=f"Medias globales: {porter}.",
                 help_text=metric_help(report), key="metrics_global_table")
-    st.caption("Pulse un encabezado para ordenar · Negrita: máximos positivos visibles, incluidos empates.")
+    st.caption("Negrita: mejores valores.")
     if porter == "Comparar":
         _show_differences(table, metric, labels[metric], key="metrics_global_differences")
     st.divider()
@@ -366,12 +402,8 @@ def render(context: AppContext) -> None:
     """Consume únicamente reports_dir; independiente del buscador y de su motor."""
     with st.container(key="jab_metrics"):
         st.header("Métricas", anchor=False,
-                  help="Evaluación guardada, independiente del buscador. Las ayudas se abren con el "
+                  help="Evaluación de FiQA en test, independiente del buscador. Las ayudas se abren con el "
                        "cursor, el foco del teclado o tocando el signo de interrogación.")
-        st.caption(
-            "FiQA · evaluación de test · resultados independientes del buscador."
-        )
-        st.button("Volver a leer reportes", key="metrics_reload", help="Relee y valida ambos archivos.")
         try:
             with st.spinner("Validando los reportes…"):
                 report = load_reports(context.reports_dir)
@@ -381,15 +413,11 @@ def render(context: AppContext) -> None:
             st.info(
                 "Restaure juntos metrics_per_query.csv y metrics_summary.json de una evaluación "
                 "válida en la carpeta indicada por JAB_REPORTS_DIR (reports/ por defecto). "
-                "Después pulse «Volver a leer reportes»."
+                "Después pulse «Reintentar carga»."
             )
+            st.button("Reintentar carga", key="metrics_retry", help="Vuelve a leer y validar los reportes.")
             return
 
-        config = report.summary["config"]
-        st.caption(
-            f"P@{config['k']} · R@{config['k']} · AP/MAP@{config['ap_cutoff']} · "
-            f"profundidad evaluada: {config['depth']}."
-        )
         _dashboard(context.reports_dir, report)
         _interpretation(report)
         _provenance(report)

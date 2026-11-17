@@ -2,8 +2,11 @@
 base = "light"
 primaryColor = "#7A2E5E"
 backgroundColor = "#FBFAF9"
-secondaryBackgroundColor = "#F3F1F2"
+secondaryBackgroundColor = "#DCD8DC"
 textColor = "#201A1F"
+dataframeBorderColor = "#D4CFD3"
+dataframeHeaderBackgroundColor = "#ECE9EC"
+dataframeHeaderTextColor = "#201A1F"
 
 [browser]
 gatherUsageStats = false

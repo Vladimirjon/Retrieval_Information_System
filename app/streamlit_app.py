@@ -40,9 +40,33 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .st-key-jab_views { width: min(720px, 100% - 32px); margin: 0 auto; }
 .st-key-jab_views:has(.st-key-jab_metrics) { width: min(1040px, 100% - 32px); }
 .jab[data-view="metricas"] .jab-main { width: min(1040px, 100% - 32px); }
+/* Cada pestaña monta una entrada distinta; los filtros conservan su contenedor. */
+.st-key-jab_view_comparar, .st-key-jab_view_metricas {
+  animation: jab-view-enter var(--d-page, 260ms) var(--ease-out, cubic-bezier(.16, 1, .3, 1));
+}
+@keyframes jab-view-enter {
+  from { opacity: 0; transform: translateY(var(--s2, 8px)); }
+  to { opacity: 1; transform: none; }
+}
+.st-key-jab_metrics {
+  --metrics-panel: #FFFFFF;
+  --metrics-line: #D4CFD3;
+  --metrics-shadow: 0 2px 8px rgb(32 26 31 / .04);
+}
+.st-key-jab_metrics .st-key-metrics_query_detail {
+  background: var(--metrics-panel); border-color: var(--metrics-line);
+  border-top: 2px solid var(--accent, #7A2E5E); border-radius: var(--r-menu, 18px);
+  padding: var(--s5, 24px); box-shadow: var(--metrics-shadow);
+}
+.st-key-jab_metrics .st-key-metrics_query_detail [class*="st-key-jab_query_"] {
+  border-top: 1px solid var(--metrics-line); padding-top: var(--s4, 16px);
+}
+.st-key-jab_metrics [data-testid="stDataFrame"] {
+  border-radius: var(--r-item, 10px); box-shadow: var(--metrics-shadow);
+}
 .st-key-jab_metrics [data-testid="stCaptionContainer"] p { color: #5E5560; }
 .st-key-metrics_controls { background: #F3F1F2; }
-.st-key-metrics_controls button { min-height: 42px; }
+.st-key-jab_metrics .st-key-metrics_controls button { min-height: 44px; }
 .st-key-jab_metrics :is(button, input, [role="radio"], [role="checkbox"], [role="combobox"]):focus-visible {
   outline: 2px solid #7A2E5E; outline-offset: 3px;
 }
@@ -51,11 +75,14 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
   .st-key-jab_views:has(.st-key-jab_metrics) { width: calc(100% - 24px); }
   .jab[data-view="metricas"] .jab-main { width: calc(100% - 24px); }
   .st-key-jab_metrics [data-testid="stMetricValue"] { font-size: 1.75rem; }
+  .st-key-jab_metrics .st-key-metrics_query_detail { padding: var(--s4, 16px); }
 }
 /* La navegación del componente es inmediata; no esperar al fin del rerun para
    ocultar la vista anterior que Streamlit conserva durante la transición. */
 body:has(.jab[data-view="buscar"]) .st-key-jab_views,
-body:has(.jab:not([data-view="metricas"])) .st-key-jab_metrics { display: none; }
+body:has(.jab:not([data-view="metricas"])) .st-key-jab_metrics,
+body:has(.jab:not([data-view="comparar"])) .st-key-jab_view_comparar,
+body:has(.jab:not([data-view="metricas"])) .st-key-jab_view_metricas { display: none; }
 /* Solo el buscador tiene su propio indicador de carga. Las vistas nativas
    conservan la atenuación de Streamlit mientras actualizan sus datos. */
 [data-testid="stElementContainer"][data-stale="true"]:has(.jab) { opacity: 1 !important; transition: none !important; }
@@ -68,7 +95,8 @@ body:has(.jab:not([data-view="metricas"])) .st-key-jab_metrics { display: none; 
 .jab-loading p { margin: 0; max-width: 36ch; color: #5E5560; font-size: 14px; }
 @keyframes jab-load { from { opacity: 1; transform: scaleX(1); } to { opacity: .65; transform: scaleX(.98); } }
 @media (prefers-reduced-motion: reduce) {
-  .jab-loading-bar, .st-key-jab_metrics [class*="st-key-jab_query_"] { animation: none; }
+  .jab-loading-bar, .st-key-jab_view_comparar, .st-key-jab_view_metricas,
+  .st-key-jab_metrics [class*="st-key-jab_query_"] { animation: none; }
 }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -179,7 +207,7 @@ def main() -> None:
             stem=request.stem,
             reports_dir=Path(os.environ.get("JAB_REPORTS_DIR", ROOT / "reports")),
         )
-        with st.container(key="jab_views"):
+        with st.container(key="jab_views"), st.container(key=f"jab_view_{request.view}"):
             (comparison if request.view == "comparar" else metrics).render(context)
 
 

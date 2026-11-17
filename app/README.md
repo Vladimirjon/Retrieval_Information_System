@@ -55,12 +55,16 @@ Cada vista es un módulo de `app/views/` con `render(context: AppContext) -> Non
 ## Métricas (#15)
 
 Abra **Métricas**; funciona sin consulta libre. El selector **Sin Porter / Con Porter /
-Comparar** y el filtro **Métodos visibles** afectan al gráfico, las tablas globales,
+Comparar** y los cuatro botones múltiples **Métodos visibles** afectan al gráfico, las tablas globales,
 el detalle por qid y el listado de consultas. Con todos los métodos hay cuatro
 configuraciones en cada variante individual y siete al comparar. Embeddings se
 mantiene una sola vez como referencia «No aplica»: no existe su versión Porter.
 Los filtros se conservan al cambiar de vista durante la sesión. **Restablecer filtros**
-recupera Comparar, los cuatro métodos, MAP@1000 y el primer qid.
+recupera Comparar, los cuatro métodos, MAP@1000 y el primer qid. Cada método
+se activa o desactiva con un clic; los botones pueden pasar a varias líneas en móvil.
+Al no haber un desplegable, seleccionar los cuatro no deja una lista vacía abierta.
+Si no hay métodos seleccionados, **Mostrar todos los métodos** recupera únicamente
+ese filtro. **Limpiar filtro de consultas** borra solo la búsqueda de qids.
 
 La jerarquía es controles → cobertura → gráfico/tabla global → detalle por consulta.
 P@k y R@k globales son medias sobre todos los qids; MAP@1000 es la media de AP@1000.
@@ -71,13 +75,17 @@ Las ayudas junto a encabezados y controles son nativas de Streamlit: admiten cur
 foco del teclado y toque. Las columnas también explican sus métricas. **Cómo interpretar
 estos resultados** reúne las explicaciones largas. Las tablas se ordenan pulsando sus
 encabezados, usan seis decimales y resaltan en negrita los máximos positivos visibles
-(con empates). Las columnas con todos sus valores a cero no se resaltan.
+(con empates). Los máximos se determinan antes del redondeo; las columnas
+completamente a cero no se resaltan. Junto al gráfico se resume el máximo de la
+métrica elegida entre las configuraciones visibles; el detalle por consulta agrupa
+selector, tabla y diferencias en un panel propio.
 El listado opcional **Explorar todas las consultas** permite filtrar qids por coincidencia
 literal sin afectar las medias. Los encabezados quedan fijos al recorrer ese listado;
-el método y el qid permanecen fijados al desplazar horizontalmente. En móvil, las tablas
-se desplazan horizontalmente y permiten pantalla completa.
+el qid permanece fijado en ese listado, y el método en las tablas global y por
+consulta. Una sola columna fija deja más espacio útil al desplazar horizontalmente
+en móvil. Las tablas permiten pantalla completa.
 
-En **Comparar**, los paneles de diferencias se cargan al abrirlos. Muestran, para la
+Con el modo **Comparar** de Porter, los paneles de diferencias se cargan al abrirlos. Muestran, para la
 métrica elegida, **Con Porter − Sin Porter** del mismo método, corte y consultas.
 Son diferencias absolutas, no porcentajes ni pruebas de significancia. El signo y
 «Aumenta/Disminuye/Sin cambio» acompañan los valores; Embeddings queda excluido.
@@ -91,6 +99,11 @@ El detalle identifica la consulta con un título y un resaltado breve al cambiar
 Al salir de Métricas, el navegador oculta esa vista de inmediato mientras Python
 termina de retirar su contenido. Al recibir datos o navegar también elimina anclas
 antiguas de la URL, sin recargar ni añadir entradas al historial.
+Las transiciones Métricas ↔ Comparar funcionan aunque ambas pestañas usen el modo
+«resultados». La cabecera actualiza la vista dentro de `startViewTransition`,
+cancela transiciones anteriores y conserva el último clic. Cada vista nativa monta
+su propio contenedor, con una entrada de 260 ms y 8 px; los filtros conservan ese
+contenedor. El movimiento reducido desactiva ambos tipos de animación.
 
 Los cortes, split, profundidad y conteos proceden del JSON validado. El esquema 1
 admite test, AP/MAP@1000 y cualquier k entero positivo hasta `depth` (que debe ser
@@ -109,8 +122,9 @@ Las consultas declaradas sin relevantes deben tener las tres métricas a cero
 en todas las configuraciones. Los conteos de relevancia solo se contrastan por coherencia interna: verificar
 de nuevo los qrels y los artefactos originales corresponde a la evaluación.
 
-Al entrar o pulsar **Volver a leer reportes** se valida el par completo; una segunda
-lectura detecta cambios durante la validación. En las interacciones de cada
+Al entrar se valida el par completo; una segunda lectura detecta cambios durante
+la validación. Se retiró el botón permanente de recarga porque repetía esa operación.
+**Reintentar carga** aparece únicamente si los reportes fallan. En las interacciones de cada
 fragmento se releen ambos archivos y se comparan sus bytes con el par ya validado.
 Si siguen idénticos, se reutilizan los datos de esa vista sin volver a analizar
 4.536 filas. Si cambian o falta alguno, se fuerza una ejecución completa para
@@ -122,6 +136,58 @@ ni resultados anteriores. La vista nunca reescribe los reportes.
 Para revisar errores sin alterar los originales, copie ambos archivos a una
 carpeta temporal dentro de `artifacts/`, establezca `JAB_REPORTS_DIR` con esa ruta
 antes de arrancar Streamlit y modifique solo las copias. Restaure ambos archivos
-válidos y pulse **Volver a leer reportes**. Las pruebas deterministas de lectura,
+válidos y pulse **Reintentar carga**. Las pruebas deterministas de lectura,
 presentación y recuperación están en `tests/test_metrics.py` y usan `AppTest` de
 Streamlit; no necesitan red, corpus ni modelos.
+
+## Decisiones visuales y alcance del seguimiento de #15
+
+### Colores de las barras
+
+El gráfico codifica la **variante de preprocesamiento**, con una asignación fija:
+
+| Variante | Color | Motivo |
+|---|---|---|
+| Sin Porter | Ciruela `#7A2E5E` | Conserva el acento aprobado para la referencia clásica sin stemming. |
+| Con Porter | Azul verdoso `#246477` | Distingue la segunda condición experimental al comparar el mismo método. |
+| No aplica | Gris `#5E5560` | Identifica la referencia única de Embeddings, que no usa Porter. |
+
+El segundo color sirve para comparar variantes contiguas; no señala al ganador ni
+implica que Porter mejore el resultado. La asignación no cambia al filtrar métodos
+o elegir otra métrica. Las etiquetas, los tooltips y la tabla aportan el mismo
+significado sin depender solo del color. La escala sigue siendo [0,1] y los valores
+proceden de los reportes originales. El azul verdoso se limita a la serie de datos;
+la identidad de la interfaz conserva la ciruela.
+
+### Tablas y controles
+
+Cabeceras gris claro, bordes definidos, texto oscuro y filas de 40 px facilitan
+seguir los datos. La negrita destaca valores positivos máximos sin cambiar las
+cifras. El panel blanco del detalle separa la consulta de los resultados globales;
+las explicaciones extensas están en ayudas y desplegables para reducir texto repetido.
+
+El resaltado de fila al pasar el puntero es el nativo de Streamlit. Se conserva
+evitando fondos por celda que lo oculten y sin añadir selección persistente a la
+aplicación; el foco del teclado mantiene su indicador. El contraste calculado de
+texto es 14,19:1 en cabeceras y 16,39:1 en el cuerpo. Estas medidas no sustituyen
+una prueba visual o con lector de pantalla.
+
+### Cambios compartidos adicionales
+
+La issue original pedía mostrar tablas y gráficos, distinguir configuraciones y
+validar los reportes. Los filtros persistentes, las diferencias de Porter y las
+acciones de recuperación amplían su usabilidad; no son nuevos requisitos académicos
+ni vuelven a evaluar test.
+
+Las transiciones, la eliminación de anclas antiguas y los contenedores por pestaña
+tocan la navegación compartida de #13 para integrar Métricas con el resto de la app.
+No implementan la comparación de rankings de #14 ni cambian el buscador, el motor
+o `render(context)`.
+
+Las opciones `dataframeBorderColor`, `dataframeHeaderBackgroundColor` y
+`dataframeHeaderTextColor` afectan a las tablas nativas. El ajuste de
+`secondaryBackgroundColor` a `#DCD8DC` también se hereda en controles nativos y
+refuerza el contraste del hover. Este efecto es global al tema y debe revisarse
+junto con las otras vistas nativas; el fondo de página, el color primario y el
+CSS del buscador personalizado se mantienen. No se añaden dependencias ni se
+modifican `reports/`, modelos, índices o fórmulas.
