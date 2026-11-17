@@ -228,7 +228,10 @@ def load_reports(directory: Path) -> MetricsReport:
         summary = json.loads(metadata.decode("utf-8"), object_pairs_hook=_unique_object,
                              parse_constant=_invalid_number)
         _validate_summary(summary)
-        verify_reports(directory)
+        try:
+            verify_reports(directory)
+        except ValueError as error:
+            raise ReportError(f"Los reportes no son válidos: {error}") from error
         reader = csv.DictReader(io.StringIO(raw.decode("utf-8"), newline=""), strict=True)
         _require(reader.fieldnames == list(CSV_COLUMNS),
                  "Las columnas del CSV no corresponden al esquema de evaluación.")

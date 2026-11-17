@@ -15,8 +15,15 @@ from ris.comparison import CONFIGURATIONS
 MODEL_NAMES = {"jaccard": "Jaccard", "tfidf": "TF-IDF", "bm25": "BM25", "dense": "Embeddings"}
 PORTER_NAMES = {"false": "Sin Porter", "true": "Con Porter", "na": "No aplica"}
 ROOT = Path(__file__).resolve().parents[2]
-with (ROOT / ".streamlit/config.toml").open("rb") as _theme_file:
-    THEME = tomllib.load(_theme_file)["theme"]
+_DEFAULT_THEME = {
+    "primaryColor": "#7A2E5E", "backgroundColor": "#FBFAF9",
+    "secondaryBackgroundColor": "#F3F1F2", "textColor": "#201A1F",
+}
+try:
+    with (ROOT / ".streamlit/config.toml").open("rb") as _theme_file:
+        THEME = tomllib.load(_theme_file)["theme"]
+except (OSError, KeyError, tomllib.TOMLDecodeError):
+    THEME = _DEFAULT_THEME
 
 
 def metric_labels(report: MetricsReport, *, per_query: bool = False) -> dict[str, str]:
@@ -165,6 +172,8 @@ def render(context: AppContext) -> None:
         st.caption("Escala de 0 a 1 · tabla con seis decimales; originales completos en Procedencia.")
 
         st.subheader("Detalle por consulta")
+        if st.session_state.get("metrics_qid") not in report.qids:
+            st.session_state["metrics_qid"] = report.qids[0]
         qid = st.selectbox("Consulta evaluada (qid)", report.qids, key="metrics_qid",
                            help="Busque un identificador como texto. Orden lexicográfico de los qids.")
         st.caption(

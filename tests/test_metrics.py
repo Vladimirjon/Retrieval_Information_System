@@ -2,6 +2,7 @@
 
 import csv
 import hashlib
+import importlib.util
 import io
 import json
 import os
@@ -92,6 +93,22 @@ def test_complete_report_uses_contract_verifier_and_preserves_string_ids(reports
     assert spec["encoding"]["x"]["scale"]["domain"] == [0, 1]
     assert [row["Valor"] for row in spec["data"]["values"]] == global_table.ap_at_1000.tolist()
     assert len({row["Configuración"] for row in spec["data"]["values"]}) == 7
+
+
+def test_theme_defaults_are_used_when_config_is_unavailable(monkeypatch):
+    theme_path = metrics.ROOT / ".streamlit/config.toml"
+    original_open = Path.open
+
+    def open_without_theme(path, *args, **kwargs):
+        if path == theme_path:
+            raise FileNotFoundError("missing config")
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", open_without_theme)
+    spec = importlib.util.spec_from_file_location("metrics_without_config", metrics.__file__)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.THEME == metrics._DEFAULT_THEME
 
 
 @pytest.mark.parametrize("filename", [evaluate.CSV_NAME, evaluate.SUMMARY_NAME])
@@ -274,6 +291,47 @@ def test_change_during_read_is_rejected(reports, monkeypatch):
     monkeypatch.setattr(data, "verify_reports", change_after_verification)
     with pytest.raises(data.ReportError, match="cambiaron"):
         data.load_reports(directory)
+
+
+def test_verifier_reason_is_preserved(reports, monkeypatch):
+    directory, _, _ = reports
+
+    def reject(_path):
+        raise ValueError("hash del CSV incorrecto")
+
+    monkeypatch.setattr(data, "verify_reports", reject)
+    with pytest.raises(data.ReportError, match="hash del CSV incorrecto"):
+        data.load_reports(directory)
+
+
+def test_reload_resets_qid_when_new_report_pair_has_different_qids(reports, tmp_path):
+    directory, rows, summary = reports
+    other = tmp_path / "other"
+    other.mkdir()
+    other_rows = deepcopy(rows)
+    for row in other_rows:
+        row["qid"] = "20" if row["qid"] == "02" else "30"
+    other_summary = deepcopy(summary)
+    other_summary["provenance"]["query_ids_sha256"] = hashlib.sha256(b'["20","30"]').hexdigest()
+    write_reports(other, other_rows, other_summary)
+
+    import app.views.metrics as view
+
+    app = view_app(directory)
+    assert not app.exception and app.selectbox[0].value == "02"
+    original = view.load_reports
+
+    def load_other(path):
+        return original(other if path == directory else path)
+
+    view.load_reports = load_other
+    try:
+        app.button[0].click().run()
+    finally:
+        view.load_reports = original
+    assert not app.exception
+    assert app.selectbox[0].options == ["20", "30"]
+    assert app.selectbox[0].value == "20"
 
 
 def test_streamlit_shows_global_map_and_query_ap_without_query_or_engine(reports, caplog):
