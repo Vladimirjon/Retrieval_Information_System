@@ -17,7 +17,9 @@ Requiere los artefactos de `scripts/build_artifacts.py` (`artifacts/index_no_ste
 | `app/ui.py` | Registra el componente, valida lo que envía el navegador y arma la respuesta. |
 | `app/streamlit_app.py` | Página, caché del motor y vistas de los compañeros. |
 | `app/context.py` | `AppContext`: lo que reciben las vistas. |
-| `app/views/comparison.py`, `app/views/metrics.py` | Reservados para #14 y #15. |
+| `app/views/comparison.py` | Vista reservada para #14. |
+| `app/views/metrics.py` | Métricas guardadas: resumen, comparación global, detalle por qid y procedencia (#15). |
+| `app/metrics_data.py` | Lectura y validación completa del par CSV/JSON, sin usar el motor. |
 | `app/static/` | Logo `jab` (palabra e icono) en SVG. |
 
 La referencia visual aprobada está en `design/prototipo/` y sus reglas en `design/README.md`.
@@ -47,3 +49,43 @@ Cada vista es un módulo de `app/views/` con `render(context: AppContext) -> Non
 - #15 (métricas): lee de `context.reports_dir` y valida `provenance.metrics_per_query_sha256` con `scripts.evaluate.verify_reports` antes de mostrar nada. No usa `context.engine`.
 - Usa los colores del tema (`.streamlit/config.toml`, paleta ciruela) y evita estilos propios que choquen con `app/frontend/styles.css`.
 - Un cambio incompatible de `AppContext` o de `SearchEngine` se coordina en el PR con ambos consumidores.
+
+## Métricas (#15)
+
+Abra **Métricas** en la navegación de jab; funciona con la barra de búsqueda vacía.
+Muestra las siete configuraciones de los reportes: tres clásicos con/sin Porter y
+Embeddings una sola vez, con Porter «No aplica». Elija P@k, R@k o MAP@1000 para
+el gráfico global y busque un **qid** en el selector para ver P@k, R@k y **AP@1000**
+de esa consulta. Las medias globales incluyen todos los qids, también los ceros;
+no cambian al seleccionar una consulta. La consulta libre, el modelo, top-n y
+Porter del buscador no filtran ni modifican la evaluación.
+
+Los cortes, split, profundidad y conteos proceden del JSON validado. El esquema 1
+admite test, AP/MAP@1000 y cualquier k entero positivo hasta `depth` (que debe ser
+al menos 1000); las etiquetas de P/R usan ese k. El gráfico conserva la escala
+[0,1] y distingue las variantes con etiquetas, sin depender del color. Las tablas
+muestran seis decimales; **Procedencia y configuración** permite inspeccionar
+conteos, parámetros, revisiones, hashes, versiones y descargar ambos originales
+con todos sus decimales.
+
+Antes de mostrar resultados, `app.metrics_data.load_reports` ejecuta
+`scripts.evaluate.verify_reports` y complementa su comprobación de hash/líneas:
+valida estructura/tipos, modelos/stem, cortes, campos CSV, valores finitos en
+[0,1], duplicados, cobertura idéntica, hash de qids, conteos y medias CSV/JSON
+(`atol=1e-12`, `rtol=0`). No descarga qids, no usa corpus/índices ni reevalúa test.
+Las consultas declaradas sin relevantes deben tener las tres métricas a cero
+en todas las configuraciones. Los conteos de relevancia solo se contrastan por coherencia interna: verificar
+de nuevo los qrels y los artefactos originales corresponde a la evaluación.
+
+No hay caché de reportes: cada interacción relee los dos archivos; una segunda
+lectura detecta cambios durante la validación. **Volver a leer reportes** permite
+reintentar después de un error. Si faltan archivos o son incompatibles, se muestra
+el motivo y cómo restaurar el par; no se presentan tablas/gráficos parciales ni
+resultados anteriores. La vista nunca reescribe los reportes.
+
+Para revisar errores sin alterar los originales, copie ambos archivos a una
+carpeta temporal dentro de `artifacts/`, establezca `JAB_REPORTS_DIR` con esa ruta
+antes de arrancar Streamlit y modifique solo las copias. Restaure ambos archivos
+válidos y pulse **Volver a leer reportes**. Las pruebas deterministas de lectura,
+presentación y recuperación están en `tests/test_metrics.py` y usan `AppTest` de
+Streamlit; no necesitan red, corpus ni modelos.
