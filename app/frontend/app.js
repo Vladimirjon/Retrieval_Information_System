@@ -18,7 +18,15 @@ const DEBOUNCE = 220;
 const PAGE_SIZE = 5;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+function clearSectionAnchor() {
+  if (window.location.hash) {
+    // Quitar anclas antiguas sin recargar, perder parámetros ni añadir historial.
+    window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+  }
+}
+
 export default function ({ parentElement, data, setStateValue }) {
+  clearSectionAnchor();
   const root = parentElement.querySelector(".jab");
   root._send = setStateValue;
   if (!root._jab) root._jab = mount(root, data || {});
@@ -338,6 +346,7 @@ function mount(root, data) {
     });
   }
   function setView(view) {
+    clearSectionAnchor();
     if (state.view === view) return;
     state.view = view; root.dataset.view = view;
     markView();

@@ -54,18 +54,48 @@ Cada vista es un módulo de `app/views/` con `render(context: AppContext) -> Non
 
 ## Métricas (#15)
 
-Abra **Métricas** en la navegación de jab; funciona con la barra de búsqueda vacía.
-Muestra las siete configuraciones de los reportes: tres clásicos con/sin Porter y
-Embeddings una sola vez, con Porter «No aplica». Elija P@k, R@k o MAP@1000 para
-el gráfico global y busque un **qid** en el selector para ver P@k, R@k y **AP@1000**
-de esa consulta. Las medias globales incluyen todos los qids, también los ceros;
-no cambian al seleccionar una consulta. La consulta libre, el modelo, top-n y
-Porter del buscador no filtran ni modifican la evaluación.
+Abra **Métricas**; funciona sin consulta libre. El selector **Sin Porter / Con Porter /
+Comparar** y el filtro **Métodos visibles** afectan al gráfico, las tablas globales,
+el detalle por qid y el listado de consultas. Con todos los métodos hay cuatro
+configuraciones en cada variante individual y siete al comparar. Embeddings se
+mantiene una sola vez como referencia «No aplica»: no existe su versión Porter.
+Los filtros se conservan al cambiar de vista durante la sesión. **Restablecer filtros**
+recupera Comparar, los cuatro métodos, MAP@1000 y el primer qid.
+
+La jerarquía es controles → cobertura → gráfico/tabla global → detalle por consulta.
+P@k y R@k globales son medias sobre todos los qids; MAP@1000 es la media de AP@1000.
+El detalle muestra **AP**, no MAP. Los filtros no recalculan ni modifican las medias.
+El buscador y sus opciones no filtran la evaluación.
+
+Las ayudas junto a encabezados y controles son nativas de Streamlit: admiten cursor,
+foco del teclado y toque. Las columnas también explican sus métricas. **Cómo interpretar
+estos resultados** reúne las explicaciones largas. Las tablas se ordenan pulsando sus
+encabezados, usan seis decimales y resaltan en negrita los máximos positivos visibles
+(con empates). Las columnas con todos sus valores a cero no se resaltan.
+El listado opcional **Explorar todas las consultas** permite filtrar qids por coincidencia
+literal sin afectar las medias. Los encabezados quedan fijos al recorrer ese listado;
+el método y el qid permanecen fijados al desplazar horizontalmente. En móvil, las tablas
+se desplazan horizontalmente y permiten pantalla completa.
+
+En **Comparar**, los paneles de diferencias se cargan al abrirlos. Muestran, para la
+métrica elegida, **Con Porter − Sin Porter** del mismo método, corte y consultas.
+Son diferencias absolutas, no porcentajes ni pruebas de significancia. El signo y
+«Aumenta/Disminuye/Sin cambio» acompañan los valores; Embeddings queda excluido.
+Una variante ausente nunca se convierte en cero: un reporte incompleto se rechaza;
+la función de comparación representa la ausencia sin calcular una diferencia.
+
+Los controles globales y el detalle usan fragmentos anidados de Streamlit: cambiar
+un qid solo actualiza su sección. No hay motor adicional ni nueva dependencia.
+El detalle identifica la consulta con un título y un resaltado breve al cambiarla
+(desactivado si se prefiere movimiento reducido).
+Al salir de Métricas, el navegador oculta esa vista de inmediato mientras Python
+termina de retirar su contenido. Al recibir datos o navegar también elimina anclas
+antiguas de la URL, sin recargar ni añadir entradas al historial.
 
 Los cortes, split, profundidad y conteos proceden del JSON validado. El esquema 1
 admite test, AP/MAP@1000 y cualquier k entero positivo hasta `depth` (que debe ser
 al menos 1000); las etiquetas de P/R usan ese k. El gráfico conserva la escala
-[0,1] y distingue las variantes con etiquetas, sin depender del color. Las tablas
+[0,1] y distingue las variantes con etiquetas y colores constantes, sin depender solo del color. Las tablas
 muestran seis decimales; **Procedencia y configuración** permite inspeccionar
 conteos, parámetros, revisiones, hashes, versiones y descargar ambos originales
 con todos sus decimales.
@@ -79,11 +109,15 @@ Las consultas declaradas sin relevantes deben tener las tres métricas a cero
 en todas las configuraciones. Los conteos de relevancia solo se contrastan por coherencia interna: verificar
 de nuevo los qrels y los artefactos originales corresponde a la evaluación.
 
-No hay caché de reportes: cada interacción relee los dos archivos; una segunda
-lectura detecta cambios durante la validación. **Volver a leer reportes** permite
-reintentar después de un error. Si faltan archivos o son incompatibles, se muestra
-el motivo y cómo restaurar el par; no se presentan tablas/gráficos parciales ni
-resultados anteriores. La vista nunca reescribe los reportes.
+Al entrar o pulsar **Volver a leer reportes** se valida el par completo; una segunda
+lectura detecta cambios durante la validación. En las interacciones de cada
+fragmento se releen ambos archivos y se comparan sus bytes con el par ya validado.
+Si siguen idénticos, se reutilizan los datos de esa vista sin volver a analizar
+4.536 filas. Si cambian o falta alguno, se fuerza una ejecución completa para
+validar de nuevo y actualizar también el resumen y la procedencia. No hay caché
+global ni se depende de fechas o tamaños de archivo. Si el par es inválido, se
+muestra el motivo y cómo restaurarlo; no se presentan tablas/gráficos parciales
+ni resultados anteriores. La vista nunca reescribe los reportes.
 
 Para revisar errores sin alterar los originales, copie ambos archivos a una
 carpeta temporal dentro de `artifacts/`, establezca `JAB_REPORTS_DIR` con esa ruta

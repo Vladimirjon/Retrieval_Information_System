@@ -38,16 +38,38 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .block-container { max-width: none; padding: 0 0 4rem; }
 .stApp { font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif; }
 .st-key-jab_views { width: min(720px, 100% - 32px); margin: 0 auto; }
-/* Streamlit atenúa la página mientras vuelve a ejecutar el script en cada interacción;
-   jab ya muestra su propio estado de carga, así que se anula ese fundido gris. */
-[data-testid="stElementContainer"][data-stale="true"] { opacity: 1 !important; transition: none !important; }
+.st-key-jab_views:has(.st-key-jab_metrics) { width: min(1040px, 100% - 32px); }
+.jab[data-view="metricas"] .jab-main { width: min(1040px, 100% - 32px); }
+.st-key-jab_metrics [data-testid="stCaptionContainer"] p { color: #5E5560; }
+.st-key-metrics_controls { background: #F3F1F2; }
+.st-key-metrics_controls button { min-height: 42px; }
+.st-key-jab_metrics :is(button, input, [role="radio"], [role="checkbox"], [role="combobox"]):focus-visible {
+  outline: 2px solid #7A2E5E; outline-offset: 3px;
+}
+.st-key-jab_metrics .stTooltipIcon button { min-width: 28px; min-height: 28px; }
+@media (max-width: 600px) {
+  .st-key-jab_views:has(.st-key-jab_metrics) { width: calc(100% - 24px); }
+  .jab[data-view="metricas"] .jab-main { width: calc(100% - 24px); }
+  .st-key-jab_metrics [data-testid="stMetricValue"] { font-size: 1.75rem; }
+}
+/* La navegación del componente es inmediata; no esperar al fin del rerun para
+   ocultar la vista anterior que Streamlit conserva durante la transición. */
+body:has(.jab[data-view="buscar"]) .st-key-jab_views,
+body:has(.jab:not([data-view="metricas"])) .st-key-jab_metrics { display: none; }
+/* Solo el buscador tiene su propio indicador de carga. Las vistas nativas
+   conservan la atenuación de Streamlit mientras actualizan sus datos. */
+[data-testid="stElementContainer"][data-stale="true"]:has(.jab) { opacity: 1 !important; transition: none !important; }
+.st-key-jab_metrics [class*="st-key-jab_query_"] { border-radius: 8px; animation: jab-query-update .45s ease-out; }
+@keyframes jab-query-update { from { box-shadow: 0 0 0 2px #7A2E5E40; } to { box-shadow: 0 0 0 2px transparent; } }
 .jab-loading { min-height: 85vh; display: grid; place-content: center; justify-items: center; gap: 24px; color: #201A1F; text-align: center; }
 .jab-loading svg { width: 120px; height: auto; }
 .jab-loading .dot { fill: #7A2E5E; }
 .jab-loading-bar { width: min(440px, 80vw); height: 56px; border-radius: 28px; background: #F3F1F2; animation: jab-load 1.4s ease-in-out infinite alternate; }
 .jab-loading p { margin: 0; max-width: 36ch; color: #5E5560; font-size: 14px; }
 @keyframes jab-load { from { opacity: 1; transform: scaleX(1); } to { opacity: .65; transform: scaleX(.98); } }
-@media (prefers-reduced-motion: reduce) { .jab-loading-bar { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .jab-loading-bar, .st-key-jab_metrics [class*="st-key-jab_query_"] { animation: none; }
+}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
