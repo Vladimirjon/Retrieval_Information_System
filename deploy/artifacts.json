@@ -1,0 +1,31 @@
+{
+  "repo_id": "VLADIMIRJON/jab-fiqa-artifacts",
+  "repo_type": "dataset",
+  "revision": "5d7f05e86ceea9b5f95cecba061c8c30031c880c",
+  "files": {
+    "dense/build_report.json": {
+      "sha256": "cf1c2fff660810a2e1e8261dc72f2f65dbb507c7b2bda4fa229190add7a22da8",
+      "size": 1439
+    },
+    "dense/embeddings.npy": {
+      "sha256": "de04badf0b481a29f54cc5fce5c6ea990f655b5b6653b9860be59246ab5373d1",
+      "size": 88532096
+    },
+    "dense/index.faiss": {
+      "sha256": "4361de6cdcc0f87455e97726cb3b2858460ca70a7ff941a0e7116ad77f6aeef4",
+      "size": 88532013
+    },
+    "dense/metadata.json": {
+      "sha256": "922b7c0dc4b9680c1e60fc935a4fefb3c7a245cfcc34e57ff483dda264f2bda0",
+      "size": 797112
+    },
+    "index_no_stem.json": {
+      "sha256": "d1d1951f35746c8ab41fcebfabef200e9e982ff8d143279703c08537023ce1b0",
+      "size": 43302169
+    },
+    "index_stem.json": {
+      "sha256": "33f9ac24b03a682574a9c45deca67ea9d6282645acfc1d6908f791cef219b4e9",
+      "size": 40491069
+    }
+  }
+}

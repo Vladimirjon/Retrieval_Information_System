@@ -124,13 +124,39 @@ python -m ruff check .
 
 Según la salida comprobada en Python 3.12.10, `python -m pytest` pasó 1 prueba y `python -m ruff check .` terminó sin errores.
 
-La aplicación Streamlit se implementará en la issue #13. Cuando exista `app/streamlit_app.py`, se iniciará con:
+La aplicación Streamlit existe desde la issue #13 y se inicia con el siguiente comando. Requiere los artefactos; si existe `deploy/artifacts.json`, se descargan automáticamente:
 
 ```powershell
 python -m streamlit run app/streamlit_app.py
 ```
 
-**URL del despliegue: pendiente (issue de despliegue #16).** Destino acordado: Hugging Face Spaces CPU básico, gratis; cualquier modalidad de pago requiere aprobación. El posible uso de Render con app reducida es una inferencia sin probar.
+## Despliegue
+
+El destino es [Streamlit Community Cloud](https://share.streamlit.io/), con los artefactos fuera de Git en el dataset público de Hugging Face `VLADIMIRJON/jab-fiqa-artifacts`. El código y esta preparación no publican nada automáticamente.
+
+### Publicar artefactos (una persona con sesión de Hugging Face)
+
+Construye antes los índices y el directorio denso con `scripts/build_artifacts.py`. Ejecuta `scripts/publish_artifacts.py` desde una carpeta cuyos `artifacts/` se hayan generado después del PR #35 (tokenización corregida). Inicia sesión localmente con `hf auth login` o configura `HF_TOKEN` en el entorno (nunca lo pegues en comandos ni lo guardes en Git). Revisa primero el plan local y sus hashes:
+
+```powershell
+python scripts/publish_artifacts.py --dry-run
+```
+
+Cuando decidas publicar, ejecuta `python scripts/publish_artifacts.py`. Acepta `--repo-id` y `--artifacts-dir` para cambiar los valores por defecto. El script crea el repositorio dataset público si hace falta, carga los archivos y una tarjeta con procedencia, y escribe `deploy/artifacts.json` apuntando al SHA del commit resultante. No uses una rama móvil como revisión.
+
+Los archivos se derivan de BeIR/fiqa; la licencia de origen debe consultarse en [su tarjeta](https://huggingface.co/datasets/BeIR/fiqa), no se presupone aquí. La configuración de origen y revisiones se encuentra en `src/ris/data.py`.
+
+### Crear la aplicación
+
+En [share.streamlit.io](https://share.streamlit.io/) despliega el repositorio `Vladimirjon/Retrieval_Information_System`, rama `main`, archivo principal `app/streamlit_app.py`; en la configuración avanzada selecciona Python 3.12. El manifiesto `deploy/artifacts.json` debe estar en esa rama y contener el SHA confirmado del dataset.
+
+Community Cloud instalará `app/requirements.txt`: busca primero el archivo de dependencias en la carpeta del archivo de entrada (`app/`) y después en la raíz; intenta instalar con `uv` y, si falla, con `pip`. Fuente: [dependencias de la app en Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies). `requirements.txt` de la raíz sigue siendo el archivo de desarrollo y CI.
+
+Comprobación local del 17 de noviembre de 2026: `uv pip compile requirements.txt --python-version 3.12 --python-platform x86_64-manylinux_2_28`, con `uv 0.13.5`, no resolvió las dependencias de la raíz. Con `--extra-index-url`, la estrategia `first-index` toma `requests` del índice de PyTorch, que solo ofrece `2.28.1`, incompatible con `jupyterlab`. Por eso `app/requirements.txt` contiene solo dependencias de ejecución, sin `--extra-index-url` ni `--index-url`, y obtiene `torch` CPU mediante la URL directa de la rueda Linux para Python 3.12. Comprobado en el servidor el 17 de noviembre de 2026, en un primer despliegue hecho desde `main` antes de integrar este cambio: `uv` falló con ese mismo error y Community Cloud instaló el `requirements.txt` de la raíz con `pip` en unos 2 min 20 s. La plataforma sustituye además `pyarrow` 26.0.1 por una versión anterior a la 25 (instaló la 24.0.0) e indica como motivo un fallo conocido (apache/arrow#50471); el cargador de FiQA se probó en local con `pyarrow` 24.0.0. La instalación de `app/requirements.txt` en el servidor queda por comprobar al integrar este cambio.
+
+El despliegue de Community Cloud y el almacenamiento público de artefactos se planifican en modalidad **gratis**, sin facturación. Streamlit presenta Community Cloud como gratuito y documenta aproximadamente 2,7 GB de RAM “as of February 2024”; ese límite puede cambiar. Las apps entran en reposo tras 12 horas sin tráfico. En la primera visita la app descarga los artefactos (unos 250 MB) y carga los modelos; visitas posteriores reutilizan la caché del proceso mientras la instancia siga activa. Fuentes: [planes de Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud) y [recursos y reposo](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app).
+
+**URL pública:** <https://jab-retrieval-information-system.streamlit.app/> (creada el 17 de noviembre de 2026; el estado de su comprobación se registra en [STATE](STATE.md)).
 
 ## Cómo contribuir
 

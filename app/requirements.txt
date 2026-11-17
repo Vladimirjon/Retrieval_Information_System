@@ -1,0 +1,15 @@
+# Community Cloud busca primero en app/ y luego en la raíz; instala con uv o, si falla, pip.
+# uv 0.13.5 usa first-index: el índice PyTorch ofrece requests 2.28.1, incompatible
+# con jupyterlab. Sin opciones de índice aquí; torch CPU se instala por URL directa.
+numpy==2.5.4
+scipy==1.18.1
+nltk==3.10.4
+huggingface_hub==2.4.0
+pyarrow==26.0.1
+torch @ https://download.pytorch.org/whl/cpu/torch-2.15.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl
+transformers==5.22.2
+sentence-transformers==6.2.0
+faiss-cpu==1.15.1
+streamlit==1.67.0
+psutil==7.2.2
+pandas==3.1.1
