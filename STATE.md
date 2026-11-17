@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: lunes 16 de noviembre de 2026 (#2–#13 integradas; #15 implementada y validada localmente en `feat/15-metricas-ui`, con publicación y PR autorizados por Jorge y en preparación; pendientes revisión manual de navegador y revisión humana; pendiente de #11: validación completa de los índices). Las notas históricas de ramas anteriores se conservan; la base de #15 incluye el pulido de #13 integrado mediante PR #36.
+Actualizado: lunes 16 de noviembre de 2026 (#2–#13 integradas; #15 publicada en el PR #37, vinculada al cierre de la issue #15 y con CI del commit funcional en verde; pendientes revisión manual de navegador y aprobación de CODEOWNER, sin merge; pendiente de #11: validación completa de los índices). Las notas históricas de ramas anteriores se conservan; la base de #15 incluye el pulido de #13 integrado mediante PR #36.
 
 ## Ubicación y alcance
 
@@ -193,6 +193,14 @@ La planificación está integrada en `main` (PR #19). #1 está integrada en `mai
 ### Preparación de publicación de #15 (16 de noviembre)
 
 Jorge autorizó expresamente hacer commit, publicar la rama y crear el PR contra `main`. Se prepara la descripción según `.github/pull_request_template.md`, con `Closes #15`, evidencia local y pendientes reales. La autorización no incluye merge ni cierre manual de la issue. Se comprobarán el vínculo de cierre en GitHub y los checks del PR antes de informar el resultado. Las notas anteriores de trabajo sin publicar describen las fases previas.
+
+### #15 publicada en PR #37 (16 de noviembre, hora de Ecuador)
+
+- Con la autorización expresa de Jorge se creó el commit funcional `f9929dd` (`feat: muestra métricas de evaluación desde reports (#15)`), se publicó `feat/15-metricas-ui` y se abrió el [PR #37](https://github.com/Vladimirjon/Retrieval_Information_System/pull/37) contra `main` como @Almejandro04. El PR contiene exactamente los seis archivos previstos; sin cambios en corpus, artefactos, reportes, dependencias, motor ni la vista #14. Se repitieron antes de publicar las 347 pruebas y Ruff, sin errores; `git diff --cached --check` también pasó.
+- Descripción conforme a `.github/pull_request_template.md`, con **`Closes #15`** y evidencia local, capturas, CI y despliegue separados; no se marcaron como hechos los criterios manuales ni la aprobación pendiente. GitHub solicitó automáticamente revisión de **@Vladimirjon** y comprobó que el PR no tiene conflictos.
+- **Vínculo de cierre verificado en GitHub**, no solo por texto: el timeline de #15 registra la referencia al PR #37 y la consulta GraphQL de solo lectura devuelve `pullRequest(number: 37).closingIssuesReferences.nodes` con la [issue #15](https://github.com/Vladimirjon/Retrieval_Information_System/issues/15), en estado `OPEN`. El PR está `OPEN`, `merged=false`, con base `main` y head `feat/15-metricas-ui`. La issue se resolverá al integrar este PR; no se hizo cierre manual.
+- **CI del commit funcional `f9929dd`**: ejecución [44003153438](https://github.com/Vladimirjon/Retrieval_Information_System/actions/runs/44003153438) completada con éxito; job `Lint and Test` (`133771932518`), instalación, Ruff y tests en Ubuntu/Python 3.12 en verde, comprobados por API. El commit posterior solo registra esta publicación en STATE/TASKS; no cambia código ni pruebas.
+- Pendientes: recorrido manual de navegador ya descrito, aprobación vigente de CODEOWNER, resolución de posibles hilos e integración por el responsable autorizado. Sin merge ni cierre de la issue. El despliegue se verifica en #16.
 
 ## GitHub configurado y verificado por API el 9 de noviembre de 2026
 
