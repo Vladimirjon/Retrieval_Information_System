@@ -6,7 +6,9 @@ Buscador sobre FiQA con los cuatro modelos. Desde la raíz del repositorio:
 python -m streamlit run app/streamlit_app.py
 ```
 
-Requiere los artefactos de `scripts/build_artifacts.py` (`artifacts/index_no_stem.json`, opcionalmente `index_stem.json`, y `artifacts/dense/`) y el corpus FiQA en la caché de Hugging Face. Variables opcionales: `JAB_ARTIFACTS_DIR` y `JAB_REPORTS_DIR`. Si falta un archivo, la interfaz muestra qué falta y el comando que lo genera; los demás modelos siguen funcionando.
+Requiere los artefactos de `scripts/build_artifacts.py` (`artifacts/index_no_stem.json`, opcionalmente `index_stem.json`, y `artifacts/dense/`) y el corpus FiQA en la caché de Hugging Face. Variables opcionales: `JAB_ARTIFACTS_DIR` y `JAB_REPORTS_DIR`. Si no se define `JAB_ARTIFACTS_DIR` y existe `deploy/artifacts.json`, el arranque descarga desde la revisión fijada los archivos ausentes o con hash incorrecto y comprueba cada SHA-256. Sin manifiesto, se usan los artefactos locales. Si falta un archivo tras la preparación, la interfaz muestra qué falta y el comando que lo genera; los demás modelos siguen funcionando. En Community Cloud la primera visita puede descargar unos 250 MB antes de cargar los modelos.
+
+Community Cloud instala `app/requirements.txt`, con las dependencias de ejecución; el archivo de la raíz se conserva para desarrollo y CI.
 
 ## Capas
 

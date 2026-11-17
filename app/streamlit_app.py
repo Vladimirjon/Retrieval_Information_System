@@ -19,14 +19,16 @@ import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:  # permite `from app...` al lanzar con streamlit run
-    sys.path.insert(0, str(ROOT))
+for import_root in (ROOT / "src", ROOT):
+    if str(import_root) not in sys.path:  # funciona sin `pip install -e .`
+        sys.path.insert(0, str(import_root))
 
 import streamlit as st
 
 from app.context import AppContext
 from app.ui import jab_component, parse_request, respond
 from app.views import comparison, metrics
+from ris.artifacts import ensure_artifacts
 from ris.data import load_queries
 from ris.engine import CLASSICAL_MODELS, EngineError, SearchEngine
 
@@ -74,7 +76,15 @@ def get_engine() -> SearchEngine:
     sobre todo importar torch) termina en segundo plano; si alguien busca con
     Embeddings antes, esa búsqueda espera a que acabe.
     """
-    engine = SearchEngine(os.environ.get("JAB_ARTIFACTS_DIR", ROOT / "artifacts"))
+    if "JAB_ARTIFACTS_DIR" in os.environ:
+        artifacts_dir = Path(os.environ["JAB_ARTIFACTS_DIR"])
+    else:
+        artifacts_dir = ROOT / "artifacts"
+        try:
+            artifacts_dir = ensure_artifacts(artifacts_dir, ROOT / "deploy" / "artifacts.json")
+        except Exception as error:  # noqa: BLE001 - el motor presenta artefactos ausentes
+            print(f"[jab] no se pudieron preparar los artefactos: {error}", flush=True)
+    engine = SearchEngine(artifacts_dir)
     _warm(engine, CLASSICAL_MODELS)
     threading.Thread(
         target=_warm, args=(engine, ("dense",)), name="jab-dense", daemon=True
@@ -111,7 +121,7 @@ def main() -> None:
         loading.markdown(
             f'<div class="jab-loading" role="status" aria-live="polite">'
             f'{logo}<div class="jab-loading-bar" aria-hidden="true"></div>'
-            '<p>Preparando el buscador… solo la primera vez, unos segundos</p></div>',
+            '<p>Preparando el buscador… la primera visita puede descargar los artefactos (~250 MB) y cargar los modelos.</p></div>',
             unsafe_allow_html=True,
         )
         try:
