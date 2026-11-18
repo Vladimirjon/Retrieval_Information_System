@@ -9,6 +9,7 @@ from ris.engine import (
     EmptyQueryError,
     ModelUnavailableError,
     SearchEngine,
+    _edit_distance,
 )
 from ris.index import InvertedIndex
 from ris.retrievers import Result
@@ -322,3 +323,130 @@ def test_title_without_visible_text_is_empty(tmp_path):
     corpus = {"d1": Doc(title="Only title", text="  "), "d2": Doc(title="", text="visible")}
     engine = SearchEngine(tmp_path, corpus_loader=lambda: corpus)
     assert engine.empty_doc_ids == frozenset({"d1"})
+
+
+GRAPH_VECTORS = {"d1": [1.0, 0.0], "d2": [0.0, 1.0], "d3": [-1.0, 0.0], "d4": [0.6, 0.8]}
+
+
+class GraphDense(FakeDense):
+    """Doble con vectores: d1 coincide con la consulta, d2 es ortogonal y d3 opuesto."""
+
+    def encode_query(self, query):
+        self.queries.append(query)
+        return [1.0, 0.0]
+
+    def vectors(self, doc_ids):
+        unknown = [doc_id for doc_id in doc_ids if doc_id not in GRAPH_VECTORS]
+        if unknown:
+            raise ValueError(f"Documento sin vector: {unknown[0]}")
+        return [GRAPH_VECTORS[doc_id] for doc_id in doc_ids]
+
+
+def graph_engine(tmp_path, dense=GraphDense):
+    write_artifacts(tmp_path)
+    return SearchEngine(tmp_path, corpus_loader=lambda: CORPUS, dense_loader=lambda path: dense())
+
+
+def test_query_graph_places_the_given_documents_by_meaning(tmp_path):
+    engine = graph_engine(tmp_path)
+    graph = engine.query_graph("gato", ["d2", "d1", "d3"], neighbors=1)
+    assert [node.doc_id for node in graph.nodes] == ["d2", "d1", "d3"]
+    assert [node.similarity for node in graph.nodes] == pytest.approx([0.0, 1.0, -1.0])
+    assert graph.nodes[1].position == pytest.approx((0.0, 0.0, 0.0))  # igual que la consulta
+    assert max(sum(v * v for v in node.position) for node in graph.nodes) == pytest.approx(1.0)
+    assert [edge[:2] for edge in graph.edges] == [(0, 1), (0, 2)]  # d2 es el más cercano de d1 y d3
+
+
+def test_query_graph_uses_the_dense_model_whatever_ranked_the_documents(tmp_path):
+    engine = graph_engine(tmp_path)
+    ranked = [hit.doc_id for hit in engine.search("bm25", "gato perro", k=3).hits]
+    graph = engine.query_graph("gato perro", ranked)
+    assert [node.doc_id for node in graph.nodes] == ranked
+    assert engine.get_retriever("dense").queries == ["gato perro"]
+
+
+@pytest.mark.parametrize("query", ["", "  "])
+def test_query_graph_needs_a_query(tmp_path, query):
+    with pytest.raises(EmptyQueryError):
+        graph_engine(tmp_path).query_graph(query, ["d1"])
+
+
+def test_query_graph_without_dense_artifacts_says_what_is_missing(tmp_path):
+    write_artifacts(tmp_path, dense=False)
+    engine = SearchEngine(tmp_path, corpus_loader=lambda: CORPUS)
+    with pytest.raises(ArtifactsMissingError, match="Embeddings"):
+        engine.query_graph("gato", ["d1"])
+    assert engine.search("bm25", "gato", k=1).hits  # la búsqueda no depende del grafo
+
+
+def test_query_graph_failure_is_readable_and_does_not_disable_dense(tmp_path):
+    engine = graph_engine(tmp_path, dense=FakeDense)  # sin encode_query ni vectors
+    with pytest.raises(ModelUnavailableError, match="No se pudo calcular el grafo"):
+        engine.query_graph("gato", ["d1"])
+    with pytest.raises(ModelUnavailableError, match="zz"):
+        graph_engine(tmp_path / "otro").query_graph("gato", ["zz"])
+    assert engine.availability()["dense"] is None
+    assert engine.search("dense", "gato", k=1).hits
+
+
+def test_query_graph_passes_linked_through(tmp_path):
+    engine = graph_engine(tmp_path)
+    graph = engine.query_graph("gato", ["d1", "d2", "d3"], neighbors=1, linked=2)
+    assert [edge[:2] for edge in graph.edges] == [(0, 1)]
+
+
+@pytest.mark.parametrize(("a", "b", "limit", "expected"), [
+    ("stok", "stock", 1, 1), ("morgage", "mortgage", 1, 1), ("abc", "abc", 0, 0),
+    ("kitten", "sitting", 3, 3), ("kitten", "sitting", 2, None), ("ab", "abcd", 1, None),
+])
+def test_edit_distance_is_levenshtein_up_to_the_limit(a, b, limit, expected):
+    assert _edit_distance(a, b, limit) == expected
+
+
+SPELLING = {
+    # stocks en 40 documentos, stock en 30, "stoks" mal escrito en uno solo, etc.
+    **{f"s{i}": Doc(title="", text="stocks stock") for i in range(30)},
+    **{f"t{i}": Doc(title="", text="stocks") for i in range(10)},
+    "u1": Doc(title="", text="stoks morgage"),
+    **{f"m{i}": Doc(title="", text="mortgage") for i in range(25)},
+    **{f"r{i}": Doc(title="", text="retirement planning") for i in range(3)},
+    "x1": Doc(title="", text="dalbar okpay"),
+}
+
+
+def spelling_engine(tmp_path):
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    InvertedIndex.build(SPELLING, stem=False).save(tmp_path / "index_no_stem.json")
+    return SearchEngine(tmp_path, corpus_loader=lambda: SPELLING)
+
+
+@pytest.mark.parametrize(("query", "expected"), [
+    ("stoks", "stocks"),                        # rara (1 doc) y falta una letra: stocks (40 docs)
+    ("what is a morgage", "what is a mortgage"),  # en el corpus, pero 25 veces menos frecuente
+    ("retirment planning", "retirement planning"),  # desconocida, distancia 1
+    ("retir", "retirement"),                    # palabra empezada: se completa
+    ("stocks and mortgage", None),             # todo correcto
+    ("Dalbar stoks", "Dalbar stocks"),         # con mayúsculas no se toca (siglas, nombres)
+    ("STOKS", None),
+    ("zzzzqqq", None),                          # nada parecido
+    ("", None),
+])
+def test_correct_query_fixes_misspelled_lowercase_words(tmp_path, query, expected):
+    assert spelling_engine(tmp_path).correct_query(query) == expected
+
+
+def test_correct_query_needs_the_rare_word_to_be_much_less_frequent(tmp_path):
+    engine = spelling_engine(tmp_path)
+    # "stock" (30 docs) está en el corpus y no es rara: no se cambia por "stocks".
+    assert engine.correct_query("stock") is None
+
+
+def test_correct_query_without_index_returns_none(tmp_path):
+    engine = SearchEngine(tmp_path, corpus_loader=lambda: SPELLING)
+    assert engine.correct_query("stoks") is None
+
+
+def test_top_terms_are_the_most_frequent_alphabetic_terms(tmp_path):
+    engine = spelling_engine(tmp_path)
+    assert engine.top_terms(3) == ("stocks", "stock", "mortgage")
+    assert len(engine.top_terms(100)) == len(set(engine.top_terms(100)))

@@ -14,9 +14,9 @@
       <a class="logo first" href="#" aria-label="jab, inicio" data-logo></a>
       <div class="slot" data-slot="home"></div>
       <div class="examples" aria-label="Ejemplos">
-        <button class="example" type="button">How should I invest my savings?</button>
-        <button class="example" type="button">What is a good credit score?</button>
-        <button class="example" type="button">Should I pay off my mortgage early?</button>
+        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>How should I invest my savings?</span></button>
+        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>What is a good credit score?</span></button>
+        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>Should I pay off my mortgage early?</span></button>
       </div>
     </section>
 
@@ -30,9 +30,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
       </span>
       <label class="sr-only" for="jab-q">Consulta</label>
-      <input id="jab-q" type="text" autocomplete="off" spellcheck="false" maxlength="300"
+      <span class="ghost" aria-hidden="true"></span>
+      <textarea id="jab-q" rows="1" autocomplete="off" spellcheck="false" maxlength="300"
              placeholder="Busca en FiQA: How should I invest my savings?"
-             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="jab-suggest">
+             role="combobox" aria-autocomplete="both" aria-expanded="false" aria-controls="jab-suggest"
+             aria-describedby="jab-ghost-hint"></textarea>
+      <span id="jab-ghost-hint" class="sr-only">Tab o flecha derecha aceptan la sugerencia en gris.</span>
       <button class="clear" type="button" aria-label="Borrar" hidden>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
       </button>
@@ -50,14 +53,44 @@
         <div role="group" data-models></div>
         <hr>
         <div class="setting"><span>Resultados</span><div class="seg" data-k></div></div>
-        <div class="setting" data-stem-row tabindex="0" data-tip="Porter reduce palabras inglesas a su raíz para buscar variantes. No se aplica a Embeddings."><span>Raíz de palabras</span><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Raíz de palabras (Porter)"></button></div>
+        <div class="setting" data-stem-row tabindex="0" data-tip="Porter reduce cada palabra inglesa a su raíz (investing → invest) para encontrar también sus variantes. No se aplica a Embeddings."><span>Stemming (Porter)</span><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Stemming (Porter)"></button></div>
+        <div class="setting" tabindex="0" data-tip="Muestra la consulta y sus resultados en un mapa 3D aproximado: los textos de significado parecido tienden a quedar cerca. El parecido exacto aparece al pasar por cada relación. No cambia el orden de la lista."><span>Grafo 3D</span><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Grafo 3D de la consulta" data-graph-switch></button></div>
       </div>
     </div>
 
     <section class="results" aria-label="Resultados">
-      <p class="status num" role="status" aria-live="polite"></p>
-      <ol class="list"></ol>
-      <nav class="pager" aria-label="Páginas de resultados" hidden></nav>
+      <div class="results-main">
+        <p class="dym" hidden>Quizás quisiste decir: <button type="button" data-dym></button></p>
+        <p class="status num" role="status" aria-live="polite"></p>
+        <ol class="list"></ol>
+        <nav class="pager" aria-label="Páginas de resultados" hidden></nav>
+      </div>
+      <aside class="graph" aria-label="Grafo 3D de la consulta" hidden>
+        <div class="graph-head">
+          <h2 class="graph-title">Vista 3D de <span data-graph-model>BM25</span></h2>
+          <ul class="graph-legend" aria-label="Leyenda">
+            <li><i class="lg-query"></i>Consulta</li>
+            <li><i class="lg-shown"></i><span data-legend-shown>Tu lista</span></li>
+            <li data-legend-context><i class="lg-context"></i><span data-legend-range>Puestos</span></li>
+          </ul>
+        </div>
+        <div class="graph-stage">
+          <canvas tabindex="0" role="img"></canvas>
+          <span class="graph-feedback" aria-live="polite" aria-atomic="true"></span>
+          <div class="graph-controls" role="toolbar" aria-label="Controles del grafo">
+            <div class="ctl-group">
+              <button type="button" data-graph-zoom="in" aria-label="Acercar" data-tip="Acercar (también con la rueda del ratón)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4.5v11M4.5 10h11"/></svg></button>
+              <button type="button" data-graph-zoom="out" aria-label="Alejar" data-tip="Alejar"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10h11"/></svg></button>
+            </div>
+            <div class="ctl-group">
+              <button type="button" data-graph-pan aria-pressed="false" aria-label="Mover" data-tip="Mover: arrastra para desplazar el mapa (también Mayús + arrastrar o clic derecho)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v15M2.5 10h15M10 2.5 7.8 4.7M10 2.5l2.2 2.2M10 17.5l-2.2-2.2M10 17.5l2.2-2.2M2.5 10l2.2-2.2M2.5 10l2.2 2.2M17.5 10l-2.2-2.2M17.5 10l-2.2 2.2"/></svg></button>
+              <button type="button" data-graph-spin aria-pressed="true" aria-label="Girar solo" data-tip="Girar solo: el mapa rota despacio. Al manejarlo se detiene y vuelve a girar unos segundos después"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3"/><path d="M14.6 2.8v3.3h-3.3"/></svg></button>
+              <button type="button" data-graph-reset aria-label="Recentrar" data-tip="Recentrar: vuelve a la vista inicial"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5"/><circle cx="10" cy="10" r="1.2"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <p class="graph-error" hidden></p>
+      </aside>
     </section>
   </div>
   <div id="jab-tip" class="tooltip" role="tooltip" hidden></div>

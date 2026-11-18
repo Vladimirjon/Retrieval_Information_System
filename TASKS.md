@@ -23,4 +23,6 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 | #17 | docs: informe técnico de hasta cinco páginas | Jorge Torres | M5 Informe y entrega | #4, #12, #16 | pendiente |
 | #18 | docs: QA final, README y entrega completa | Vladimirjon | M5 Informe y entrega | #16, #17 | pendiente |
 
+Mejora fuera del plan (17 de noviembre): grafo 3D opcional por consulta, rutas con parámetros en la URL, campo de búsqueda como el de Google con autocompletado, «Quizás quisiste decir» y Ctrl+Z, en curso en la rama `feat/13-grafo-3d-consulta`, sin commit ni issue propia; probado en local y en navegador, con revisión cruzada de Codex (un P2 corregido); falta PR y CI. Evidencia en STATE.
+
 Actualizar junto con [STATE](STATE.md) al terminar cada tarea. Estados: pendiente, en curso, hecho, bloqueado. Ismael Freire = @BrandonFreire; Jorge Torres = @Almejandro04.

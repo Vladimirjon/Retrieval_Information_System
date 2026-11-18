@@ -83,6 +83,16 @@
 .jab .logo .dot { fill: var(--accent); }
 .jab .logo.first .dot { animation: jab-dot var(--d-page) 120ms var(--ease-out) both; }
 @keyframes jab-dot { from { transform: translateY(-28px); opacity: 0; } to { transform: none; opacity: 1; } }
+.jab .logo .dot { transform-box: fill-box; transform-origin: 50% 100%; }
+.jab .logo .dot.hop { animation: jab-hop 560ms var(--ease-out); }
+@keyframes jab-hop {
+  0% { transform: none; }
+  18% { transform: scale(1.18, .82); }
+  45% { transform: translateY(-140%) scale(.9, 1.1); }
+  72% { transform: translateY(0) scale(1.14, .86); }
+  86% { transform: translateY(-22%); }
+  100% { transform: none; }
+}
 
 /* Resultados: logo pequeño a la izquierda de la barra */
 .jab .results-head {
@@ -96,8 +106,8 @@
 
 /* ---------- Barra de búsqueda ---------- */
 .jab .bar {
-  position: relative; width: 100%; height: var(--bar-h); padding: var(--bar-pad);
-  display: flex; align-items: center; gap: var(--s1);
+  position: relative; width: 100%; min-height: var(--bar-h); padding: var(--bar-pad);
+  display: flex; align-items: flex-start; gap: var(--s1);
   background: #fff; border: 1px solid var(--line); border-radius: var(--r-bar);
   corner-shape: squircle; box-shadow: var(--shadow-bar);
   view-transition-name: bar;
@@ -107,16 +117,29 @@
 .jab .bar:focus-within { border-color: color-mix(in srgb, var(--accent-ink) 55%, var(--line)); box-shadow: var(--shadow-bar), 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
 .jab .bar-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; color: var(--ink-3); }
 .jab .bar-icon svg { width: 20px; height: 20px; }
-.jab .bar input {
-  flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent;
-  font: 400 var(--t-lg)/1 var(--font); color: var(--ink);
+.jab .bar textarea, .jab .ghost {
+  box-sizing: border-box; margin: 0; padding: 9px 0; border: 0;
+  font: 400 var(--t-lg)/24px var(--font); letter-spacing: normal;
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; tab-size: 8;
 }
-.jab .bar input::placeholder { color: var(--ink-3); opacity: 1; }
-.jab .bar input:focus-visible { outline: none; }
+.jab .bar textarea {
+  flex: 1; min-width: 0; width: 0; height: 42px; max-height: 138px;
+  resize: none; outline: 0; background: transparent; color: var(--ink);
+  position: relative; z-index: 1; overflow: hidden;
+}
+.jab .bar textarea::placeholder { color: var(--ink-3); opacity: 1; }
+/* Sin foco queda en una línea (como en Google): se recorta el relleno inferior para que
+   no asome la segunda; al pulsar, crece y se ve todo. */
+.jab .bar textarea:not(:focus) { clip-path: inset(0 0 9px 0); }
+.jab .ghost {
+  position: absolute; overflow: hidden; pointer-events: none; color: var(--ink-3);
+}
+.jab .ghost .typed { color: transparent; }
+.jab .bar textarea:focus-visible { outline: none; }
 
 /* Botón de borrar: ícono que entra con fundido y desenfoque */
 .jab .clear {
-  flex: none; position: relative; width: 36px; height: 36px; border: 0; border-radius: 50%;
+  flex: none; position: relative; margin-top: 3px; width: 36px; height: 36px; border: 0; border-radius: 50%;
   background: transparent; color: var(--ink-3); cursor: pointer; display: grid; place-items: center;
   transition: opacity var(--d-fast) ease-out, filter var(--d-fast) ease-out, transform var(--d-fast) ease-out;
 }
@@ -175,16 +198,27 @@
 .jab .suggest li span { display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .jab .suggest li svg { flex: none; width: 16px; height: 16px; color: var(--ink-3); }
 .jab .suggest li b { color: var(--ink); font-weight: 600; }
-.jab .suggest li[aria-selected="true"], .jab .suggest li:hover { background: var(--surface); }
+.jab .suggest li .kbd { margin-left: auto; opacity: 0; transition: opacity var(--d-fast) ease-out; }
+.jab .suggest li[aria-selected="true"], .jab .suggest li:hover { background: var(--accent-soft); color: var(--ink); }
+.jab .suggest li[aria-selected="true"] svg, .jab .suggest li:hover svg { color: var(--accent-ink); }
+.jab .suggest li[aria-selected="true"] .kbd, .jab .suggest li:hover .kbd { opacity: 1; }
 
 /* Ejemplos y atajos en el inicio */
 .jab .examples { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s2); }
 .jab .example {
-  position: relative; min-height: 40px; padding: 0 var(--s4); border: 1px solid var(--line); border-radius: 999px;
-  background: transparent; color: var(--ink-2); font-size: var(--t-sm); cursor: pointer;
-  transition: border-color var(--d-fast) ease-out, color var(--d-fast) ease-out, transform var(--d-fast) ease-out;
+  position: relative; display: inline-flex; align-items: center; gap: var(--s2);
+  min-height: 40px; padding: 0 var(--s4) 0 var(--s3); border: 1px solid var(--line); border-radius: 999px;
+  background: #fff; color: var(--ink-2); font-size: var(--t-sm); cursor: pointer;
+  box-shadow: 0 1px 2px rgb(32 26 31 / .04);
+  transition: border-color var(--d-fast) ease-out, color var(--d-fast) ease-out, background-color var(--d-fast) ease-out,
+              box-shadow var(--d-fast) ease-out, transform var(--d-fast) ease-out;
 }
-.jab .example:hover { border-color: var(--ink-3); color: var(--ink); }
+.jab .example svg { flex: none; width: 15px; height: 15px; color: var(--accent-ink); opacity: .75; }
+.jab .example:hover {
+  border-color: color-mix(in srgb, var(--accent-ink) 45%, var(--line)); background: var(--accent-soft);
+  color: var(--accent-ink); box-shadow: 0 4px 12px rgb(122 46 94 / .12); transform: translateY(-1px);
+}
+.jab .example:hover svg { opacity: 1; }
 .jab .hints { display: flex; gap: var(--s5); color: var(--ink-3); font-size: var(--t-xs); }
 .jab .hints span { display: inline-flex; align-items: center; gap: var(--s2); }
 
@@ -194,6 +228,7 @@
   padding: var(--s2); background: #fff; border: 1px solid var(--line);
   border-radius: var(--r-menu); corner-shape: squircle; box-shadow: var(--shadow-menu);
   transform-origin: top right;  /* nace del chip */
+  max-height: calc(100vh - 24px); overflow-y: auto; scroll-margin-bottom: 12px;
   transition: opacity var(--d-menu) var(--ease-out), transform var(--d-menu) var(--ease-out);
 }
 .jab .menu[hidden] { display: block; opacity: 0; transform: scale(.95); pointer-events: none; transition-duration: var(--d-exit); }
@@ -207,6 +242,7 @@
 .jab .opt strong { display: block; font-size: var(--t-sm); font-weight: 600; color: var(--ink); line-height: 1.2; }
 .jab .opt small { display: block; font-size: var(--t-xs); color: var(--ink-3); line-height: 1.3; }
 .jab .opt:hover, .jab .opt.is-active { background: var(--surface); }
+.jab .opt[aria-checked="true"] { background: var(--accent-soft); }
 .jab .opt[aria-checked="true"] strong::after {
   content: ""; display: inline-block; width: 6px; height: 6px; margin-left: var(--s2); vertical-align: middle;
   border-radius: 50%; background: var(--accent);
@@ -235,7 +271,27 @@
 
 /* ---------- Resultados ---------- */
 .jab .results { padding: var(--s5) 0 var(--s8); }
-.jab .status { min-height: 22px; margin: 0 0 var(--s3); color: var(--ink-3); font-size: var(--t-sm); }
+.jab .status {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3);
+  min-height: 28px; margin: 0 0 var(--s3); color: var(--ink-2); font-size: var(--t-sm);
+}
+.jab .status b { color: var(--ink); font-weight: 600; }
+.jab .time {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px;
+  border-radius: 999px; background: var(--surface); color: var(--ink-2); font-size: var(--t-xs); font-weight: 500;
+}
+.jab .time svg { width: 14px; height: 14px; color: var(--accent-ink); }
+
+/* «Quizás quisiste decir» */
+.jab .dym { margin: 0 0 var(--s3); color: var(--ink-2); font-size: var(--t-md); }
+.jab .dym[hidden] { display: none; }
+.jab .dym button {
+  padding: 0; border: 0; background: none; color: var(--accent-ink); font: inherit; font-style: italic;
+  cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+  transition: text-decoration-color var(--d-fast) ease-out;
+}
+.jab .dym button:hover { text-decoration-color: currentColor; }
+.jab .dym button b { font-weight: 700; }
 .jab .list { list-style: none; margin: 0; padding: 0; transition: opacity var(--d-fast) ease-out, transform var(--d-fast) ease-out; }
 .jab .list[data-stale="true"] { opacity: .45; }
 .jab .list.leaving { opacity: 0; transform: translateX(-8px); }
@@ -261,7 +317,7 @@
 .jab mark { background: var(--accent-soft); color: var(--accent-ink); border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .jab .meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); margin-top: var(--s3); color: var(--ink-3); font-size: var(--t-xs); }
 .jab .score { display: inline-flex; align-items: center; gap: var(--s2); }
-.jab .tip-target { border-radius: 4px; cursor: help; }
+.jab .tip-target { border-radius: 4px; cursor: default; }
 .jab .score-bar { width: 56px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .jab .score-bar i { display: block; height: 100%; background: var(--ink-3); border-radius: 2px; }
 .jab .row[data-top="true"] .score-bar i { background: var(--accent); }
@@ -307,6 +363,68 @@
   background: var(--accent); color: var(--on-accent); font-weight: 600; cursor: pointer;
 }
 
+/* ---------- Grafo 3D de la consulta (opcional, menú del chip) ---------- */
+.jab .graph[hidden], .jab .graph-stage[hidden], .jab .graph-error[hidden], .jab .graph-legend [hidden] { display: none; }
+.jab[data-graph="on"][data-mode="results"][data-view="buscar"] .results { display: flex; flex-direction: column; }
+.jab .graph { order: -1; margin-bottom: var(--s5); transition: opacity var(--d-fast) ease-out; }
+.jab .graph[data-stale="true"] { opacity: .45; }
+.jab .graph-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s1) var(--s4); margin-bottom: var(--s3); }
+.jab .graph-title { margin: 0; color: var(--ink); font-size: var(--t-md); font-weight: 600; letter-spacing: -.01em; }
+.jab .graph-title span { color: var(--accent-ink); }
+.jab .graph-legend { display: flex; flex-wrap: wrap; gap: var(--s3); margin: 0; padding: 0; list-style: none; color: var(--ink-3); font-size: var(--t-xs); }
+.jab .graph-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.jab .graph-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.jab .lg-query { background: var(--accent); }
+.jab .lg-shown { background: #fff; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.jab .lg-context { background: var(--ink-3); opacity: .35; }
+.jab .graph-stage {
+  position: relative; height: 380px; overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 35%, #fff 0%, var(--paper) 100%);
+  border: 1px solid var(--line); border-radius: var(--r-menu); corner-shape: squircle;
+}
+.jab .graph canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; user-select: none; }
+.jab .graph-feedback {
+  position: absolute; top: 12px; left: 12px; pointer-events: none;
+  padding: 5px 10px; border: 1px solid var(--line); border-radius: 20px;
+  background: var(--paper); color: var(--ink-2); font-size: var(--t-xs);
+  opacity: 0; transition: opacity 140ms ease-out;
+}
+.jab .graph-feedback.visible { opacity: 1; }
+.jab .graph canvas:focus-visible { outline-offset: -4px; border-radius: var(--r-menu); }
+/* Controles al estilo de un mapa: iconos apilados con su nombre al pasar el puntero. */
+.jab .graph-controls { position: absolute; right: var(--s3); bottom: var(--s3); display: grid; gap: var(--s2); }
+.jab .ctl-group {
+  display: grid; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 1px 2px rgb(32 26 31 / .06), 0 4px 12px rgb(32 26 31 / .08);
+}
+.jab .ctl-group button {
+  display: grid; place-items: center; width: 36px; height: 36px; border: 0; background: transparent;
+  color: var(--ink-2); cursor: pointer; transition: background-color var(--d-fast) ease-out, color var(--d-fast) ease-out;
+}
+.jab .ctl-group button + button { border-top: 1px solid var(--line); }
+.jab .ctl-group button:hover { background: var(--surface); color: var(--ink); }
+.jab .ctl-group button:active svg { transform: scale(.9); }
+.jab .ctl-group button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+.jab .ctl-group button:focus-visible { outline-offset: -3px; border-radius: 10px; }
+.jab .ctl-group svg {
+  width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+  transition: transform var(--d-fast) ease-out;
+}
+.jab .graph-error { margin: var(--s3) 0 0; color: var(--ink-2); font-size: var(--t-sm); }
+.jab .row.flash { animation: flash 1200ms ease-out; }
+@keyframes flash { from { background-color: var(--accent-soft); } to { background-color: transparent; } }
+/* Con sitio, el grafo va al lado de la lista y la acompaña al desplazarse. */
+@media (min-width: 1100px) {
+  .jab[data-graph="on"][data-mode="results"][data-view="buscar"] .jab-main { width: min(1200px, 100% - 2 * var(--s6)); }
+  .jab[data-graph="on"][data-mode="results"][data-view="buscar"] .results-head { max-width: 720px; }
+  .jab[data-graph="on"][data-mode="results"][data-view="buscar"] .results {
+    display: grid; grid-template-columns: minmax(0, 680px) minmax(0, 1fr); gap: var(--s6); align-items: start;
+  }
+  .jab[data-graph="on"] .results-main { grid-column: 1; grid-row: 1; }
+  .jab[data-graph="on"] .graph { grid-column: 2; grid-row: 1; position: sticky; top: var(--s4); margin: 0; }
+  .jab[data-graph="on"] .graph-stage { height: min(520px, 72vh); }
+}
+
 /* ---------- Vistas de los compañeros (#14 y #15) ---------- */
 /* La cabecera queda compacta; la lista de resultados la sustituye la vista de Streamlit. */
 .jab[data-view="comparar"] .results, .jab[data-view="metricas"] .results { display: none; }
@@ -327,7 +445,7 @@
   .jab .hints { display: none; }
   .jab .chip .kbd, .jab .chip svg { display: none; }
   .jab .chip { padding: 0 var(--s3); }
-  .jab .menu { position: fixed; left: var(--s3); right: var(--s3); top: auto; bottom: var(--s3); width: auto; transform-origin: bottom center; }
+  .jab .menu { left: 0; right: 0; width: auto; }
   .jab .row { grid-template-columns: 22px 1fr; }
 }
 
