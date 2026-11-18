@@ -30,7 +30,44 @@ En la vista Buscar, `app/ui.py` llama a `SearchEngine.search(..., skip_empty=Tru
 
 ## Cómo se comunican navegador y Python
 
-El componente envía un único estado `request = {q, model, k, stem, view, seq}`. Cada cambio sube `seq`, así ningún cambio se pierde aunque llegue mientras Python atiende otro. Python valida todo (modelo y vista en lista blanca, `k` en 5/10/20/50, consulta de 300 caracteres como máximo), busca y responde con el mismo `seq` y una `key` de la búsqueda. La interfaz descarta respuestas de un `seq` viejo y no repinta si solo cambió la vista. Si detecta que Python atendió un estado anterior, lo reenvía una vez.
+El componente envía un único estado `request = {q, model, k, stem, graph, view, seq}`. Cada cambio sube `seq`, así ningún cambio se pierde aunque llegue mientras Python atiende otro. Python valida todo (modelo y vista en lista blanca, `k` en 5/10/20/50, consulta de 300 caracteres como máximo, `graph` solo si llega `true`), busca y responde con el mismo `seq` y una `key` de la búsqueda. La interfaz descarta respuestas de un `seq` viejo y no repinta si solo cambió la vista. Si detecta que Python atendió un estado anterior, lo reenvía una vez.
+
+## Rutas y URL
+
+El mismo estado vive en la URL, para recargar, compartir o usar atrás y adelante:
+
+| Ruta | Vista |
+|---|---|
+| `/` | Inicio; mientras se escribe, los resultados en vivo aparecen aquí (`/?q=…`) |
+| `/search` | Búsqueda confirmada (Enter, una sugerencia, un ejemplo o «Quizás quisiste decir») |
+| `/comparison` | Comparar (#14) |
+| `/metrics` | Métricas (#15) |
+
+Parámetros: `q`, `model` (`jaccard`, `tfidf`, `bm25` o `embeddings`), `results` (5, 10, 20 o 50), `stemming` (`true`/`false`; no aparece con Embeddings) y `graph` (`true`/`false`). En el inicio solo aparecen los que difieren de lo predeterminado. Ejemplo: `/search?q=index+funds&model=bm25&results=10&stemming=false&graph=true`.
+
+Cada ruta es una página de `st.navigation` (oculta) sin contenido propio; la interfaz se dibuja en `main()`. Cambiar de página con `st.switch_page` vuelve a montar el componente (comprobado en el navegador: se pierden foco y texto a medio escribir), por eso escribir nunca cambia de página: el estado lleva `route` (`home` o `search`) y solo una acción explícita lo pasa a `search`; el logo vuelve a `home`. En `/search`, borrar la consulta deja la vista de resultados vacía en vez de volver al inicio. Tras Enter, el campo recupera el foco al volver a montarse.
+
+`resolve_state` (en `app/ui.py`) decide qué estado manda en cada ejecución: si el navegador envió un `seq` mayor, el del navegador, y Python mueve la URL con `st.switch_page` o `st.query_params`; si la URL cambió sin que lo hiciera la app (recargar, atrás, un enlace), la URL, con un `seq` nuevo y `nav` + 1 para que el componente la adopte. Solo cuenta como cambio una URL distinta de la vista en la ejecución anterior: una ejecución pedida antes de procesar un `switch_page` trae la URL vieja y no debe deshacer lo último que hizo el usuario.
+
+## Escritura asistida
+
+- **Campo como en Google:** es un `textarea` de una línea que, con el foco, crece hasta mostrar toda la consulta (hasta 5 líneas; luego desplaza) y sin foco vuelve a una línea. Enter busca; los saltos de línea al escribir o pegar se convierten en espacios; máximo 300 caracteres. Borrar con ×, aceptar el gris, pegar o elegir una sugerencia pasan por el historial nativo de deshacer (`editInput` con `execCommand` y respaldo), así que Ctrl+Z y Ctrl+Y funcionan.
+- **Autocompletado en gris:** mientras se escribe, aparece en gris lo que falta de la primera consulta de FiQA (train) que empieza igual; si no hay, se completa la última palabra con las 12 000 más frecuentes del índice (`SearchEngine.top_terms`). Se dibuja en un espejo superpuesto con las mismas medidas que el campo, así queda alineado también con varias líneas, y el campo crece para mostrar entera la sugerencia. Si lo escrito está en minúsculas, el resto también («he» → «heloc vs. …», no «heLOC»). Tab o flecha derecha lo aceptan.
+- **Quizás quisiste decir:** `SearchEngine.correct_query` corrige palabras en minúscula que no están en el índice sin Porter, o que están en menos de 10 documentos cuando hay una forma parecida al menos 20 veces más frecuente (FiQA tiene erratas como «morgage»). Puntúa ln(df) − 2 × distancia de edición (hasta 1 en palabras de hasta 7 letras, 2 en las más largas) y completa palabras empezadas («diabet» → diabetes). No toca palabras con mayúsculas (siglas y nombres propios). Medido sobre las 648 consultas de test: sugiere en 5 (3 erratas reales y 2 discutibles: «excl» → excel, «dishonour» → dishonor).
+
+## Grafo 3D de la consulta (opcional)
+
+Se activa en el menú del chip («Grafo 3D»; apagado por defecto). Con él activo, cada búsqueda trae además `graph`, calculado en ese momento por `SearchEngine.query_graph` (`src/ris/graph.py`):
+
+- Sitúa los 50 primeros resultados del modelo elegido: los del top-n elegido como nodos numerados y el resto, hasta 50, como puntos tenues «alrededor». Con top-n 50 todos son nodos.
+- Usa siempre los embeddings MiniLM, sea cual sea el modelo del ranking: sitúa los resultados por significado y no cambia su orden. Codifica la consulta y lee los vectores ya guardados en FAISS; no toca el corpus. Medido en local con los artefactos reales: 12–14 ms para 50 resultados.
+- Posición que calcula Python: PCA a 3D de la consulta y los documentos; la consulta queda en el origen y el punto más lejano a distancia 1. `variance` dice qué fracción de la variación conserva esa proyección (22–26 % con 50 resultados en las consultas probadas). El navegador no la dibuja tal cual (ver más abajo): de ella solo toma la dirección, así que la interfaz no cita ese porcentaje.
+- Parecido: coseno entre los vectores originales, no entre las posiciones 3D. Con Embeddings coincide con la puntuación del modelo (diferencia máxima medida 2,6e-7).
+- Relaciones: la consulta con cada nodo mostrado, y cada nodo mostrado con sus dos mostrados más parecidos (desempate por `doc_id`); los puntos de alrededor no tienen relaciones.
+
+Formato: `graph = {nodes: [[x, y, z, coseno]], edges: [[i, j, coseno]], shown, context: [{rank, doc_id, text}], variance, elapsed_ms}`, con `nodes[i]` en el orden del ranking (los `shown` primeros son los de `hits`), o `{error}` si el modelo denso no está disponible (los resultados se muestran igual).
+
+El navegador pinta en un `<canvas>`, sin bibliotecas ni rejillas. Para que la nube no quede amontonada junto a la consulta, la posición que se dibuja no es la del PCA tal cual: la dirección es la del PCA quitándole el 80 % de la dirección común (para que la nube rodee la consulta) y la distancia al centro sigue el puesto de cada documento según 1 − coseno con la consulta (más lejos, menos parecido; empates al mismo radio, entre 0,22 y 1), con una separación suave para que no se tapen los números. Los nodos llevan degradado y un tono que va del gris tinta al ciruela según su parecido, y la consulta un halo. El encuadre se calcula para que todo quepa al girar; «Recentrar» vuelve a él. Leyenda: «Tu lista (1–N)» y «Puestos N+1–50». Arrastrar gira; la rueda o dos dedos acercan; Mayús + arrastrar, clic derecho o el modo «Mover» desplazan. Mientras se manipula, una pastilla dice «Girando», «Moviendo» o «Zoom 1,6×», y el cursor lo fija una sola función. «Girar solo» es una preferencia: manejar el grafo lo pausa y vuelve a girar unos 2 s después de la última interacción. Los controles tipo mapa (acercar, alejar, mover, girar solo, recentrar) dicen qué hacen al pasar el puntero. Pasar por un punto o por un resultado de la lista resalta sus relaciones con su parecido; pasar o pulsar una relación muestra su número. Pulsar un nodo o una relación centra y acerca el grafo en ello con una animación corta y lo deja resaltado; si es un nodo de la lista, además marca su fila. Pulsar en vacío quita el resaltado. En pantallas de 1100 px o más va al lado de la lista; en las demás, encima. Con `prefers-reduced-motion` no gira solo.
 
 ## Contrato `render(context)` para #14 y #15
 

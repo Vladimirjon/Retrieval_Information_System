@@ -242,3 +242,25 @@ def test_real_encoder_factory_is_lazy_pinned_and_reused(built, tmp_path, monkeyp
     })]
     assert thread_counts == [8]
     assert [call[0] for call in encoder.calls] == [[" Query ORIGINAL! "]] * 2
+
+
+def test_encode_query_is_the_normalized_vector_search_uses(built):
+    retriever, encoder = built
+    encoder.calls.clear()
+    query = " Query ORIGINAL! "
+    encoded = retriever.encode_query(query)
+    assert encoded.dtype == np.float32 and encoded.shape == (DIMENSION,)
+    np.testing.assert_allclose(encoded, vector(1, 2) / np.sqrt(5), rtol=1e-6)
+    retriever.search(query, k=1)
+    assert [texts for texts, _ in encoder.calls] == [[query], [query]]  # mismo texto original
+
+
+def test_vectors_follow_the_requested_order_and_reject_unknown_ids(built):
+    retriever, _ = built
+    stored = retriever.vectors(["d2", "d1"])
+    assert stored.dtype == np.float32 and stored.shape == (2, DIMENSION)
+    np.testing.assert_allclose(stored[0], vector(1, 0), atol=1e-6)
+    np.testing.assert_allclose(stored[1], vector(2, 3) / np.sqrt(13), rtol=1e-6)
+    assert retriever.vectors([]).shape == (0, DIMENSION)
+    with pytest.raises(ValueError, match="d9"):
+        retriever.vectors(["d1", "d9"])
