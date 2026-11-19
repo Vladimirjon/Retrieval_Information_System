@@ -23,18 +23,15 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 | #17 | docs: informe técnico de hasta cinco páginas | Jorge Torres | M5 Informe y entrega | #4, #12, #16 | pendiente |
 | #18 | docs: QA final, README y entrega completa | Vladimirjon | M5 Informe y entrega | #16, #17 | pendiente |
 
-Seguimiento de #15: rama `fix/15-interacciones-metricas` preparada para revisión
-contra `main` (`fa2d3ec`). La issue original sigue cerrada con el PR #37.
+El seguimiento de #15 está en `fix/15-interacciones-metricas` con `main` (`66aea9d`) incorporado al [PR #40](https://github.com/Vladimirjon/fiqa-information-retrieval/pull/40). La issue original sigue cerrada con el PR #37.
 Incluye filtros persistentes, diferencias absolutas de Porter, exploración de qids,
 botones múltiples de métodos, recuperación de estados vacíos, tablas más legibles,
 ayudas y transiciones entre pestañas. Los colores de las barras identifican la
 variante experimental; el tema gris y la navegación son ampliaciones de alcance
 justificadas en [app/README](app/README.md).
 
-Validación local: 384 pruebas, incluidas 98 de Métricas, Ruff y diff sin errores;
-diagnósticos auxiliares de navegación y migración del selector. Se mantienen
-reportes, fórmulas, motor, contrato y dependencias. **En revisión:** recorrido
-visual final, CI del PR y aprobación del equipo antes de integrar. No hay despliegue
-comprobado del seguimiento. Evidencia y límites en [STATE](STATE.md).
+Pasaron 484 pruebas locales. En el navegador se comprobaron los filtros, el gráfico de métricas, el explorador de consultas, la navegación y el grafo 3D. El detalle funciona después de cambiar los filtros globales. La aprobación del equipo sigue pendiente y el CI se consulta en el PR. Evidencia y límites en [STATE](STATE.md).
+
+El grafo 3D opcional, las rutas con parámetros, el autocompletado, «Quizás quisiste decir» y Ctrl+Z quedaron integrados en `main` con el PR #41. La rama de seguimiento de #15 incorpora ese cambio. Evidencia en [STATE](STATE.md).
 
 Actualizar junto con [STATE](STATE.md) al terminar cada tarea. Estados: pendiente, en curso, hecho, bloqueado. Ismael Freire = @BrandonFreire; Jorge Torres = @Almejandro04.

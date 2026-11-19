@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import threading
-from collections.abc import Callable
+from bisect import bisect_left
+from collections.abc import Callable, Sequence
 from hashlib import sha256
 from importlib.metadata import version
 from pathlib import Path
@@ -143,6 +144,22 @@ class DenseRetriever:
                    for score, row in zip(scores[0], rows[0], strict=True)]
         results.sort(key=lambda result: (-result.score, result.doc_id))
         return results[:k]
+
+    def encode_query(self, query: str) -> np.ndarray:
+        """Vector normalizado de la consulta, el mismo con el que busca `search`."""
+        return self._encode([query], 1)[0]
+
+    def vectors(self, doc_ids: Sequence[str]) -> np.ndarray:
+        """Vectores guardados de esos documentos, en el orden pedido."""
+        rows = []
+        for doc_id in doc_ids:
+            row = bisect_left(self.doc_ids, doc_id)  # doc_ids está ordenado (build y load)
+            if row == len(self.doc_ids) or self.doc_ids[row] != doc_id:
+                raise ValueError(f"Documento sin vector en el índice denso: {doc_id!r}")
+            rows.append(row)
+        if not rows:
+            return np.empty((0, self._index.d), dtype=np.float32)
+        return np.stack([self._index.reconstruct(row) for row in rows])
 
     def save(self, path: str | Path) -> None:
         """Guarda vectores, índice y manifiesto; este último se escribe al final.

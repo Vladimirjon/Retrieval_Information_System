@@ -320,9 +320,7 @@ def _query_detail(
                         help_text=metric_help(report, per_query=True), key="metrics_all_queries")
 
 
-@st.fragment
 def _dashboard(directory: Path, report: MetricsReport) -> None:
-    _check_report_unchanged(directory, report)
     labels = metric_labels(report)
     with st.container(border=True, key="metrics_controls"):
         porter = st.segmented_control(

@@ -3,6 +3,9 @@
 Ejecutar desde la raíz del repositorio:
     python -m streamlit run app/streamlit_app.py
 
+Rutas: / (inicio), /search, /comparison y /metrics; las opciones de la búsqueda van en
+los parámetros de la URL (ver app/ui.py).
+
 Variables de entorno opcionales:
     JAB_ARTIFACTS_DIR  carpeta con los índices (por defecto, ./artifacts)
     JAB_REPORTS_DIR    carpeta con las métricas de #11 (por defecto, ./reports)
@@ -26,7 +29,15 @@ for import_root in (ROOT / "src", ROOT):
 import streamlit as st
 
 from app.context import AppContext
-from app.ui import jab_component, parse_request, respond
+from app.ui import (
+    VOCABULARY_SIZE,
+    jab_component,
+    page_for,
+    parse_request,
+    resolve_state,
+    respond,
+    url_params,
+)
 from app.views import comparison, metrics
 from ris.artifacts import ensure_artifacts
 from ris.data import load_queries
@@ -158,9 +169,64 @@ def get_suggestions() -> tuple[str, ...]:
     return tuple(sorted(text for text in texts if 3 <= len(text) <= 140))
 
 
+@st.cache_resource(show_spinner=False)
+def get_vocabulary(_engine: SearchEngine) -> tuple[str, ...]:
+    """Palabras frecuentes de FiQA para completar en gris; vacío si el índice no carga."""
+    try:
+        return _engine.top_terms(VOCABULARY_SIZE)
+    except Exception:  # noqa: BLE001 - sin vocabulario se completa solo con sugerencias
+        return ()
+
+
+# Cada ruta es una página de Streamlit sin contenido propio: la interfaz se dibuja en
+# main() para que el componente siga montado (y con el foco) al cambiar de ruta.
+def _home() -> None: ...
+def _search() -> None: ...
+def _comparison() -> None: ...
+def _metrics() -> None: ...
+
+
+def _pages() -> dict[str, st.Page]:
+    return {
+        "home": st.Page(_home, title="jab · búsqueda en FiQA", default=True),
+        "search": st.Page(_search, title="jab · Buscar", url_path="search"),
+        "comparison": st.Page(_comparison, title="jab · Comparar", url_path="comparison"),
+        "metrics": st.Page(_metrics, title="jab · Métricas", url_path="metrics"),
+    }
+
+
+def _current_request(page: str):
+    """Estado vigente y si llegó desde la URL (nav) en vez de desde la interfaz.
+
+    Gana lo último que ocurrió: una acción del navegador sube su seq; un cambio de la
+    URL que no hizo la app (recargar, atrás, adelante, un enlace) cambia la ruta o los
+    parámetros sin cambiar el seq, y entonces se adopta la URL con un seq nuevo.
+
+    Solo cuenta como cambio una URL distinta de la que se vio en la ejecución anterior:
+    una ejecución que el navegador pidió antes de procesar un `switch_page` todavía
+    trae la URL vieja, y adoptarla devolvería la interfaz a un estado ya abandonado.
+    """
+    sent = (st.session_state.get("jab") or {}).get("request")
+    current, nav, seen = resolve_state(
+        st.session_state.get("jab_current"),
+        None if sent is None else parse_request(sent),
+        page, st.query_params.to_dict(),
+        st.session_state.get("jab_seen_url"), st.session_state.get("jab_nav", 0),
+    )
+    st.session_state["jab_seen_url"] = seen
+    st.session_state["jab_current"] = current
+    st.session_state["jab_nav"] = nav
+    return current, nav
+
+
 def main() -> None:
     mark = Path(__file__).parent / "static" / "jab-mark.svg"
     st.set_page_config(page_title="jab · búsqueda en FiQA", page_icon=str(mark), layout="wide")
+    pages = _pages()
+    active = st.navigation(list(pages.values()), position="hidden")
+    page = next((key for key, value in pages.items() if value.url_path == active.url_path),
+                "home")
+    st.set_page_config(page_title=active.title)  # la pestaña nombra la vista
     st.markdown(PAGE_CSS, unsafe_allow_html=True)
     status = _engine_status()
     if status["ready"]:
@@ -176,13 +242,12 @@ def main() -> None:
         )
         try:
             engine = get_engine()
+            get_vocabulary(engine)  # unos segundos la primera vez: dentro de la pantalla de carga
         finally:
             loading.empty()
         status["ready"] = True
 
-    # Estado que el navegador envió en la interacción anterior.
-    state = st.session_state.get("jab") or {}
-    request = parse_request(state.get("request"))
+    request, nav = _current_request(page)
     cache = st.session_state.get("jab_response")
     if cache and request.q and cache.get("key") == request.key and "error" not in cache:
         cache = {**cache, "seq": request.seq}  # misma búsqueda (p. ej. solo cambió la vista)
@@ -190,16 +255,24 @@ def main() -> None:
         cache = respond(engine, request)
     st.session_state["jab_response"] = cache
 
-    jab_component(get_suggestions())(
+    jab_component(get_suggestions(), get_vocabulary(engine))(
         key="jab",
         data={
             "initial": {"q": request.q, "model": request.model, "k": request.k,
-                        "stem": request.stem, "view": request.view, "seq": request.seq},
+                        "stem": request.stem, "graph": request.graph, "view": request.view,
+                        "route": request.route, "seq": request.seq, "nav": nav},
             "response": cache,
         },
         default={"request": None},
         on_request_change=lambda: None,
     )
+
+    # La URL sigue al estado: ruta según la vista y parámetros con las opciones.
+    target, params = page_for(request), url_params(request)
+    if target != page:
+        st.switch_page(pages[target], query_params=params)
+    if st.query_params.to_dict() != params:
+        st.query_params.from_dict(params)
 
     if request.view != "buscar":
         context = AppContext(
