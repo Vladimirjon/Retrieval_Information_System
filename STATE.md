@@ -4,10 +4,15 @@ Actualizado el 19 de noviembre de 2026. `main` está en `66aea9d` e incluye #1�
 
 ## Integración del seguimiento de #15 con main (19 de noviembre)
 
-- La rama `fix/15-interacciones-metricas` incorpora `main` en `66aea9d` sobre el trabajo de `76a3b45` y mantiene el [PR #40](https://github.com/Vladimirjon/fiqa-information-retrieval/pull/40) para revisión. La navegación conserva las rutas, el historial y las transiciones entre vistas.
+- La rama `fix/15-interacciones-metricas` incorpora `main` en `66aea9d` sobre el trabajo de `76a3b45`. La navegación conserva las rutas, el historial y las transiciones entre vistas.
 - Al alternar Porter, el fragmento anidado del detalle podía quedar registrado con un identificador anterior y dejar sus controles sin respuesta. Los filtros globales ahora actualizan la vista completa e independizan el detalle por consulta, que conserva su fragmento y comprueba los reportes al interactuar.
 - En local pasaron 484 pruebas en Windows con Python 3.12. En el navegador, con los reportes de FiQA y una ventana estrecha, se comprobaron los tres modos de Porter, el cambio de métrica, la ayuda con teclado, el filtro del explorador por qid y la persistencia al navegar. En Buscar se comprobaron Tab, Enter, Ctrl+Z, Atrás/Adelante y el grafo 3D de BM25 para una consulta real. La consola quedó sin errores en esos recorridos.
-- Sigue pendiente la revisión del PR. Comparar abre la vista reservada por #14 en `main`. La comprobación corresponde a la app local.
+- El [PR #40](https://github.com/Vladimirjon/fiqa-information-retrieval/pull/40) se cerró durante la revisión local y concentra la entrega del seguimiento. El commit de integración `3d65e91` pasó CI. Comparar abre la vista reservada por #14 en `main`. La comprobación visual corresponde a la app local.
+- Ajuste local posterior: Buscar, Comparar y Métricas comparten la dirección base y mantienen montado el buscador para la transición. El historial de la pestaña recupera la vista, consulta y opciones. En `127.0.0.1:8516` se comprobaron una URL anterior de Métricas, Atrás/Adelante, recarga y persistencia de qid, filtro y métrica. El `main` remoto seguía en `66aea9d`.
+- Tras comparar con `76a3b45`, se comprobó que el logo podía quedar en la misma posición en dos vistas compactas. La palabra completa se anima 260 ms desde su posición y tamaño anteriores, con un desplazamiento breve si coinciden. Los seis cambios de vista ejecutaron la animación en Chromium con movimiento normal, comprobado en una página local aislada con los recursos de la app.
+- A pedido de Jorge se retiraron las optimizaciones del grafo y se limitó la animación de entrada de Buscar a la lista. El JavaScript, los estilos y el motor del grafo coinciden con `main` (`66aea9d`). La preferencia de movimiento reducido ya estaba tanto en ese commit como en la rama #15 anterior.
+- Se reprodujo en la app local que el navegador integrado tenía movimiento reducido activo y el logo cambiaba de golpe. Se comprobaron los seis cambios con un fundido de 180 ms, sin desplazamiento, y con la dirección base. En una prueba aislada con movimiento normal, los seis cambios ejecutaron el desplazamiento del logo de 340 ms. Se verificó también la carga de las medias globales al volver a Métricas. El ajuste se limita al logo.
+- La comprobación final en local volvió a ejecutar 485 pruebas, Ruff, la validación de sintaxis JavaScript y `git diff --check`. El CI de la versión publicada y la revisión del equipo se consultan en el PR #40.
 
 ## Seguimiento de #15 preparado para revisión (17 de noviembre)
 

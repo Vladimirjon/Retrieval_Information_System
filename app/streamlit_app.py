@@ -3,8 +3,7 @@
 Ejecutar desde la raíz del repositorio:
     python -m streamlit run app/streamlit_app.py
 
-Rutas: / (inicio), /search, /comparison y /metrics; las opciones de la búsqueda van en
-los parámetros de la URL (ver app/ui.py).
+La navegación usa la dirección base. Los enlaces anteriores todavía se pueden abrir.
 
 Variables de entorno opcionales:
     JAB_ARTIFACTS_DIR  carpeta con los índices (por defecto, ./artifacts)
@@ -32,11 +31,10 @@ from app.context import AppContext
 from app.ui import (
     VOCABULARY_SIZE,
     jab_component,
-    page_for,
     parse_request,
     resolve_state,
     respond,
-    url_params,
+    view_links,
 )
 from app.views import comparison, metrics
 from ris.artifacts import ensure_artifacts
@@ -196,27 +194,15 @@ def _pages() -> dict[str, st.Page]:
 
 
 def _current_request(page: str):
-    """Estado vigente y si llegó desde la URL (nav) en vez de desde la interfaz.
-
-    Gana lo último que ocurrió: una acción del navegador sube su seq; un cambio de la
-    URL que no hizo la app (recargar, atrás, adelante, un enlace) cambia la ruta o los
-    parámetros sin cambiar el seq, y entonces se adopta la URL con un seq nuevo.
-
-    Solo cuenta como cambio una URL distinta de la que se vio en la ejecución anterior:
-    una ejecución que el navegador pidió antes de procesar un `switch_page` todavía
-    trae la URL vieja, y adoptarla devolvería la interfaz a un estado ya abandonado.
-    """
+    """Lee los enlaces anteriores al entrar y conserva la última petición del navegador."""
     sent = (st.session_state.get("jab") or {}).get("request")
-    current, nav, seen = resolve_state(
+    current = resolve_state(
         st.session_state.get("jab_current"),
         None if sent is None else parse_request(sent),
         page, st.query_params.to_dict(),
-        st.session_state.get("jab_seen_url"), st.session_state.get("jab_nav", 0),
     )
-    st.session_state["jab_seen_url"] = seen
     st.session_state["jab_current"] = current
-    st.session_state["jab_nav"] = nav
-    return current, nav
+    return current
 
 
 def main() -> None:
@@ -226,7 +212,11 @@ def main() -> None:
     active = st.navigation(list(pages.values()), position="hidden")
     page = next((key for key, value in pages.items() if value.url_path == active.url_path),
                 "home")
-    st.set_page_config(page_title=active.title)  # la pestaña nombra la vista
+    request = _current_request(page)
+    if page != "home":
+        st.switch_page(pages["home"], query_params={})
+    title = {"buscar": "Buscar", "comparar": "Comparar", "metricas": "Métricas"}
+    st.set_page_config(page_title=f"jab · {title[request.view]}")
     st.markdown(PAGE_CSS, unsafe_allow_html=True)
     status = _engine_status()
     if status["ready"]:
@@ -247,7 +237,6 @@ def main() -> None:
             loading.empty()
         status["ready"] = True
 
-    request, nav = _current_request(page)
     cache = st.session_state.get("jab_response")
     if cache and request.q and cache.get("key") == request.key and "error" not in cache:
         cache = {**cache, "seq": request.seq}  # misma búsqueda (p. ej. solo cambió la vista)
@@ -255,24 +244,21 @@ def main() -> None:
         cache = respond(engine, request)
     st.session_state["jab_response"] = cache
 
+    base_path = "/" + st.get_option("server.baseUrlPath").strip("/")
+    base_path = base_path.rstrip("/") + "/"
     jab_component(get_suggestions(), get_vocabulary(engine))(
         key="jab",
         data={
             "initial": {"q": request.q, "model": request.model, "k": request.k,
                         "stem": request.stem, "graph": request.graph, "view": request.view,
-                        "route": request.route, "seq": request.seq, "nav": nav},
+                        "route": request.route, "seq": request.seq},
             "response": cache,
+            "basePath": base_path,
+            "links": view_links(request, base_path),
         },
         default={"request": None},
         on_request_change=lambda: None,
     )
-
-    # La URL sigue al estado: ruta según la vista y parámetros con las opciones.
-    target, params = page_for(request), url_params(request)
-    if target != page:
-        st.switch_page(pages[target], query_params=params)
-    if st.query_params.to_dict() != params:
-        st.query_params.from_dict(params)
 
     if request.view != "buscar":
         context = AppContext(

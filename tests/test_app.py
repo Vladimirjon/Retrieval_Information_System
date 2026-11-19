@@ -21,8 +21,8 @@ from app.ui import (
     request_from_url,
     resolve_state,
     respond,
-    same_state,
     url_params,
+    view_links,
 )
 from app.views import comparison, metrics
 from ris.engine import ArtifactsMissingError, Hit, ModelUnavailableError, SearchResponse
@@ -377,6 +377,35 @@ def frontend_function(name, next_name):
         f"function {next_name}(", 1)[0]
 
 
+def test_wordmark_moves_between_layouts_and_when_headings_align():
+    run_frontend_js("""
+import assert from 'node:assert/strict';
+const compact = {left: 24, top: 64, width: 48, height: 30};
+const home = {left: 350, top: 200, width: 144, height: 90};
+let target = compact;
+const logo = {
+    getBoundingClientRect: () => target,
+    animate: (frames, opts) => ({frames, opts}),
+};
+const options = {duration: 340, easing: 'ease-out'};
+""" + frontend_function("animateLayout", "setMode") + """
+const shrink = animateLayout(logo, home, options, 12);
+assert.equal(shrink.frames[0].transform, 'translate(326px, 136px) scale(3, 3)');
+assert.equal(shrink.frames[1].transform, 'none');
+assert.equal(shrink.opts.duration, 340);
+const lift = animateLayout(logo, compact, options, 12);
+assert.equal(lift.frames[0].transform, 'translate(0px, 0px) scale(1, 1)');
+assert.equal(lift.frames[1].transform, 'translateY(-12px)');
+assert.equal(lift.frames[2].transform, 'none');
+assert.equal(animateLayout(logo, compact, options), undefined);
+target = home;
+assert.equal(animateLayout(logo, compact, options).frames[0].transform,
+    'translate(-326px, -136px) scale(0.3333333333333333, 0.3333333333333333)');
+target = {width: 0, height: 0};
+assert.equal(animateLayout(logo, compact, options), undefined);
+""")
+
+
 
 def test_graph_layout_uses_real_dissimilarity_and_preserves_radii():
     js = (FRONTEND / "app.js").read_text(encoding="utf-8")
@@ -629,10 +658,10 @@ def test_odd_results_values_fall_back_to_ten_without_crashing(results):
 
 def test_route_follows_the_view_and_what_the_interface_chose():
     assert page_for(Request("", "bm25", 10, False, "buscar", 0)) == "home"
-    # Escribir en el inicio no cambia de página (se perdería el foco al volver a montar).
+    # Escribir en el inicio y confirmar son dos estados distintos en los enlaces.
     assert page_for(Request("x", "bm25", 10, False, "buscar", 0)) == "home"
     assert page_for(Request("x", "bm25", 10, False, "buscar", 0, route="search")) == "search"
-    # Borrar en /search tampoco: se queda en /search hasta pulsar el logo.
+    # Aunque se borre el texto, el enlace de una búsqueda confirmada conserva su vista.
     assert page_for(Request("", "bm25", 10, False, "buscar", 0, route="search")) == "search"
     assert page_for(Request("", "bm25", 10, False, "comparar", 0)) == "comparison"
     assert page_for(Request("x", "bm25", 10, False, "metricas", 0, route="search")) == "metrics"
@@ -668,14 +697,17 @@ def test_home_url_only_keeps_what_differs_from_the_defaults():
 ])
 def test_url_round_trip_keeps_the_state(request_):
     back = request_from_url(page_for(request_), url_params(request_), seq=request_.seq)
-    assert back == request_ and same_state(back, request_)
+    assert back == request_
 
 
-def test_same_state_ignores_seq_but_not_view_or_options():
-    a = Request("x", "bm25", 10, False, "buscar", 1)
-    assert same_state(a, Request("x", "bm25", 10, False, "buscar", 9))
-    assert not same_state(a, Request("x", "bm25", 10, False, "comparar", 1))
-    assert not same_state(a, Request("x", "bm25", 10, False, "buscar", 1, graph=True))
+def test_view_links_support_base_path_and_escape_query():
+    request = Request("a & b", "dense", 5, False, "buscar", 0, route="search")
+    options = "?q=a+%26+b&model=embeddings&results=5&graph=false"
+    assert view_links(request, "/jab/") == {
+        "buscar": f"/jab/search{options}",
+        "comparar": f"/jab/comparison{options}",
+        "metricas": f"/jab/metrics{options}",
+    }
 
 
 # ---------- Quizás quisiste decir y contexto del grafo ----------
@@ -723,30 +755,24 @@ def _graph_for(doc_ids):
 SEARCH_A = {"q": "a", "model": "bm25", "results": "10", "stemming": "false", "graph": "false"}
 
 
-def test_first_load_takes_the_url_and_announces_it():
-    state, nav, seen = resolve_state(None, None, "search", SEARCH_A, None, 0)
-    assert (state.q, state.view, state.seq, nav) == ("a", "buscar", 0, 1)
-    assert seen == ("search", state.key, "buscar", "search")
+def test_first_load_takes_a_direct_link():
+    state = resolve_state(None, None, "search", SEARCH_A)
+    assert (state.q, state.view, state.route, state.seq) == ("a", "buscar", "search", 0)
 
 
-def test_an_interface_action_wins_over_the_url():
+def test_an_interface_action_wins_on_the_base_page():
     current = request_from_url("search", SEARCH_A, seq=3)
     sent = Request("b", "bm25", 10, False, "metricas", 4)
-    state, nav, _ = resolve_state(current, sent, "search", SEARCH_A, None, 2)
-    assert state == sent and nav == 2  # la URL vieja no lo deshace
+    assert resolve_state(current, sent, "home", {}) == sent
 
 
-def test_a_stale_url_from_an_in_flight_run_is_not_adopted():
-    # La app ya pasó a q="" y pidió ir a "/"; llega una ejecución con la URL anterior.
-    _, _, seen = resolve_state(None, None, "search", SEARCH_A, None, 0)
+def test_a_stale_request_or_url_does_not_undo_a_newer_action():
     current = Request("", "bm25", 10, False, "buscar", 5)
-    state, nav, _ = resolve_state(current, current, "search", SEARCH_A, seen, 1)
-    assert (state.q, state.seq, nav) == ("", 5, 1)
+    stale = request_from_url("search", SEARCH_A, seq=4)
+    assert resolve_state(current, stale, "home", SEARCH_A) == current
 
 
-def test_back_button_adopts_the_previous_url_with_a_new_seq():
-    _, _, seen_metrics = resolve_state(None, None, "metrics", SEARCH_A, None, 0)
-    current = request_from_url("metrics", SEARCH_A, seq=7)
-    state, nav, seen = resolve_state(current, None, "search", SEARCH_A, seen_metrics, 3)
-    assert (state.view, state.q, state.seq, nav) == ("buscar", "a", 8, 4)
-    assert seen != seen_metrics
+def test_legacy_page_state_survives_redirect_to_base_page():
+    state = resolve_state(None, None, "metrics", SEARCH_A)
+    assert (state.view, state.q) == ("metricas", "a")
+    assert resolve_state(state, None, "home", {}) == state

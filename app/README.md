@@ -32,22 +32,31 @@ En la vista Buscar, `app/ui.py` llama a `SearchEngine.search(..., skip_empty=Tru
 
 El componente envía un único estado `request = {q, model, k, stem, graph, view, seq}`. Cada cambio sube `seq`, así ningún cambio se pierde aunque llegue mientras Python atiende otro. Python valida todo (modelo y vista en lista blanca, `k` en 5/10/20/50, consulta de 300 caracteres como máximo, `graph` solo si llega `true`), busca y responde con el mismo `seq` y una `key` de la búsqueda. La interfaz descarta respuestas de un `seq` viejo y no repinta si solo cambió la vista. Si detecta que Python atendió un estado anterior, lo reenvía una vez.
 
-## Rutas y URL
+## Dirección e historial
 
-El mismo estado vive en la URL, para recargar, compartir o usar atrás y adelante:
+Al buscar o cambiar entre Buscar, Comparar y Métricas, la barra de direcciones
+muestra solo la dirección base de la app. Atrás, Adelante y recargar recuperan
+la vista y las opciones de búsqueda desde el historial de esa pestaña.
+Para compartir un estado concreto, se puede copiar el enlace de la vista desde
+el menú contextual de su nombre en la barra de navegación.
+
+Los enlaces directos existentes siguen funcionando. La app lee la ruta y sus
+opciones al abrirlos y pasa a la dirección base:
 
 | Ruta | Vista |
 |---|---|
-| `/` | Inicio; mientras se escribe, los resultados en vivo aparecen aquí (`/?q=…`) |
+| `/` | Inicio o resultados en vivo si el enlace incluye `q` |
 | `/search` | Búsqueda confirmada (Enter, una sugerencia, un ejemplo o «Quizás quisiste decir») |
 | `/comparison` | Comparar (#14) |
 | `/metrics` | Métricas (#15) |
 
 Parámetros: `q`, `model` (`jaccard`, `tfidf`, `bm25` o `embeddings`), `results` (5, 10, 20 o 50), `stemming` (`true`/`false`; no aparece con Embeddings) y `graph` (`true`/`false`). En el inicio solo aparecen los que difieren de lo predeterminado. Ejemplo: `/search?q=index+funds&model=bm25&results=10&stemming=false&graph=true`.
 
-Cada ruta es una página de `st.navigation` (oculta) sin contenido propio; la interfaz se dibuja en `main()`. Cambiar de página con `st.switch_page` vuelve a montar el componente (comprobado en el navegador: se pierden foco y texto a medio escribir), por eso escribir nunca cambia de página: el estado lleva `route` (`home` o `search`) y solo una acción explícita lo pasa a `search`; el logo vuelve a `home`. En `/search`, borrar la consulta deja la vista de resultados vacía en vez de volver al inicio. Tras Enter, el campo recupera el foco al volver a montarse.
-
-`resolve_state` (en `app/ui.py`) decide qué estado manda en cada ejecución: si el navegador envió un `seq` mayor, el del navegador, y Python mueve la URL con `st.switch_page` o `st.query_params`; si la URL cambió sin que lo hiciera la app (recargar, atrás, un enlace), la URL, con un `seq` nuevo y `nav` + 1 para que el componente la adopte. Solo cuenta como cambio una URL distinta de la vista en la ejecución anterior: una ejecución pedida antes de procesar un `switch_page` trae la URL vieja y no debe deshacer lo último que hizo el usuario.
+El buscador permanece montado al cambiar de vista. La interfaz añade una entrada
+al cambiar de vista o confirmar desde el inicio y actualiza la entrada actual
+al escribir o cambiar opciones. Borrar la consulta después de confirmarla deja
+vacía la vista de resultados. El logo vuelve al inicio. Python adopta las
+peticiones con un `seq` mayor para respetar el orden de las acciones.
 
 ## Escritura asistida
 
@@ -134,14 +143,14 @@ de Streamlit para que el cambio de qid o del filtro del explorador actualice sol
 esa sección.
 El detalle identifica la consulta con un título y un resaltado breve al cambiarla
 (desactivado si se prefiere movimiento reducido).
-Al salir de Métricas, el navegador oculta esa vista de inmediato mientras Python
-termina de retirar su contenido. Al recibir datos o navegar también elimina anclas
-antiguas de la URL, sin recargar ni añadir entradas al historial.
-Las transiciones Métricas ↔ Comparar funcionan aunque ambas pestañas usen el modo
-«resultados». La cabecera actualiza la vista dentro de `startViewTransition`,
-cancela transiciones anteriores y conserva el último clic. Cada vista nativa monta
-su propio contenedor, con una entrada de 260 ms y 8 px; los filtros conservan ese
-contenedor. El movimiento reducido desactiva ambos tipos de animación.
+Al salir de Métricas, el navegador oculta esa vista mientras Python retira su
+contenido. El logo completo se anima desde su posición y tamaño anteriores
+durante 340 ms y la barra durante 260 ms. Cuando dos cabeceras coinciden, el
+logo sube y vuelve a su posición para hacer visible el cambio. Un clic rápido
+retoma el movimiento desde la posición en pantalla. Comparar, Métricas y la
+lista de Buscar tienen una entrada de 260 ms y 8 px. Los filtros conservan el
+contenedor de Métricas. Con movimiento reducido, el logo usa un fundido breve
+de 180 ms, sin desplazamiento ni cambio de tamaño.
 
 Los cortes, split, profundidad y conteos proceden del JSON validado. El esquema 1
 admite test, AP/MAP@1000 y cualquier k entero positivo hasta `depth` (que debe ser
