@@ -33,12 +33,16 @@ class AppContext:
     stem: bool
     reports_dir: Path
 
-    def search(self, model: str | None = None) -> SearchResponse:
+    def search(self, model: str | None = None, *, skip_empty: bool = False) -> SearchResponse:
         """Busca con la consulta, k y stem actuales; `model` por defecto es el elegido.
+
+        Con `skip_empty=True` omite los documentos sin título ni texto y completa el
+        top-k con los siguientes, igual que la vista Buscar.
 
         Lanza EngineError (EmptyQueryError, ArtifactsMissingError,
         ModelUnavailableError) con mensajes aptos para mostrar al usuario.
         """
+        extra = {"skip_empty": True} if skip_empty else {}
         return self.engine.search(
-            model or self.model, self.query, self.k, stem=self.stem
+            model or self.model, self.query, self.k, stem=self.stem, **extra
         )
