@@ -224,18 +224,18 @@
 
 /* ---------- Menú del modelo (también Ctrl/⌘ K) ---------- */
 .jab .menu {
-  position: absolute; right: 0; top: calc(100% + var(--s2)); z-index: 30; width: 320px;
-  padding: var(--s2); background: #fff; border: 1px solid var(--line);
+  position: absolute; right: 0; top: calc(100% + var(--s2)); z-index: 30; width: 300px;
+  padding: 6px; background: #fff; border: 1px solid var(--line);
   border-radius: var(--r-menu); corner-shape: squircle; box-shadow: var(--shadow-menu);
   transform-origin: top right;  /* nace del chip */
   max-height: calc(100vh - 24px); overflow-y: auto; scroll-margin-bottom: 12px;
   transition: opacity var(--d-menu) var(--ease-out), transform var(--d-menu) var(--ease-out);
 }
 .jab .menu[hidden] { display: block; opacity: 0; transform: scale(.95); pointer-events: none; transition-duration: var(--d-exit); }
-.jab .menu-label { padding: var(--s2) var(--s3) var(--s1); color: var(--ink-3); font-size: var(--t-xs); }
+.jab .menu-label { margin: 0; padding: var(--s1) 10px 2px; color: var(--ink-3); font-size: var(--t-xs); }
 .jab .opt {
   width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--s3);
-  min-height: 48px; padding: 0 var(--s3); border: 0; border-radius: var(--r-item);
+  min-height: 40px; padding: var(--s1) 10px; border: 0; border-radius: calc(var(--r-menu) - 6px);  /* concéntrico con el menú */
   background: transparent; text-align: left; cursor: pointer;
   transition: background-color var(--d-fast) ease-out, transform var(--d-fast) ease-out;
 }
@@ -247,12 +247,14 @@
   content: ""; display: inline-block; width: 6px; height: 6px; margin-left: var(--s2); vertical-align: middle;
   border-radius: 50%; background: var(--accent);
 }
-.jab .menu hr { border: 0; border-top: 1px solid var(--line); margin: var(--s2) 0; }
-.jab .setting { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 48px; padding: 0 var(--s3); font-size: var(--t-sm); }
+.jab .menu hr { border: 0; border-top: 1px solid var(--line); margin: var(--s1) 0; }
+.jab .setting { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 40px; padding: 0 10px; font-size: var(--t-sm); }
+/* En pantallas táctiles cada fila conserva 44 px de alto (Fitts). */
+@media (pointer: coarse) { .jab .opt, .jab .setting, .jab .example { min-height: 44px; } }
 .jab .setting[aria-disabled="true"] { color: var(--ink-3); }
 .jab .seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--surface); border-radius: 12px; }
 .jab .seg button {
-  min-width: 36px; height: 30px; border: 0; border-radius: 9px; background: transparent;
+  min-width: 36px; height: 28px; border: 0; border-radius: 9px; background: transparent;
   color: var(--ink-2); font-size: var(--t-xs); font-weight: 500; cursor: pointer;
   transition: background-color var(--d-fast) ease-out, color var(--d-fast) ease-out, transform var(--d-fast) ease-out;
 }
@@ -429,6 +431,30 @@
 /* La cabecera queda compacta; la lista de resultados la sustituye la vista de Streamlit. */
 .jab[data-view="comparar"] .results, .jab[data-view="metricas"] .results { display: none; }
 .jab[data-view="metricas"] .bar { display: none; }
+/* Comparar usa el mismo ancho que sus columnas; la cabecera conserva el ancho y la
+   posición centrada de Buscar, así la barra no salta al cambiar de vista. */
+.jab[data-view="comparar"] .jab-main { width: min(1120px, 100% - 2 * var(--s4)); }
+.jab[data-view="comparar"] .results-head { max-width: 720px; margin-inline: auto; }
+/* Comparar sin consulta: una línea y los ejemplos del inicio, bajo la barra. */
+.jab .cmp-start { display: none; }
+.jab[data-view="comparar"][data-query="off"] .cmp-start {
+  display: grid; gap: var(--s3); grid-column: 2; padding: var(--s4) 0 var(--s2);
+}
+.jab .cmp-start p { margin: 0; color: var(--ink-2); font-size: var(--t-sm); }
+.jab .cmp-start .examples { justify-content: flex-start; }
+.jab .cmp-start .example { text-align: left; }
+/* Comparar con consulta, mientras Python aún no dibuja la vista (app/views/comparison.py
+   oculta esta línea en cuanto pinta sus columnas, su aviso o su indicador de carga). */
+.jab .cmp-pending { display: none; }
+.jab[data-view="comparar"][data-query="on"] .cmp-pending {
+  display: flex; align-items: center; gap: var(--s2); grid-column: 2; margin: var(--s4) 0 0;
+  color: var(--ink-2); font-size: var(--t-sm);
+}
+.jab .cmp-pending::before {
+  content: ""; flex: none; width: 14px; height: 14px; border: 2px solid var(--line);
+  border-top-color: var(--accent); border-radius: 50%; animation: jab-spin .8s linear infinite;
+}
+@keyframes jab-spin { to { transform: rotate(360deg); } }
 .jab .results-head .logo { cursor: pointer; }
 
 /* ---------- Transición inicio → resultados ---------- */
@@ -442,6 +468,8 @@
   .jab .home { padding-top: 56px; gap: var(--s5); }
   .jab .logo svg { height: 64px; }
   .jab .results-head { grid-template-columns: 1fr; gap: var(--s3); }
+  .jab[data-view="comparar"][data-query="off"] .cmp-start { grid-column: auto; padding-top: var(--s2); }
+  .jab[data-view="comparar"][data-query="on"] .cmp-pending { grid-column: auto; margin-top: var(--s2); }
   .jab .hints { display: none; }
   .jab .chip .kbd, .jab .chip svg { display: none; }
   .jab .chip { padding: 0 var(--s3); }

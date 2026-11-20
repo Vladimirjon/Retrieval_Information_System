@@ -19,7 +19,8 @@ Community Cloud instala `app/requirements.txt`, con las dependencias de ejecuci�
 | `app/ui.py` | Registra el componente, valida lo que envía el navegador y arma la respuesta. |
 | `app/streamlit_app.py` | Página, caché del motor y vistas de los compañeros. |
 | `app/context.py` | `AppContext`: lo que reciben las vistas. |
-| `app/views/comparison.py` | Vista reservada para #14. |
+| `app/views/comparison.py` | Comparar: los cuatro rankings lado a lado, etiquetas de cobertura y panel de solapamiento (#14). |
+| `app/overlap.py` | Solapamiento entre rankings (funciones puras, sin Streamlit; #14). |
 | `app/views/metrics.py` | Métricas guardadas: resumen, comparación global, detalle por qid y procedencia (#15). |
 | `app/metrics_data.py` | Lectura y validación completa del par CSV/JSON, sin usar el motor. |
 | `app/static/` | Logo `jab` (palabra e icono) en SVG. |
@@ -82,22 +83,49 @@ Cada vista es un módulo de `app/views/` con `render(context: AppContext) -> Non
 | `stem` | `True` si los clásicos usan el índice con Porter; el denso lo ignora. |
 | `reports_dir` | Carpeta de `reports/` (esquema en `reports/README.md`). |
 
-`context.search(model=None)` busca con `query`, `k` y `stem` actuales y devuelve un `SearchResponse` (`hits` con `rank`, `doc_id`, `title`, `text`, `score`, y `elapsed_ms`). Para comparar, llama a `context.search(m)` por cada `m` de `ris.engine.MODELS`. Lanza `EngineError` (`EmptyQueryError`, `ArtifactsMissingError`, `ModelUnavailableError`) con mensajes aptos para `st.error`.
+`context.search(model=None, *, skip_empty=False)` busca con `query`, `k` y `stem` actuales (con `skip_empty=True` omite los documentos vacíos como la vista Buscar) y devuelve un `SearchResponse` (`hits` con `rank`, `doc_id`, `title`, `text`, `score`, y `elapsed_ms`). Para comparar, llama a `context.search(m)` por cada `m` de `ris.engine.MODELS`. Lanza `EngineError` (`EmptyQueryError`, `ArtifactsMissingError`, `ModelUnavailableError`) con mensajes aptos para `st.error`.
 
-- #14 (comparación): si `context.query` está vacío, muestra un aviso en lugar de buscar. Cada ejecución repite las búsquedas; el denso tarda unos 150 a 500 ms.
+- #14 (comparación): si `context.query` está vacío, no busca (el componente ofrece los tres ejemplos del inicio). Cada ejecución repite las búsquedas; el denso tarda unos 150 a 500 ms.
 - #15 (métricas): lee de `context.reports_dir` y valida `provenance.metrics_per_query_sha256` con `scripts.evaluate.verify_reports` antes de mostrar nada. No usa `context.engine`.
 - Usa los colores del tema (`.streamlit/config.toml`, paleta ciruela) y evita estilos propios que choquen con `app/frontend/styles.css`.
 - Un cambio incompatible de `AppContext` o de `SearchEngine` se coordina en el PR con ambos consumidores.
 
 ## Métricas (#15)
 
-Abra **Métricas** en la navegación de jab; funciona con la barra de búsqueda vacía.
-Muestra las siete configuraciones de los reportes: tres clásicos con/sin Porter y
-Embeddings una sola vez, con Porter «No aplica». Elija P@k, R@k o MAP@1000 para
-el gráfico global y busque un **qid** en el selector para ver P@k, R@k y **AP@1000**
-de esa consulta. Las medias globales incluyen todos los qids, también los ceros;
-no cambian al seleccionar una consulta. La consulta libre, el modelo, top-n y
-Porter del buscador no filtran ni modifican la evaluación.
+Abra **Métricas**; funciona sin consulta libre. El selector **Sin Porter / Con Porter /
+Comparar** y los cuatro botones múltiples **Métodos visibles** afectan al gráfico, las tablas globales,
+el detalle por qid y el listado de consultas. Con todos los métodos hay cuatro
+configuraciones en cada variante individual y siete al comparar. Embeddings se
+mantiene una sola vez como referencia «No aplica»: no existe su versión Porter.
+Los filtros se conservan al cambiar de vista durante la sesión. **Restablecer**
+recupera Comparar, los cuatro métodos, MAP@1000 y el primer qid. Cada método
+se activa o desactiva con un clic; los botones pueden pasar a varias líneas en móvil.
+Al no haber un desplegable, seleccionar los cuatro no deja una lista vacía abierta.
+Si no hay métodos seleccionados, **Mostrar todos los métodos** recupera únicamente
+ese filtro. **Limpiar filtro de consultas** borra solo la búsqueda de qids.
+
+Elija P@k, R@k o MAP@1000 para el gráfico global, o un **qid** para ver P@k,
+R@k y **AP@1000** de una consulta. Las medias globales incluyen todos los qids
+y se mantienen al cambiar de consulta o filtrar el listado. Las opciones del
+buscador son independientes de la evaluación.
+
+No hay ayudas repartidas junto a cada control o encabezado: **Cómo interpretar
+estos resultados** reúne las explicaciones largas. Las tablas se ordenan pulsando sus
+encabezados, usan seis decimales y resaltan en negrita los máximos positivos visibles
+(con empates). Los máximos se determinan antes del redondeo; las columnas
+completamente a cero no se resaltan. Junto al gráfico se resume el máximo de la
+métrica elegida entre las configuraciones visibles; el detalle por consulta agrupa
+selector, tabla y diferencias en un panel propio.
+El listado opcional **Explorar todas las consultas** permite filtrar qids por coincidencia
+literal sin afectar las medias. Los encabezados quedan fijos al recorrer ese listado;
+el qid permanece fijado en ese listado, y el método en las tablas global y por
+consulta. Una sola columna fija deja más espacio útil al desplazar horizontalmente
+en móvil. Las tablas permiten pantalla completa.
+
+Al salir de Métricas, el panel se oculta en cuanto se activa el destino.
+Comparar y Métricas tienen una entrada breve del panel y el logo, que se
+omite con movimiento reducido. Las rutas y parámetros compartibles siguen
+el mecanismo descrito en **Rutas y URL**.
 
 Los cortes, split, profundidad y conteos proceden del JSON validado. El esquema 1
 admite test, AP/MAP@1000 y cualquier k entero positivo hasta `depth` (que debe ser
@@ -116,15 +144,25 @@ Las consultas declaradas sin relevantes deben tener las tres métricas a cero
 en todas las configuraciones. Los conteos de relevancia solo se contrastan por coherencia interna: verificar
 de nuevo los qrels y los artefactos originales corresponde a la evaluación.
 
-No hay caché de reportes: cada interacción relee los dos archivos; una segunda
-lectura detecta cambios durante la validación. **Volver a leer reportes** permite
-reintentar después de un error. Si faltan archivos o son incompatibles, se muestra
-el motivo y cómo restaurar el par; no se presentan tablas/gráficos parciales ni
-resultados anteriores. La vista nunca reescribe los reportes.
+Al entrar o cambiar un filtro global se valida el par completo. Las interacciones
+del detalle comprueban los bytes de ambos archivos y reutilizan los datos
+validados mientras sean idénticos. Si el par cambia, la página vuelve a validarlo.
+Si falla la validación, la vista muestra el motivo y retira los resultados.
+**Reintentar carga** vuelve a leer los reportes después de restaurar el par.
 
 Para revisar errores sin alterar los originales, copie ambos archivos a una
 carpeta temporal dentro de `artifacts/`, establezca `JAB_REPORTS_DIR` con esa ruta
 antes de arrancar Streamlit y modifique solo las copias. Restaure ambos archivos
-válidos y pulse **Volver a leer reportes**. Las pruebas deterministas de lectura,
+válidos y pulse **Reintentar carga**. Las pruebas deterministas de lectura,
 presentación y recuperación están en `tests/test_metrics.py` y usan `AppTest` de
 Streamlit; no necesitan red, corpus ni modelos.
+
+## Comparar (#14)
+
+Abra **Comparar** en la navegación de jab: usa la consulta, el top-n y Porter de la barra (el modelo elegido no cambia nada, siempre salen los cuatro). Sin consulta no busca y ofrece los tres ejemplos del inicio. Cada ejecución repite las cuatro búsquedas con `context.search(m, skip_empty=True)`, así que los documentos son los mismos que en Buscar (sin documentos vacíos y completando hasta k); si un modelo falla (p. ej. Embeddings aún cargando) su columna lo explica y las demás se muestran.
+
+- **Cuatro columnas** (dos en pantallas medianas y una en teléfono): modelo, tiempo de la búsqueda, y por documento posición, `doc_id`, score propio del modelo, fragmento de 200 caracteres (texto limpiado con `app.ui.clean_text`) y «Ver texto completo». Los scores no son comparables entre modelos y no se dibujan como barras.
+- **Etiquetas de cobertura:** «En n de 4» (relleno ciruela si salió en los cuatro, suave si en 2 o 3) y «Solo aquí» (borde gris) para lo que recuperó un único modelo; los puntos repiten n y el texto de ayuda nombra a los otros modelos.
+- **Solapamiento** (`app/overlap.py`, funciones puras): para cada par, la intersección de `doc_id` de sus rankings. **Denominador: el menor de los dos tamaños**, es decir, el máximo que podrían coincidir; vale k con rankings completos y no castiga a un modelo clásico que devolvió menos de k documentos. Si un ranking está vacío el denominador es 0 y se muestra «—». Seis filas por pares, en dos grupos (léxicos entre sí, léxicos frente a Embeddings) con la media de cada grupo.
+- **Estilo:** tarjetas y colores con los tokens de `styles.css` (`:root`) con la paleta ciruela como respaldo; el CSS de la vista va acotado a `.cmp` y solo ensancha `.st-key-jab_views` mientras se muestra Comparar.
+- Pruebas: `tests/test_comparison_view.py` (el `tests/test_comparison.py` existente es de #12).

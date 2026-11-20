@@ -49,6 +49,63 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .block-container { max-width: none; padding: 0 0 4rem; }
 .stApp { font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif; }
 .st-key-jab_views { width: min(720px, 100% - 32px); margin: 0 auto; }
+.st-key-jab_views:has(.st-key-jab_metrics),
+.jab[data-view="metricas"] .jab-main { width: min(1040px, 100% - 32px); }
+/* Métricas: barra superior, logo y contenido comparten el mismo ancho centrado. */
+.jab[data-view="metricas"] .top { width: min(1040px, 100% - 32px); margin: 0 auto; padding: 0; }
+/* El logo sube a la fila de la navegación; solo él recibe clics en esa franja. */
+.jab[data-view="metricas"] .jab-main { margin-top: -54px; position: relative; pointer-events: none; }
+.jab[data-view="metricas"] .jab-main :is(a, button) { pointer-events: auto; }
+.st-key-jab_metrics {
+  --metrics-line: #D4CFD3;
+  gap: 12px;
+}
+.st-key-jab_metrics .st-key-metrics_controls {
+  background: #F3F1F2; border-radius: var(--r-item, 10px); padding: 10px 16px 12px;
+  row-gap: 8px; align-items: flex-end;
+}
+.st-key-jab_metrics .st-key-metrics_controls button { min-height: 36px; }
+.st-key-jab_metrics .st-key-metrics_reset { margin-left: auto; }
+.st-key-jab_metrics [data-testid="stHeading"] h3 { font-size: 1.125rem; line-height: 1.3; padding: 4px 0 0; }
+.st-key-jab_metrics [data-testid="stDataFrame"] { border-radius: var(--r-item, 10px); }
+.st-key-jab_metrics [data-testid="stCaptionContainer"] { opacity: 1; }
+.st-key-jab_metrics [data-testid="stCaptionContainer"] p { color: #5E5560; font-size: .8125rem; }
+.st-key-jab_metrics [data-testid="stAlertContainer"]:has([data-testid="stAlertContentInfo"]) {
+  background: #F3F1F2; color: #201A1F; border: 1px solid var(--metrics-line);
+}
+.st-key-jab_metrics .st-key-metrics_heading_row { align-items: baseline; justify-content: space-between; row-gap: 0; }
+.st-key-jab_metrics .st-key-metrics_query_detail { gap: 12px; border-top: 1px solid var(--metrics-line); padding-top: 12px; margin-top: 4px; }
+.st-key-jab_metrics .st-key-metrics_detail_controls { align-items: flex-end; row-gap: 8px; }
+.st-key-jab_metrics :is(button, input, [role="radio"], [role="checkbox"], [role="combobox"]):focus-visible {
+  outline: 2px solid #7A2E5E; outline-offset: 3px;
+}
+@media (pointer: coarse) {
+  .st-key-jab_metrics .st-key-metrics_controls button { min-height: 44px; }
+}
+/* Retira el panel anterior mientras Streamlit cambia de ruta. */
+body:has(.jab:not([data-view="metricas"])) .st-key-jab_metrics,
+body:has(.jab[data-view="metricas"]) .st-key-jab_view_comparar { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .st-key-jab_view_comparar, .st-key-jab_view_metricas,
+  .jab:is([data-view="comparar"], [data-view="metricas"]) .results-head .logo {
+    animation: jab-view-arrive 260ms cubic-bezier(.16, 1, .3, 1);
+  }
+}
+@keyframes jab-view-arrive {
+  from { opacity: .6; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+/* En teléfono la cabecera pasa a una columna: el logo no puede ocupar todo el ancho porque, al subir
+   a la fila de navegación, taparía sus enlaces. */
+@media (max-width: 640px) {
+  .jab[data-view="metricas"] .results-head .logo { justify-self: start; width: max-content; }
+}
+@media (max-width: 600px) {
+  .st-key-jab_views:has(.st-key-jab_metrics) { width: calc(100% - 24px); }
+  .jab[data-view="metricas"] .jab-main, .jab[data-view="metricas"] .top { width: calc(100% - 24px); }
+  .st-key-jab_metrics .st-key-metrics_controls { padding: 10px 12px 12px; }
+  .st-key-jab_metrics .st-key-metrics_reset { margin-left: 0; }
+}
 /* Streamlit atenúa la página mientras vuelve a ejecutar el script en cada interacción;
    jab ya muestra su propio estado de carga, así que se anula ese fundido gris. */
 [data-testid="stElementContainer"][data-stale="true"] { opacity: 1 !important; transition: none !important; }
@@ -58,7 +115,10 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .jab-loading-bar { width: min(440px, 80vw); height: 56px; border-radius: 28px; background: #F3F1F2; animation: jab-load 1.4s ease-in-out infinite alternate; }
 .jab-loading p { margin: 0; max-width: 36ch; color: #5E5560; font-size: 14px; }
 @keyframes jab-load { from { opacity: 1; transform: scaleX(1); } to { opacity: .65; transform: scaleX(.98); } }
-@media (prefers-reduced-motion: reduce) { .jab-loading-bar { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .jab-loading-bar,
+  .st-key-jab_metrics .st-key-metrics_query_detail [class*="st-key-jab_query_"] { animation: none; }
+}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -230,7 +290,7 @@ def main() -> None:
             stem=request.stem,
             reports_dir=Path(os.environ.get("JAB_REPORTS_DIR", ROOT / "reports")),
         )
-        with st.container(key="jab_views"):
+        with st.container(key="jab_views"), st.container(key=f"jab_view_{request.view}"):
             (comparison if request.view == "comparar" else metrics).render(context)
 
 

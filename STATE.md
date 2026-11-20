@@ -1,6 +1,34 @@
 # Estado del proyecto
 
-Actualizado: martes 17 de noviembre de 2026 (#1–#13, #15 y #16 integradas en `main`, que está en `827fa6c`; la app funciona en <https://jab-retrieval-information-system.streamlit.app/>; de #16 quedan por comprobar el arranque tras el reposo de 12 h y Comparar; #14 pendiente, sin rama; pendiente de #11: validación completa de los índices). Las notas históricas de ramas anteriores se conservan.
+Actualizado: 19 de noviembre de 2026. Rama de integración desde `main` (`66aea9d`): reúne los PR #42 (#14), #43 (#17) y #40 (seguimiento de #15) y un commit de pulido de interfaz; ver «Integración de #14, #15 y #17». Las notas históricas de ramas anteriores se conservan.
+
+## Integración de #14, #15 y #17 con pulido de interfaz (19 de noviembre, rama de integración)
+
+- **Base y contenido:** `main` en `66aea9d` + merge de los PR #42 (`b2980d9`), #43 (`4f3b766`) y #40 (`e302ab5`, que restituye las rutas en la URL) + un commit de pulido de Comparar, Métricas y el menú de la barra. Los conflictos con `e302ab5` (en `app.js`, `streamlit_app.py` y `app/README.md`) se resolvieron conservando su sincronización con la URL y reaplicando los cambios del pulido.
+- **Pulido:** Comparar sin consulta muestra los tres ejemplos del inicio en lugar del aviso azul; sin título repetido; contexto en una línea y ayuda en un desplegable; solapamiento en seis filas; Comparar usa un `ThreadPoolExecutor` con espera por `wait()` para que cambiar de vista no quede bloqueado por los cuatro modelos. Métricas: controles en una banda, gráfico y tabla lado a lado, mejor valor marcado con texto y contorno. Menú de la barra más compacto. Comparar usa un debounce de 450 ms (220 ms en Buscar) y, al volver a Buscar con la consulta editada, repite la búsqueda en lugar de mostrar la lista anterior como vigente.
+- **Probado localmente (Windows, Python 3.12):** `pytest` 515 pasan; `ruff check .` sin errores; navegador local (Playwright, artefactos reales): rutas `/search`, `/comparison` y `/metrics` con parámetros, atrás, adelante, recargar y enlaces directos; ejemplos pulsables en Comparar vacío; sin desbordamiento horizontal a 375 px en Comparar y Métricas.
+- **Revisión cruzada:** un agente Opus de solo lectura revisó el pulido antes de rebasarlo sobre `e302ab5`; su hallazgo obligatorio (un `TimeoutError` del motor giraba sin fin en `run_models`) se corrigió con prueba. Una segunda revisión independiente (Opus, solo lectura) de la resolución de conflictos sobre `e302ab5` halló dos fallos reales, ya corregidos y probados en navegador: `adopt()` dejaba `data-query` viejo (atrás a Comparar vacío mostraba «Buscando…» sin fin y sin ejemplos) y en Métricas a ≤640 px el logo tapaba la navegación.
+- **Sin comprobar:** CI de esta rama, despliegue en Community Cloud (Comparar sigue pendiente de #16), tema oscuro, lector de pantalla, táctil real y varias sesiones a la vez.
+- **Límites conocidos:** la primera búsqueda tras arrancar tarda 4–5 s porque MiniLM carga en segundo plano (medido en local; en la nube puede ser más); el pool de 4 hilos de Comparar es compartido por todas las sesiones y búsquedas interrumpidas pueden ocuparlo mientras MiniLM carga (inferido por revisión, no medido).
+
+## #14: vista de comparación lado a lado (19 de noviembre, rama `feat/14-comparacion-ui`, sin commit)
+
+- Rama creada desde `main` (`66aea9d`, igual a `origin/main` tras `git fetch`). Responsable: Ismael Freire (@BrandonFreire). Se leyeron STATE, TASKS, PLAN, ESPECIFICACION, `app/README.md`, `config.toml`, `styles.css`, `app/ui.py`, `streamlit_app.py` y la vista de métricas antes de programar.
+- **Entregado:** `app/views/comparison.py` (`render(context)`; cuatro columnas con posición, `doc_id`, score, tiempo, fragmento limpiado con `clean_text` y «Ver texto completo»; etiquetas «En n de 4» / «Solo aquí»; panel de solapamiento con seis tarjetas por pares), `app/overlap.py` (funciones puras: `pair_overlap`, `overlaps`, `mean_percent`, `appearances`, `exclusive_counts`) y `tests/test_comparison_view.py` (22 pruebas). `tests/test_comparison.py` ya existía (es de #12) y no se tocó.
+- **Cambio compatible en #13:** `AppContext.search(model=None, *, skip_empty=False)`. La vista pide `skip_empty=True` para mostrar los mismos documentos que Buscar (sin vacíos, completando hasta k); sin el parámetro la llamada al motor es idéntica a la anterior (`tests/test_app.py` no cambió).
+- **Denominador del solapamiento:** el menor de los dos tamaños de ranking (k con rankings completos). Ranking vacío: denominador 0, se muestra «—». Decisión documentada en `app/overlap.py` y `app/README.md`.
+- **Casos borde cubiertos:** consulta vacía o de espacios (aviso, sin buscar), rankings cortos y vacíos, ningún modelo con resultados (aviso), modelo no disponible (su columna lo explica; los demás se muestran).
+- **Probado localmente** (Windows, Python 3.12.10): `pytest -q` pasa 479 pruebas y 5 se omiten (antes de la rama: 457 y 5); `ruff check .` sin errores; `git diff --check` sin errores. El motor de las pruebas de la vista es simulado.
+- **Comprobado en navegador** (app local, puerto 8519, artefactos reales, revisión visual hecha por un subagente de navegador, capturas en su carpeta de evidencias): con «how to invest in index funds» y top-10 se ven el panel de solapamiento (p. ej. Jaccard∩TF-IDF 3/10, TF-IDF∩BM25 5/10, BM25∩Embeddings 5/10), la leyenda y las cuatro columnas con tiempos; «Ver texto completo» despliega sin recargar; a 800 px pasan a 2 columnas y a 500 px a 1 sin desbordes; sin consulta aparece el aviso; con «xyzzyqwerty» los tres clásicos muestran «Sin resultados» y Embeddings sus 5 documentos con «Solo aquí». La primera búsqueda con Embeddings tardó 7 s (esperaba a que terminara de cargar MiniLM). Se corrigió la sangría de la lista (el estilo de Streamlit añadía 32 px a `ol`) y la leyenda, que no mostraba «En 3 de 4».
+- **Sin comprobar:** CI, despliegue en Community Cloud (el recorrido de Comparar allí sigue pendiente de #16), Safari/Firefox, lectores de pantalla y revisión cruzada de otro modelo. Falta abrir el PR (`Closes #14`) y la aprobación de @Vladimirjon.
+Actualizado el 19 de noviembre de 2026. `main` está en `66aea9d` e incluye el grafo 3D, las rutas y la escritura asistida del PR #41. El registro histórico conserva las comprobaciones de despliegue y los pendientes.
+
+## Informe técnico #17 (19 de noviembre)
+
+- La entrega parte de `main` en `66aea9d` (PR #41). Los datos de evaluación, el manifiesto y los aportes del informe coinciden con los de la revisión anterior. La vista Comparar se revisa en el PR #42.
+- La fuente editable y el PDF están en `docs/informe/`. El documento tiene las cuatro secciones exigidas y cinco páginas A4 sin carátula. La bibliografía incluye fuentes externas y el material facilitado por el profesor.
+- La auditoría local confirmó 4 536 filas de evaluación, siete configuraciones, 49 medias por grupo, las métricas de los dos casos y la correspondencia del texto y los enlaces con el PDF. Dos generaciones produjeron el mismo SHA-256. Se revisaron las cinco páginas y Ruff pasó.
+- En el PR #43 se verificó el ajuste de formato del informe. Queda pendiente la revisión de los aportes por Ismael y Vladimirjon.
 
 ## Grafo 3D, rutas y escritura asistida (17 de noviembre, rama `feat/13-grafo-3d-consulta`, sin commit)
 
@@ -273,3 +301,11 @@ Python 3.12, `src/ris/`, FiQA inglés, cuatro recuperadores propios/FAISS, evalu
 - El equipo tenía solo Python 3.14; #1 exige 3.12 (`requires-python = ">=3.12,<3.13"`). Se instaló 3.12 en paralelo con winget y el `.venv` se crea con `py -3.12`.
 - Los qrels almacenan los ids como enteros y los Parquet como strings; `ris.data` convierte los IDs de qrels a `str`.
 - Las 648 consultas test únicas fueron contadas directamente en el TSV fijado; son distintas de las 1 706 filas de qrels.
+
+## Ajuste local del seguimiento de #15 tras la revisión del PR #40
+
+- El seguimiento parte de `66aea9d`. Conserva `app/ui.py`, el frontend, el flujo de navegación de `app/streamlit_app.py` y las pruebas de URL de `tests/test_app.py` tal como están en `main`. Los estilos cubren Métricas y una entrada visual de 260 ms del panel y el logo al abrir Comparar o Métricas.
+- Se conservan los filtros de Porter y métodos, las tablas, el gráfico, la validación y el detalle por consulta del seguimiento. Probado localmente con 484 pruebas y Ruff. En una copia de prueba junto al código de Comparar del PR #42 pasaron 506 pruebas.
+- En el navegador se verificaron los enlaces con consulta, modelo, número de resultados, Porter y grafo, y la apertura de Buscar, Comparar y Métricas. Al volver a Métricas se recuperaron el filtro, la métrica y el qid; en un recorrido se necesitó un paso adicional de Atrás. A 375 px se comprobaron los tres modos de Porter sin desbordamiento horizontal de la página.
+- Con el código de Comparar del PR #42 se verificaron ambas direcciones de la transición, el panel anterior oculto, las URL con opciones, Atrás, Adelante y recarga. La comprobación a 375 px no mostró desbordamiento horizontal.
+- Los PR #42 y #43 siguen pendientes de integración. Queda pendiente actualizar el PR #40 a `main` cuando ambos estén integrados y repetir la comprobación de navegación.

@@ -317,6 +317,42 @@ def test_status_counts_the_visible_page_without_a_rank_range():
     assert "renderStatus(r, Math.min(PAGE_SIZE, n - first))" in js
 
 
+def test_compare_without_query_reuses_the_home_examples_and_shows_progress():
+    html, css, js = build_assets(())
+    # Un solo juego de ejemplos: se mueve entre el inicio de Buscar y Comparar vacío
+    assert html.count('class="example"') == 3 and "data-cmp-start" in html
+    assert '$(state.view === "comparar" ? "[data-cmp-start]" : ".home").append(examples)' in js
+    assert 'root.dataset.query = state.q.trim() ? "on" : "off"' in js
+    assert '.jab[data-view="comparar"][data-query="off"] .cmp-start' in css
+    # Mientras Python no pinta la comparación, la barra dice que está buscando
+    assert 'class="cmp-pending" role="status"' in html
+    assert '.jab[data-view="comparar"][data-query="on"] .cmp-pending' in css
+    # Comparar y su cabecera comparten ancho; la barra conserva el de Buscar
+    assert '.jab[data-view="comparar"] .jab-main { width: min(1120px' in css
+
+
+def test_compare_waits_longer_and_search_never_shows_an_old_list_as_current():
+    _, _, js = build_assets(())
+    assert 'state.view === "comparar" ? COMPARE_DEBOUNCE : DEBOUNCE' in js
+    compare = int(re.search(r"const COMPARE_DEBOUNCE = (\d+);", js).group(1))
+    assert compare > int(re.search(r"const DEBOUNCE = (\d+);", js).group(1))
+    # Volver a Buscar con una consulta editada en Comparar relanza la búsqueda (lista
+    # atenuada y barra ocupada) en vez de mostrar la anterior como vigente.
+    set_view = js.split("function setView(", 1)[1].split("root.querySelectorAll", 1)[0]
+    assert 'view === "buscar" && state.searchedKey !== searchKey()) search();' in set_view
+    assert "state.searchedKey = searchKey();" in js.split("function search(", 1)[1]
+    adopt = js.split("function adopt(", 1)[1].split("// ----------", 1)[0]
+    assert 'root.dataset.query = state.q.trim() ? "on" : "off"' in adopt and "state.searchedKey = searchKey()" in adopt
+
+
+def test_model_menu_is_compact_but_keeps_touch_targets():
+    css = (FRONTEND / "styles.css").read_text(encoding="utf-8")
+    opt = css.split(".jab .opt {", 1)[1].split("}", 1)[0]
+    setting = css.split(".jab .setting {", 1)[1].split("}", 1)[0]
+    assert "min-height: 40px" in opt and "min-height: 40px" in setting
+    assert "@media (pointer: coarse) { .jab .opt, .jab .setting, .jab .example { min-height: 44px; } }" in css
+
+
 def test_query_is_a_bounded_textarea_with_the_combobox_contract():
     html, css, js = build_assets(())
     field = re.search(r'<textarea\b[^>]*id="jab-q"[^>]*></textarea>', html)

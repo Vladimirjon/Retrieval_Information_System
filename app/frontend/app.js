@@ -20,6 +20,7 @@ const MODELS = [
 ];
 const KS = [5, 10, 20, 50];
 const DEBOUNCE = 220;
+const COMPARE_DEBOUNCE = 450;
 const PAGE_SIZE = 5;
 const CORPUS_SIZE = "57 638";
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -87,6 +88,9 @@ function mount(root, data) {
   // ---------- Modo: inicio ↔ resultados ----------
   let moving = false;
   const placeBar = (mode) => root.querySelector(`[data-slot="${mode}"]`).append(bar);
+  // Los mismos tres ejemplos sirven al inicio de Buscar y al estado vacío de Comparar.
+  const examples = $(".examples");
+  const placeExamples = () => $(state.view === "comparar" ? "[data-cmp-start]" : ".home").append(examples);
   function setMode(mode) {
     if (root.dataset.mode === mode) return;
     const focused = document.activeElement === input, reopen = !suggest.hidden;
@@ -106,11 +110,18 @@ function mount(root, data) {
   }
 
   // ---------- Búsqueda: Python responde con el mismo seq ----------
-  const currentRequest = () => ({ q: state.q.trim(), model: state.model, k: state.k, stem: state.stem, graph: state.graph, view: state.view, route: state.route, seq: state.seq });
+  // Búsqueda que refleja la lista de Buscar; cambia al editar la consulta o las opciones.
+  const searchKey = () => JSON.stringify([state.q.trim(), state.model, state.k, state.stem, state.graph]);
+  // Cada petición actualiza si hay consulta: Comparar sin consulta muestra los ejemplos.
+  const currentRequest = () => {
+    root.dataset.query = state.q.trim() ? "on" : "off";
+    return { q: state.q.trim(), model: state.model, k: state.k, stem: state.stem, graph: state.graph, view: state.view, route: state.route, seq: state.seq };
+  };
   function search() {
     clearTimeout(state.timer);
     clearTimeout(state.pageTimer);
     list.classList.remove("leaving");
+    state.searchedKey = searchKey();
     const q = state.q.trim();
     state.seq += 1;
     state.page = 1; state.renderedKey = null;
@@ -121,7 +132,8 @@ function mount(root, data) {
     graphBox.dataset.stale = "true";
     if (state.hasHits) list.dataset.stale = "true"; else renderSkeleton();
   }
-  const schedule = () => { clearTimeout(state.timer); state.timer = setTimeout(search, DEBOUNCE); };
+  // Comparar ejecuta los cuatro modelos: espera a una pausa más larga antes de pedirlos.
+  const schedule = () => { clearTimeout(state.timer); state.timer = setTimeout(search, state.view === "comparar" ? COMPARE_DEBOUNCE : DEBOUNCE); };
   const searchNow = () => { hop(); search(); };
   // Diseño de inicio (logo grande): Buscar sin consulta y fuera de /search.
   const isHome = () => state.view === "buscar" && !state.q.trim() && state.route !== "search";
@@ -888,6 +900,7 @@ function mount(root, data) {
   // ---------- Vistas: Buscar / Comparar / Métricas (cada una con su ruta) ----------
   function markView() {
     root.dataset.view = state.view;
+    placeExamples();
     root.querySelectorAll("[data-view-link]").forEach((a) => {
       if (a.dataset.viewLink === state.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
@@ -897,7 +910,10 @@ function mount(root, data) {
     state.view = view;
     markView(); hop();
     setMode(isHome() ? "home" : "results");
-    state.seq += 1; send("request", currentRequest());
+    // Si la consulta cambió en otra vista y aún no se buscó, Buscar no muestra la lista
+    // anterior como vigente: la marca como desactualizada mientras llega la respuesta.
+    if (view === "buscar" && state.searchedKey !== searchKey()) search();
+    else { state.seq += 1; send("request", currentRequest()); }
   }
   root.querySelectorAll("[data-view-link]").forEach((a) => on(a, "click", (e) => { e.preventDefault(); setView(a.dataset.viewLink); }));
 
@@ -908,6 +924,9 @@ function mount(root, data) {
       view: init.view || "buscar", route: init.route || "home", seq: init.seq || 0, nav: init.nav || 0, renderedKey: null, page: 1, hasHits: false,
     });
     input.value = state.q; syncClear(); hideSuggest(); syncControls(); markView(); updateGhost();
+    // Atrás, adelante y recargar no pasan por currentRequest(): sin esto Comparar vacío conservaría
+    // data-query="on" (línea «Buscando…» eterna y sin ejemplos).
+    root.dataset.query = state.q.trim() ? "on" : "off"; state.searchedKey = searchKey();
     setMode(isHome() ? "home" : "results");
     if (state.q.trim()) { bar.dataset.busy = "true"; renderSkeleton(); }
     else { list.innerHTML = ""; status.innerHTML = ""; pager.hidden = true; dym.hidden = true; showGraph(null); }
@@ -919,6 +938,8 @@ function mount(root, data) {
     window.__jabRefocus = false;
     requestFrame(() => { input.focus({ preventScroll: true }); input.setSelectionRange(input.value.length, input.value.length); });
   }
+  root.dataset.query = state.q.trim() ? "on" : "off";
+  state.searchedKey = searchKey();  // Python ya responde a este estado inicial
   if (!isHome()) { root.dataset.mode = "results"; placeBar("results"); }
 
   let resent = -1;         // si Python atendió un estado viejo, se reenvía una vez con seq nuevo

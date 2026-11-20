@@ -1,0 +1,194 @@
+{
+  "base_commit": "66aea9d2849cf4d4e0ed58c3bfff1ce5b23bfaa0",
+  "date": "2026-11-19",
+  "tolerance_absolute": 1e-12,
+  "inputs": {
+    "reports/metrics_per_query.csv": {
+      "sha256_git": "c9ad4f7a06de53512f65ea4ef7b5a97b3d3666b680727c5c3433e74f0161a2ea",
+      "sha256_worktree": "c9ad4f7a06de53512f65ea4ef7b5a97b3d3666b680727c5c3433e74f0161a2ea",
+      "only_line_endings_differ": false
+    },
+    "reports/metrics_summary.json": {
+      "sha256_git": "97a4cd25f222d14068871df167b13490336aeddf83c9ef6dd1e67860df177832",
+      "sha256_worktree": "4e6f1e8e6a510e1b52e8e0ba2039156b2107a7b181c2db020da8ffda1937df13",
+      "only_line_endings_differ": true
+    },
+    "reports/comparison_summary.json": {
+      "sha256_git": "d286429ef33d4f15dd68ea39c14c8a734fbee218d9e1daa2964380092bcfee7c",
+      "sha256_worktree": "bb44e7e8a9ad4910b3d046c7a1308e9bfa918145a9892cff35db31eb8ecfdd29",
+      "only_line_endings_differ": true
+    },
+    "reports/eda_summary.json": {
+      "sha256_git": "13cacf7e550f09bfd38d685a17258bc839d757d8da6aeda104e4020fa41df52d",
+      "sha256_worktree": "c5ae1403bdbc06204576d458f21b758cd8b23b7ffd2dc4c001fc6443408480d6",
+      "only_line_endings_differ": true
+    },
+    "deploy/artifacts.json": {
+      "sha256_git": "3574113f213b668c82ae6ed74e72180b29f4d4d928bf21e07d7a2f8f5612aa73",
+      "sha256_worktree": "08a5c4f1a38da685866357331e2e98f4c7597af93673e3e6b6da22f2b0f8d531",
+      "only_line_endings_differ": true
+    }
+  },
+  "counts": {
+    "n_corpus_docs": 57638,
+    "n_qrel_pairs": 1706,
+    "n_queries": 648,
+    "n_queries_without_relevant": 0,
+    "n_relevant_docs_distinct": 1706,
+    "n_relevant_docs_not_in_corpus": 0,
+    "n_relevant_pairs": 1706,
+    "n_rows": 4536
+  },
+  "overall": [
+    {
+      "model": "jaccard",
+      "stem": "false",
+      "n": 648,
+      "precision": 0.015432098765432098,
+      "recall": 0.06307877650470242,
+      "ap_at_1000": 0.03851954210374813
+    },
+    {
+      "model": "jaccard",
+      "stem": "true",
+      "n": 648,
+      "precision": 0.015123456790123458,
+      "recall": 0.060502473349695565,
+      "ap_at_1000": 0.038461083621982944
+    },
+    {
+      "model": "tfidf",
+      "stem": "false",
+      "n": 648,
+      "precision": 0.049074074074074076,
+      "recall": 0.21745968366338736,
+      "ap_at_1000": 0.13302835140531388
+    },
+    {
+      "model": "tfidf",
+      "stem": "true",
+      "n": 648,
+      "precision": 0.050462962962962966,
+      "recall": 0.219552870826019,
+      "ap_at_1000": 0.13971771897786603
+    },
+    {
+      "model": "bm25",
+      "stem": "false",
+      "n": 648,
+      "precision": 0.06373456790123458,
+      "recall": 0.28483187337354005,
+      "ap_at_1000": 0.18099260544155976
+    },
+    {
+      "model": "bm25",
+      "stem": "true",
+      "n": 648,
+      "precision": 0.06944444444444445,
+      "recall": 0.31302117378506267,
+      "ap_at_1000": 0.20621917443991963
+    },
+    {
+      "model": "dense",
+      "stem": "na",
+      "n": 648,
+      "precision": 0.10447530864197531,
+      "recall": 0.44130556086574607,
+      "ap_at_1000": 0.3115863456599059
+    }
+  ],
+  "verified_group_mean_rows": 49,
+  "verified_paired_metric_sets": 27,
+  "case_metrics_recomputed_from_positions": {
+    "2076": {
+      "bm25_true": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "ap_at_1000": 0.000628140703517588
+      },
+      "dense_na": {
+        "precision": 0.2,
+        "recall": 1.0,
+        "ap_at_1000": 1.0
+      }
+    },
+    "1310": {
+      "bm25_true": {
+        "precision": 0.1,
+        "recall": 1.0,
+        "ap_at_1000": 1.0
+      },
+      "dense_na": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "ap_at_1000": 0.008849557522123894
+      }
+    }
+  },
+  "eda_selected_values": {
+    "lexical_total": 4099045,
+    "lexical_mean": 71.11705819077692,
+    "lexical_median": 48.0,
+    "lexical_p99": 340.0,
+    "query_mean": 6.3919753086419755,
+    "vocabulary_lexical": 78115,
+    "vocabulary_porter": 57620,
+    "vocabulary_reduction_pct": 26.236958330666326,
+    "empty_texts": 38,
+    "relevance_mean": 2.632716049382716,
+    "queries_le2_relevant": 404
+  },
+  "artifact_hashes_compared_to_evaluation": true,
+  "dataset_revisions": [
+    {
+      "file": "corpus/corpus-00000-of-00001.parquet",
+      "repo": "BeIR/fiqa",
+      "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+      "sha256": "b36bb07dab3bfad488190818828e749a52faf5ba391c1d51dac8b06064576f99"
+    },
+    {
+      "file": "queries/queries-00000-of-00001.parquet",
+      "repo": "BeIR/fiqa",
+      "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+      "sha256": "e9b3863724ffd538d8efff19684ef8ae495bdbddd96b35e81bdc39e3e22860d6"
+    },
+    {
+      "file": "test.tsv",
+      "repo": "BeIR/fiqa-qrels",
+      "revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+      "sha256": "6adc2a640dcdd22bb8b3858f89107adef2a7c3db20a63550dfa7a0f71e379e44"
+    }
+  ],
+  "deployment_revision": "5d7f05e86ceea9b5f95cecba061c8c30031c880c",
+  "source_sha256": "161ebddac5d9f1f9e83410b1eb9ac3a6c460760d327619c3ddc6a2de73f970d3",
+  "scope": "Auditoría de reportes y texto; no reevalúa test ni verifica los artefactos completos.",
+  "discrepancies": [
+    "El aporte 12_comparacion_modelos.md conserva la advertencia antigua de hashes densos distintos. Los campos actuales artifact_bytes_equal_to_original son true y los hashes locales de #12 coinciden con #11 y deploy/artifacts.json. Se sigue la evidencia estructurada.",
+    "La copia Windows de los JSON usa CRLF. Los hashes de procedencia se contrastan con los blobs Git fijados y con igualdad semántica de los JSON; no se modifican los originales. El CSV conserva LF y satisface su hash exacto."
+  ],
+  "pending": [
+    "Revisión de esta versión por el equipo",
+    "Comparar (#14)",
+    "Arranque tras reposo",
+    "Pico de memoria del servidor bajo uso"
+  ],
+  "pdf": {
+    "pages": 5,
+    "format": "A4",
+    "sha256": "978b90d9175fba1667ee81a3af82d1f74956d7604d1521189768c681b2bf2fff",
+    "complete_text_matches_markdown_per_page": true,
+    "links": [
+      "https://andrefreitas.org/papers/www_fiqa_2018.pdf",
+      "https://arxiv.org/abs/2104.08663",
+      "https://github.com/facebookresearch/faiss/wiki/Faiss-indexes",
+      "https://huggingface.co/datasets/BeIR/fiqa",
+      "https://huggingface.co/datasets/BeIR/fiqa-qrels",
+      "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2",
+      "https://jab-retrieval-information-system.streamlit.app/",
+      "https://nlp.stanford.edu/IR-book/information-retrieval-book.html",
+      "https://tartarus.org/martin/PorterStemmer/def.txt",
+      "https://www.ccs.neu.edu/home/vip/teach/IRcourse/IR_surveys/robertson_foundations.pdf"
+    ],
+    "visual_review": "Debe revisarse también el renderizado; la extracción no valida el diseño."
+  }
+}

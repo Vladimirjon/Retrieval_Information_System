@@ -1,2 +1,5 @@
 # El JSON de #11 verifica el hash de los bytes exactos del CSV, también en Windows.
 reports/metrics_per_query.csv text eol=lf
+
+# El PDF reproducible conserva sus bytes en todos los sistemas.
+docs/informe/informe_tecnico.pdf binary
