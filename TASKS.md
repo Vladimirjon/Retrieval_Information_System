@@ -25,4 +25,6 @@ Plan base: 9 de noviembre de 2026. Las issues #1–#18 están creadas en GitHub 
 
 Mejora fuera del plan (17 de noviembre): grafo 3D opcional por consulta, rutas con parámetros en la URL, campo de búsqueda como el de Google con autocompletado, «Quizás quisiste decir» y Ctrl+Z, en curso en la rama `feat/13-grafo-3d-consulta`, sin commit ni issue propia; probado en local y en navegador, con revisión cruzada de Codex (un P2 corregido); falta PR y CI. Evidencia en STATE.
 
+Seguimiento de #15 (PR #40): rutas compartibles, mejoras de Métricas y transición visual comprobadas en local. Pendiente actualizar a `main` después de la integración de #42 y #43 y repetir la prueba de navegación. Evidencia en [STATE](STATE.md).
+
 Actualizar junto con [STATE](STATE.md) al terminar cada tarea. Estados: pendiente, en curso, hecho, bloqueado. Ismael Freire = @BrandonFreire; Jorge Torres = @Almejandro04.

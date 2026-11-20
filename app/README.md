@@ -93,12 +93,28 @@ Cada vista es un módulo de `app/views/` con `render(context: AppContext) -> Non
 ## Métricas (#15)
 
 Abra **Métricas** en la navegación de jab; funciona con la barra de búsqueda vacía.
-Muestra las siete configuraciones de los reportes: tres clásicos con/sin Porter y
-Embeddings una sola vez, con Porter «No aplica». Elija P@k, R@k o MAP@1000 para
-el gráfico global y busque un **qid** en el selector para ver P@k, R@k y **AP@1000**
-de esa consulta. Las medias globales incluyen todos los qids, también los ceros;
-no cambian al seleccionar una consulta. La consulta libre, el modelo, top-n y
-Porter del buscador no filtran ni modifican la evaluación.
+Los filtros **Sin Porter**, **Con Porter** y **Comparar** y los botones de métodos
+se aplican al gráfico, las tablas y el detalle. Con todos los métodos se muestran
+siete configuraciones al comparar, o cuatro por variante individual. Embeddings
+aparece una vez como «No aplica». **Restablecer filtros** recupera las opciones
+iniciales. Los filtros se conservan durante la sesión al cambiar de vista.
+
+Elija P@k, R@k o MAP@1000 para el gráfico global, o un **qid** para ver P@k,
+R@k y **AP@1000** de una consulta. Las medias globales incluyen todos los qids
+y se mantienen al cambiar de consulta o filtrar el listado. Las opciones del
+buscador son independientes de la evaluación.
+
+Las tablas se ordenan por encabezado y muestran seis decimales. La negrita
+señala los máximos positivos visibles, incluidos empates. En **Comparar** los
+desplegables muestran la diferencia absoluta **Con Porter − Sin Porter** para
+pares del mismo método y corte. **Explorar todas las consultas** permite filtrar
+el listado por identificador. Las ayudas nativas y **Cómo interpretar estos
+resultados** explican las métricas y los métodos.
+
+Al salir de Métricas, el panel se oculta en cuanto se activa el destino.
+Comparar y Métricas tienen una entrada breve del panel y el logo, que se
+omite con movimiento reducido. Las rutas y parámetros compartibles siguen
+el mecanismo descrito en **Rutas y URL**.
 
 Los cortes, split, profundidad y conteos proceden del JSON validado. El esquema 1
 admite test, AP/MAP@1000 y cualquier k entero positivo hasta `depth` (que debe ser
@@ -117,16 +133,16 @@ Las consultas declaradas sin relevantes deben tener las tres métricas a cero
 en todas las configuraciones. Los conteos de relevancia solo se contrastan por coherencia interna: verificar
 de nuevo los qrels y los artefactos originales corresponde a la evaluación.
 
-No hay caché de reportes: cada interacción relee los dos archivos; una segunda
-lectura detecta cambios durante la validación. **Volver a leer reportes** permite
-reintentar después de un error. Si faltan archivos o son incompatibles, se muestra
-el motivo y cómo restaurar el par; no se presentan tablas/gráficos parciales ni
-resultados anteriores. La vista nunca reescribe los reportes.
+Al entrar o cambiar un filtro global se valida el par completo. Las interacciones
+del detalle comprueban los bytes de ambos archivos y reutilizan los datos
+validados mientras sean idénticos. Si el par cambia, la página vuelve a validarlo.
+Si falla la validación, la vista muestra el motivo y retira los resultados.
+**Reintentar carga** vuelve a leer los reportes después de restaurar el par.
 
 Para revisar errores sin alterar los originales, copie ambos archivos a una
 carpeta temporal dentro de `artifacts/`, establezca `JAB_REPORTS_DIR` con esa ruta
 antes de arrancar Streamlit y modifique solo las copias. Restaure ambos archivos
-válidos y pulse **Volver a leer reportes**. Las pruebas deterministas de lectura,
+válidos y pulse **Reintentar carga**. Las pruebas deterministas de lectura,
 presentación y recuperación están en `tests/test_metrics.py` y usan `AppTest` de
 Streamlit; no necesitan red, corpus ni modelos.
 
