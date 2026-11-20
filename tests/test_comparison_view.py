@@ -1,5 +1,6 @@
 """Solapamiento y vista de comparación lado a lado (#14), sin motor ni red."""
 
+import time
 from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
@@ -126,17 +127,21 @@ def test_formatting():
 class FakeEngine:
     """Devuelve rankings fijos por modelo y registra cómo se le pregunta."""
 
-    def __init__(self, rankings, errors=None):
+    def __init__(self, rankings, errors=None, texts=None, delays=None):
         self.rankings = rankings
         self.errors = errors or {}
+        self.texts = texts or {}
+        self.delays = delays or {}
         self.calls = []
 
     def search(self, model, query, k, *, stem=False, skip_empty=False):
         self.calls.append((model, query, k, stem, skip_empty))
+        time.sleep(self.delays.get(model, 0))
         if model in self.errors:
             raise self.errors[model]
         hits = tuple(
-            Hit(rank, doc_id, "", f"Texto **del** documento {doc_id}", 10.0 - rank)
+            Hit(rank, doc_id, "", self.texts.get(doc_id, f"Texto **del** documento {doc_id}"),
+                10.0 - rank)
             for rank, doc_id in enumerate(self.rankings.get(model, [])[:k], start=1)
         )
         return SearchResponse(model=model, stem=stem, query=query, k=k, hits=hits, elapsed_ms=7.0)
@@ -181,23 +186,48 @@ def test_run_models_keeps_other_models_when_one_fails():
     assert runs["bm25"].error is None and runs["bm25"].ids == FULL["bm25"]
 
 
+def test_run_models_propagates_a_timeout_raised_by_the_search():
+    # Un TimeoutError del propio motor no es «aún no termina»: debe salir, no girar sin fin.
+    engine = FakeEngine(FULL, errors={"jaccard": TimeoutError("agotado")})
+    waits = []
+    try:
+        comparison.run_models(make_context(engine), on_wait=waits.append)
+    except TimeoutError as error:
+        assert str(error) == "agotado" and waits == []
+    else:
+        raise AssertionError("el TimeoutError de la búsqueda se perdió")
+
+
+def test_run_models_reports_the_slow_model_while_waiting(monkeypatch):
+    # Mientras Embeddings tarda, la vista recibe avisos periódicos (puntos en los que
+    # Streamlit puede atender otra petición) y el resultado no cambia.
+    monkeypatch.setattr(comparison, "WAIT_STEP_S", 0.02)
+    engine = FakeEngine(FULL, delays={"dense": 0.15})
+    waits = []
+    runs = comparison.run_models(make_context(engine), on_wait=waits.append)
+    assert waits and set(waits) == {"dense"}
+    assert [call[0] for call in engine.calls] == list(MODELS)
+    assert runs["dense"].ids == FULL["dense"]
+
+
 # ------------------------------------------------------------------ vista completa
 
 
-def _view(rankings, query="index funds", k=5, errors=None):
-    def script(rankings, query, k, errors):
+def _view(rankings, query="index funds", k=5, errors=None, texts=None, stem=False):
+    def script(rankings, query, k, errors, texts, stem):
         from pathlib import Path
 
         from app.context import AppContext
         from app.views.comparison import render
         from tests.test_comparison_view import FakeEngine
 
-        engine = FakeEngine(rankings, errors)
-        render(AppContext(engine=engine, query=query, model="bm25", k=k, stem=False,
+        engine = FakeEngine(rankings, errors, texts)
+        render(AppContext(engine=engine, query=query, model="bm25", k=k, stem=stem,
                           reports_dir=Path("r")))
 
     return AppTest.from_function(script, kwargs={
-        "rankings": rankings, "query": query, "k": k, "errors": errors,
+        "rankings": rankings, "query": query, "k": k, "errors": errors, "texts": texts,
+        "stem": stem,
     }).run(timeout=30)
 
 
@@ -205,12 +235,29 @@ def _html(at):
     return "".join(element.proto.body for element in at.get("html"))
 
 
-def test_empty_query_shows_a_notice_and_does_not_search():
+def test_empty_query_draws_nothing_and_leaves_the_empty_state_to_the_bar():
+    # Sin consulta, el componente de la barra muestra la invitación y los ejemplos
+    # (tests/test_app.py); la vista no pinta avisos de Streamlit ni busca.
     for query in ("", "   "):
         at = _view(FULL, query=query)
         assert not at.exception
-        assert "Escribe una consulta" in at.info[0].value
-        assert at.get("html") == []
+        assert at.info == [] and at.header == [] and at.get("html") == []
+
+
+def test_results_have_no_page_title_and_one_short_context_line():
+    at = _view(FULL)
+    page = _html(at)
+    assert at.header == [] and at.caption == [] and at.info == []
+    assert "Comparación</" not in page
+    assert '<p class="cmp-context"><b>Top-5</b> por modelo · Porter desactivado</p>' in page
+    assert "Porter activado" in _html(_view(FULL, stem=True))
+    # Las explicaciones largas quedan en una ayuda desplegable, no en párrafos visibles
+    help_box = page.split('<details class="cmp-help">', 1)[1].split("</details>", 1)[0]
+    assert "<summary>" in help_box and "no se comparan" in help_box
+    assert "menor de los" in help_box and "5 si ambos están completos" in help_box
+    assert "Cobertura" in help_box
+    # Con la vista pintada, la línea «Buscando…» del componente se oculta
+    assert ".jab .cmp-pending { display: none !important; }" in page
 
 
 def test_full_rankings_render_four_columns_and_counts():
@@ -221,8 +268,11 @@ def test_full_rankings_render_four_columns_and_counts():
     for name in comparison.MODEL_NAMES.values():
         assert name in page
     assert page.count('<li class="cmp-doc"') == 20
-    # jaccard∩tfidf = {1,2}: 2 / 5, 40 %
-    assert "<b>2</b><em>/ 5</em><span>40 %</span>" in page
+    # jaccard∩tfidf = {1,2}: 2 / 5, 40 %; seis pares en dos grupos de tres
+    assert '<span class="cmp-count"><b>2</b> / 5</span><span class="cmp-pct">40 %</span>' in page
+    assert page.count('<li class="cmp-pair"') == 6 and page.count('class="cmp-group"') == 2
+    assert 'title="Jaccard ∩ TF-IDF: 2 de 5 documentos en común, 40 %"' in page
+    assert "media 40 %" in page  # léxicos: (40 + 40 + 40) / 3
     # el documento 1 sale en los cuatro modelos; el 14 solo en Embeddings
     assert page.count("En 4 de 4") >= 4
     assert "Solo aquí" in page
@@ -237,15 +287,30 @@ def test_short_and_empty_rankings_do_not_break_the_view():
     assert "Sin resultados para esta consulta." in page
     assert "2 de 5 resultados" in page and "1 de 5 resultados" in page
     # denominador efectivo: tfidf (2) frente a bm25 (5) comparte 2 de 2
-    assert "<b>2</b><em>/ 2</em><span>100 %</span>" in page
-    assert "sin documentos que comparar" in page  # pares con Jaccard vacío
+    assert '<span class="cmp-count"><b>2</b> / 2</span><span class="cmp-pct">100 %</span>' in page
+    # pares con Jaccard vacío: «—», sin porcentaje y con la explicación en el título
+    assert page.count('<li class="cmp-pair" data-empty="true"') == 3
+    assert '<span class="cmp-count">—</span><span class="cmp-pct">—</span>' in page
+    assert "sin documentos que comparar" in page
 
 
 def test_no_results_in_any_model_shows_a_notice():
     at = _view({})
     assert not at.exception
-    assert "Ningún modelo devolvió resultados" in at.info[0].value
-    assert at.get("html") == []
+    page = _html(at)
+    assert at.info == []  # aviso propio, no el cuadro azul de Streamlit
+    assert '<p class="cmp-notice" role="status">Ningún modelo devolvió resultados' in page
+    assert 'class="cmp-col"' not in page
+
+
+def test_corpus_text_ids_and_errors_are_escaped():
+    attack = '<img src=x onerror="alert(1)">'
+    rankings = {"jaccard": ["<b>1</b>"], "tfidf": [], "bm25": [], "dense": []}
+    at = _view(rankings, texts={"<b>1</b>": attack},
+               errors={"dense": ModelUnavailableError("<script>x</script>")})
+    page = _html(at)
+    assert attack not in page and "<script>x" not in page and "<b>1</b>" not in page
+    assert "&lt;img src=x" in page and "&lt;script&gt;x" in page and "&lt;b&gt;1" in page
 
 
 def test_unavailable_model_is_reported_and_the_rest_still_show():
@@ -255,6 +320,7 @@ def test_unavailable_model_is_reported_and_the_rest_still_show():
     assert "Embeddings no disponible" in page and "No disponible" in page
     assert page.count('<li class="cmp-doc"') == 15
     assert "En 3 de 3" in page
+    assert "Cobertura:" in page and "En 2 de 3" in page  # la leyenda usa los 3 disponibles
 
 
 def test_view_follows_the_agreed_contract():

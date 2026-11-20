@@ -6,6 +6,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 from copy import deepcopy
 from pathlib import Path
 
@@ -72,6 +73,17 @@ if show:
     render(AppContext(engine=ForbiddenEngine(), query={query!r}, model="dense", k={search_k},
                       stem=True, reports_dir=Path({str(directory)!r})))
 ''').run(timeout=30)
+
+
+def data_line(app):
+    """Línea única de contexto: cifras de reports/ y configuraciones visibles."""
+    lines = [text.value for text in app.caption if "configuraciones visibles" in text.value]
+    assert len(lines) == 1
+    return lines[0]
+
+
+def visible_configurations(app):
+    return int(re.search(r"(\d+) configuraciones visibles", data_line(app)).group(1))
 
 
 def test_complete_report_uses_contract_verifier_and_preserves_string_ids(reports, monkeypatch):
@@ -332,7 +344,10 @@ def test_streamlit_shows_global_map_and_query_ap_without_query_or_engine(reports
     directory, _, _ = reports
     app = view_app(directory)
     assert not app.exception and not app.error
-    assert [m.value for m in app.metric] == ["2", "57 638", "7"]
+    assert not app.metric and not app.header
+    line = data_line(app)
+    assert "2 consultas · 57 638 documentos · 7 configuraciones visibles" in line
+    assert "independiente del buscador" in line
     assert app.selectbox[0].options == ["02", "10"]
     assert app.selectbox[0].value == "02"
     before = app.dataframe[0].value.copy()
@@ -349,15 +364,14 @@ def test_streamlit_shows_global_map_and_query_ap_without_query_or_engine(reports
     pd.testing.assert_frame_equal(app.dataframe[0].value, before)
     assert app.dataframe[1].value.ap_at_1000.tolist() == pytest.approx([.1, .2, .3, .4, .5, .6, .7])
     assert "font-weight" in app.dataframe[1].proto.arrow_data.styler.styles
-    app.radio[0].set_value("recall").run()
-    assert not app.exception and app.radio[0].value == "recall"
+    app.segmented_control(key="metrics_metric").set_value("recall").run()
+    assert not app.exception and app.segmented_control(key="metrics_metric").value == "recall"
     charts = app.get("vega_lite_chart")
     assert len(charts) == 1
     spec = json.loads(charts[0].proto.spec)
     assert spec["encoding"]["x"]["title"] == "R@10"
     chart_data = convert_arrow_bytes_to_pandas_df(charts[0].proto.data.data)
     assert chart_data.Valor.tolist() == before.recall.tolist()
-    assert "FiQA en test" in app.header[0].proto.help
     assert not any(text.value.startswith(("FiQA ·", "P@10 · R@10", "Mostrando:",
                                           "Embeddings: referencia única")) for text in app.caption)
     assert not [record for record in caplog.records
@@ -419,7 +433,7 @@ def test_versioned_reports_are_displayed_exactly():
     assert not app.exception and not app.error
     pd.testing.assert_frame_equal(app.dataframe[0].value, table)
     for metric, label in metrics.metric_labels(report).items():
-        app.radio[0].set_value(metric).run()
+        app.segmented_control(key="metrics_metric").set_value(metric).run()
         chart = app.get("vega_lite_chart")[0].proto
         assert json.loads(chart.spec)["encoding"]["x"]["title"] == label
         plotted = convert_arrow_bytes_to_pandas_df(chart.data.data)
@@ -473,9 +487,9 @@ def test_porter_control_filters_summary_chart_and_both_tables_without_changing_v
     directory, _, _ = reports
     report = data.load_reports(directory)
     app = view_app(directory)
-    app.segmented_control[0].set_value(porter).run()
+    app.segmented_control(key="metrics_porter").set_value(porter).run()
     assert not app.exception and not app.error
-    assert app.metric[2].value == str(n_rows)
+    assert visible_configurations(app) == n_rows
     for index, qid in enumerate((None, "02")):
         expected = metrics.filter_table(metrics.metric_table(report, qid), porter,
                                         list(metrics.MODEL_NAMES.values()))
@@ -492,17 +506,17 @@ def test_method_filters_empty_state_and_reset(reports, monkeypatch, caplog):
 
     monkeypatch.setattr(policies, "_shown_default_value_warning", False)
     app = view_app(reports[0])
-    app.segmented_control[0].set_value("Con Porter").run()
+    app.segmented_control(key="metrics_porter").set_value("Con Porter").run()
     app.pills(key="metrics_methods").set_value(["BM25"]).run()
-    assert app.metric[2].value == "1"
+    assert visible_configurations(app) == 1
     assert app.dataframe[0].value.Modelo.tolist() == ["BM25"]
     assert app.dataframe[0].value.Porter.tolist() == ["Con Porter"]
     app.pills(key="metrics_methods").set_value([]).run()
-    assert not app.exception and app.metric[2].value == "0"
+    assert not app.exception and visible_configurations(app) == 0
     assert not app.dataframe and not app.get("vega_lite_chart")
     assert any("No hay métodos" in message.value for message in app.info)
     app.button(key="metrics_reset").click().run()
-    assert app.segmented_control[0].value == "Comparar"
+    assert app.segmented_control(key="metrics_porter").value == "Comparar"
     assert len(app.dataframe[0].value) == 7
     assert not any("Session State API" in record.message for record in caplog.records)
 
@@ -533,7 +547,7 @@ def test_missing_variant_has_no_fabricated_zero_or_difference():
 
 def test_query_explorer_uses_shared_filters_and_literal_search(reports):
     app = view_app(reports[0])
-    app.segmented_control[0].set_value("Sin Porter").run()
+    app.segmented_control(key="metrics_porter").set_value("Sin Porter").run()
     before = app.dataframe[0].value.copy()
     app.checkbox(key="metrics_explore").check().run()
     app.text_input[0].set_value("02").run()
@@ -549,22 +563,22 @@ def test_query_explorer_uses_shared_filters_and_literal_search(reports):
 
 def test_filters_survive_navigation_and_reset_restores_defaults(reports):
     app = view_app(reports[0], with_navigation=True)
-    app.segmented_control[0].set_value("Con Porter").run()
+    app.segmented_control(key="metrics_porter").set_value("Con Porter").run()
     app.pills(key="metrics_methods").set_value(["BM25"]).run()
-    app.radio[0].set_value("recall").run()
+    app.segmented_control(key="metrics_metric").set_value("recall").run()
     app.selectbox[0].select("10").run()
     app.toggle[0].set_value(True).run()
     assert not app.dataframe
     app.toggle[0].set_value(False).run()
     assert not app.exception
-    assert app.segmented_control[0].value == "Con Porter"
+    assert app.segmented_control(key="metrics_porter").value == "Con Porter"
     assert app.pills(key="metrics_methods").value == ["BM25"]
-    assert app.radio[0].value == "recall"
+    assert app.segmented_control(key="metrics_metric").value == "recall"
     assert app.selectbox[0].value == "10"
     app.button(key="metrics_reset").click().run()
-    assert app.segmented_control[0].value == "Comparar"
+    assert app.segmented_control(key="metrics_porter").value == "Comparar"
     assert app.pills(key="metrics_methods").value == list(metrics.MODEL_NAMES.values())
-    assert app.radio[0].value == "ap_at_1000"
+    assert app.segmented_control(key="metrics_metric").value == "ap_at_1000"
     assert app.selectbox[0].value == "02"
 
 
@@ -604,24 +618,24 @@ def test_metric_summary_handles_empty_zero_ties_and_full_precision(case):
 
 def test_empty_methods_recover_without_resetting_other_filters(reports):
     app = view_app(reports[0])
-    app.segmented_control[0].set_value("Con Porter").run()
-    app.radio[0].set_value("recall").run()
+    app.segmented_control(key="metrics_porter").set_value("Con Porter").run()
+    app.segmented_control(key="metrics_metric").set_value("recall").run()
     app.selectbox[0].select("10").run()
     app.pills(key="metrics_methods").set_value([]).run()
     assert not app.dataframe
     app.button(key="metrics_restore_methods").click().run()
     assert not app.exception
-    assert app.segmented_control[0].value == "Con Porter"
-    assert app.radio[0].value == "recall" and app.selectbox[0].value == "10"
+    assert app.segmented_control(key="metrics_porter").value == "Con Porter"
+    assert app.segmented_control(key="metrics_metric").value == "recall" and app.selectbox[0].value == "10"
     assert app.pills(key="metrics_methods").value == list(metrics.MODEL_NAMES.values())
     assert len(app.dataframe[0].value) == 4
 
 
 def test_empty_query_filter_clears_without_resetting_selection(reports):
     app = view_app(reports[0])
-    app.segmented_control[0].set_value("Con Porter").run()
+    app.segmented_control(key="metrics_porter").set_value("Con Porter").run()
     app.pills(key="metrics_methods").set_value(["BM25"]).run()
-    app.radio[0].set_value("recall").run()
+    app.segmented_control(key="metrics_metric").set_value("recall").run()
     app.selectbox[0].select("10").run()
     before = app.dataframe[0].value.copy()
     app.checkbox(key="metrics_explore").check().run()
@@ -629,8 +643,8 @@ def test_empty_query_filter_clears_without_resetting_selection(reports):
     assert len(app.dataframe) == 2
     app.button(key="metrics_clear_query_filter").click().run()
     assert not app.exception and app.text_input[0].value == ""
-    assert app.selectbox[0].value == "10" and app.radio[0].value == "recall"
-    assert app.segmented_control[0].value == "Con Porter"
+    assert app.selectbox[0].value == "10" and app.segmented_control(key="metrics_metric").value == "recall"
+    assert app.segmented_control(key="metrics_porter").value == "Con Porter"
     assert app.pills(key="metrics_methods").value == ["BM25"]
     assert len(app.dataframe[2].value) == 2
     pd.testing.assert_frame_equal(app.dataframe[0].value, before)
@@ -648,12 +662,43 @@ def test_tables_keep_one_context_column_fixed_for_horizontal_scroll(reports):
 def test_global_summary_follows_visible_methods_and_metric_without_changing_data(reports):
     app = view_app(reports[0])
     app.selectbox[0].select("10").run()
-    app.segmented_control[0].set_value("Con Porter").run()
+    app.segmented_control(key="metrics_porter").set_value("Con Porter").run()
     app.pills(key="metrics_methods").set_value(["BM25"]).run()
     before = app.dataframe[0].value.copy()
-    app.radio[0].set_value("precision").run()
+    app.segmented_control(key="metrics_metric").set_value("precision").run()
     summaries = [text.value for text in app.caption if text.value.startswith("Mayor **")]
     assert len(summaries) == 1
     assert all("P@10" in text and "BM25" in text and "Con Porter" in text for text in summaries)
     assert any("0.150000" in text for text in summaries)
     pd.testing.assert_frame_equal(app.dataframe[0].value, before)
+
+
+def test_chart_marks_the_best_value_with_text_and_outline_not_only_color():
+    table = pd.DataFrame([
+        {"Modelo": "Jaccard", "Porter": "Sin Porter", "precision": .1},
+        {"Modelo": "BM25", "Porter": "Con Porter", "precision": .3},
+        {"Modelo": "TF-IDF", "Porter": "Sin Porter", "precision": .3},
+    ])
+    spec = metrics.chart_spec(table, "precision", "P@10")
+    values = spec["data"]["values"]
+    assert [row["Mayor"] for row in values] == [False, True, True]
+    assert [row["Etiqueta"] for row in values] == ["0.1000", "0.3000 · mayor", "0.3000 · mayor"]
+    assert [row["Valor"] for row in values] == table.precision.tolist()
+    bar, plain, bold = spec["layer"]
+    assert bar["encoding"]["stroke"]["condition"]["test"] == "datum.Mayor"
+    assert (plain["mark"]["fontWeight"], bold["mark"]["fontWeight"]) == (400, 700)
+    zero = metrics.chart_spec(table.assign(precision=0.), "precision", "P@10")
+    assert not any(row["Mayor"] or "mayor" in row["Etiqueta"] for row in zero["data"]["values"])
+
+
+def test_view_has_no_page_heading_or_scattered_help_icons(reports):
+    app = view_app(reports[0])
+    assert not app.header and not app.subheader[0].proto.help
+    for element in (*app.get("segmented_control"), *app.get("button_group"), *app.selectbox):
+        assert not element.proto.help
+    assert all(not json.loads(table.proto.columns)[column].get("help")
+               for table in app.dataframe for column in table.value.columns
+               if column in json.loads(table.proto.columns))
+    labels = [expander.label for expander in app.expander]
+    assert labels[-2:] == ["Cómo interpretar estos resultados", "Procedencia y configuración"]
+    assert sum(label.startswith("Diferencias con Porter") for label in labels) == 2

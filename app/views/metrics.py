@@ -15,16 +15,12 @@ from ris.comparison import CONFIGURATIONS
 MODEL_NAMES = {"jaccard": "Jaccard", "tfidf": "TF-IDF", "bm25": "BM25", "dense": "Embeddings"}
 PORTER_NAMES = {"false": "Sin Porter", "true": "Con Porter", "na": "No aplica"}
 PORTER_MODES = ("Sin Porter", "Con Porter", "Comparar")
-TABLE_ROW_HEIGHT = 40
+TABLE_ROW_HEIGHT = 36
 VARIANT_COLORS = ("#7A2E5E", "#246477", "#5E5560")
 METHOD_HELP = (
     "Jaccard: coincidencia de palabras distintas. TF-IDF: coseno de palabras ponderadas. "
     "BM25: coincidencia léxica con ajuste de frecuencia y longitud. "
     "Embeddings: similitud semántica con MiniLM; Porter no aplica."
-)
-TABLE_HELP = (
-    "Pulse un encabezado para ordenar. La negrita señala los máximos positivos, incluidos los empates. "
-    "En pantallas pequeñas, deslice la tabla horizontalmente o abra su vista de pantalla completa."
 )
 ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_THEME = {"backgroundColor": "#FBFAF9", "textColor": "#201A1F"}
@@ -113,18 +109,22 @@ def metric_help(report: MetricsReport, *, per_query: bool = False) -> dict[str, 
 
 
 def chart_spec(table: pd.DataFrame, metric: str, label: str) -> dict:
-    """Barras contiguas por método, etiquetas explícitas y escala común [0,1]."""
+    """Barras por configuración con escala común [0,1]; el mayor valor lleva contorno y la palabra «mayor»."""
+    best = table[metric].max() if len(table) else 0
     values = [
         {"Configuración": f"{row['Modelo']} · {row['Porter']}", "Método": row["Modelo"],
-         "Variante": row["Porter"], "Métrica": label, "Valor": row[metric]}
+         "Variante": row["Porter"], "Métrica": label, "Valor": row[metric],
+         "Mayor": bool(best > 0 and row[metric] == best),
+         "Etiqueta": f"{row[metric]:.4f}" + (" · mayor" if best > 0 and row[metric] == best else "")}
         for row in table.to_dict("records")
     ]
     return {
-        "data": {"values": values}, "height": max(200, 38 * len(values)),
-        "mark": {"type": "bar", "cornerRadiusEnd": 3},
+        "data": {"values": values}, "height": 30 * len(values) + 64,
+        # Solo se reserva sitio a la etiqueta si el mayor valor llega al borde derecho.
+        "padding": {"left": 0, "right": 96 if best > .7 else 8, "top": 4, "bottom": 0},
         "encoding": {
             "y": {"field": "Configuración", "type": "nominal", "sort": None,
-                  "axis": {"title": None, "labelLimit": 190, "labelOverlap": False,
+                  "axis": {"title": None, "labelLimit": 170, "labelOverlap": False,
                            "ticks": False, "domain": False}},
             "x": {"field": "Valor", "type": "quantitative", "title": label,
                   "scale": {"domain": [0, 1]}, "axis": {"tickCount": 5, "format": ".1f"}},
@@ -138,6 +138,17 @@ def chart_spec(table: pd.DataFrame, metric: str, label: str) -> dict:
                 {"field": "Valor", "type": "quantitative", "format": ".6f"},
             ],
         },
+        "layer": [
+            {"mark": {"type": "bar", "cornerRadiusEnd": 3, "strokeWidth": 2},
+             "encoding": {"stroke": {"condition": {"test": "datum.Mayor", "value": THEME["textColor"]},
+                                     "value": "transparent"}}},
+            *({"transform": [{"filter": test}],
+               "mark": {"type": "text", "align": "left", "baseline": "middle", "dx": 6,
+                        "fontSize": 13, "fontWeight": weight},
+               "encoding": {"text": {"field": "Etiqueta", "type": "nominal"},
+                            "color": {"value": THEME["textColor"]}}}
+              for test, weight in (("!datum.Mayor", 400), ("datum.Mayor", 700))),
+        ],
         "config": {
             "font": "Schibsted Grotesk", "background": THEME["backgroundColor"],
             "view": {"stroke": None},
@@ -148,8 +159,7 @@ def chart_spec(table: pd.DataFrame, metric: str, label: str) -> dict:
 
 
 def _show_table(
-    table: pd.DataFrame, labels: dict[str, str], *, description: str,
-    help_text: dict[str, str], key: str,
+    table: pd.DataFrame, labels: dict[str, str], *, description: str, key: str,
 ) -> None:
     # Los fondos quedan a cargo del grid para conservar su hover transitorio.
     styled = table.style.set_properties(color=THEME["textColor"])
@@ -161,12 +171,11 @@ def _show_table(
         height=min(360, TABLE_ROW_HEIGHT * (len(table) + 1) + 4), row_height=TABLE_ROW_HEIGHT,
         column_config={
             "qid": st.column_config.TextColumn("Consulta (qid)", width=110, pinned=True),
-            "Modelo": st.column_config.TextColumn("Método", width=115, help=METHOD_HELP,
+            "Modelo": st.column_config.TextColumn("Método", width=100,
                                                   pinned="qid" not in table.columns),
-            "Porter": st.column_config.TextColumn("Variante", width=115,
-                                                  help="Porter solo se aplica a los métodos clásicos."),
-            **{name: st.column_config.NumberColumn(f"{label} ↑", format="%.6f", width=125,
-                                                   help=help_text[name], alignment="right")
+            "Porter": st.column_config.TextColumn("Variante", width=95),
+            **{name: st.column_config.NumberColumn(f"{label} ↑", format="%.6f", width=105,
+                                                   alignment="right")
                for name, label in labels.items()},
         },
     )
@@ -256,17 +265,31 @@ def _show_differences(table: pd.DataFrame, metric: str, label: str, *, key: str)
             height=min(360, TABLE_ROW_HEIGHT * (len(differences) + 1) + 4),
             alt=f"Cambio absoluto de {label} entre variantes del mismo método; Embeddings no aplica.",
             column_config={
-                "Modelo": st.column_config.TextColumn("Método", help=METHOD_HELP, width=115, pinned=True),
-                **{name: st.column_config.NumberColumn(name, format="%.6f", width=120)
+                "Modelo": st.column_config.TextColumn("Método", width=100, pinned=True),
+                **{name: st.column_config.NumberColumn(name, format="%.6f", width=110)
                    for name in ("Sin Porter", "Con Porter")},
                 "Cambio absoluto": st.column_config.NumberColumn(
-                    "Δ absoluto", format="%+.6f", width=130,
+                    "Δ absoluto", format="%+.6f", width=120,
                     help=f"{label} con Porter menos {label} sin Porter. No es un porcentaje ni "
-                         "una prueba de significancia. Un valor positivo indica aumento.",
+                         "una prueba de significancia.",
                 ),
-                "Resultado": st.column_config.TextColumn(width=145),
+                "Resultado": st.column_config.TextColumn(width=120),
             },
         )
+
+
+def data_line(report: MetricsReport, n_visible: int) -> str:
+    """Única línea de contexto: procedencia y tamaño de la evaluación."""
+    counts = report.summary["counts"]
+
+    def number(value: int) -> str:
+        return f"{value:,}".replace(",", " ")
+
+    return (
+        "FiQA (test), independiente del buscador · "
+        f"{number(counts['n_queries'])} consultas · {number(counts['n_corpus_docs'])} documentos · "
+        f"{n_visible} configuraciones visibles"
+    )
 
 
 @st.fragment
@@ -274,29 +297,29 @@ def _query_detail(
     directory: Path, report: MetricsReport, porter: str, methods: list[str], metric: str,
 ) -> None:
     _check_report_unchanged(directory, report)
-    with st.container(border=True, key="metrics_query_detail"):
-        st.subheader("Detalle por consulta", anchor=False,
-                     help="Elija un qid para ver P, R y AP de esa consulta. MAP es la media global. " + TABLE_HELP)
+    with st.container(key="metrics_query_detail"):
+        st.subheader("Detalle por consulta", anchor=False)
         if st.session_state.get("metrics_qid") not in report.qids:
             st.session_state["metrics_qid"] = report.qids[0]
-        qid = st.selectbox("Consulta evaluada (qid)", report.qids, key="metrics_qid",
-                           persist_state="session",
-                           help="Busque un identificador de test. El reporte guarda ids, no el texto de las consultas.")
+        with st.container(key="metrics_detail_controls", horizontal=True,
+                          vertical_alignment="bottom", gap="medium"):
+            qid = st.selectbox("Consulta evaluada (qid)", report.qids, key="metrics_qid",
+                               persist_state="session", width=260)
+            explore = st.checkbox("Explorar todas las consultas", key="metrics_explore",
+                                  persist_state="session")
         labels = metric_labels(report, per_query=True)
         query_table = filter_table(metric_table(report, qid), porter, methods)
         with st.container(key=f"jab_query_{qid}"):
             st.markdown(f"**Resultados de la consulta {qid}** · {porter}")
             _show_table(query_table, labels, description=f"Resultados de la consulta {qid}: {porter}.",
-                        help_text=metric_help(report, per_query=True), key="metrics_query_table")
+                        key="metrics_query_table")
         if porter == "Comparar":
             _show_differences(query_table, metric, labels[metric], key="metrics_query_differences")
 
-    if st.checkbox("Explorar todas las consultas", key="metrics_explore", persist_state="session",
-                   help="Abre un listado ordenable. Conserva los métodos y variantes seleccionados arriba. "
-                   "El qid queda fijo al desplazar la tabla horizontalmente."):
+    if explore:
         search = st.text_input("Filtrar identificadores de consulta", key="metrics_qid_filter",
-                               persist_state="session", live=True, placeholder="Por ejemplo: 100",
-                               help="Coincidencia literal en el qid. Solo filtra este listado; no cambia las medias.")
+                               persist_state="session", live=True,
+                               placeholder="Coincidencia literal en el qid, por ejemplo: 100")
         all_rows = pd.DataFrame(report.rows)
         all_rows["Modelo"] = all_rows.model.map(MODEL_NAMES)
         all_rows["Porter"] = all_rows.stem.map(PORTER_NAMES)
@@ -312,59 +335,48 @@ def _query_detail(
         else:
             _show_table(all_rows[["qid", "Modelo", "Porter", *labels]], labels,
                         description=f"Consultas filtradas: {porter}; ordenar pulsando los encabezados.",
-                        help_text=metric_help(report, per_query=True), key="metrics_all_queries")
+                        key="metrics_all_queries")
 
 
 def _dashboard(directory: Path, report: MetricsReport) -> None:
     labels = metric_labels(report)
-    with st.container(border=True, key="metrics_controls"):
+    with st.container(key="metrics_controls", horizontal=True, vertical_alignment="bottom", gap="medium"):
         porter = st.segmented_control(
-            "Variantes de los métodos clásicos", PORTER_MODES,
+            "Variante de Porter", PORTER_MODES,
             default=None if "metrics_porter" in st.session_state else "Comparar", required=True,
-            key="metrics_porter", persist_state="session", width="stretch",
-            help="Porter agrupa variantes de palabras recortando terminaciones. Comparar usa el mismo test. "
-                 "Embeddings es una referencia única, sin Porter, en las tres opciones.",
+            key="metrics_porter", persist_state="session",
+        )
+        metric = st.segmented_control(
+            "Métrica destacada", list(labels), format_func=labels.get, required=True,
+            default=None if "metrics_metric" in st.session_state else "ap_at_1000",
+            key="metrics_metric", persist_state="session",
         )
         methods = st.pills("Métodos visibles", list(MODEL_NAMES.values()), selection_mode="multi",
                            default=None if "metrics_methods" in st.session_state else list(MODEL_NAMES.values()),
-                           key="metrics_methods", persist_state="session", help=METHOD_HELP,
-                           wrap=True)
-        metric_names = {"precision": "Precisión", "recall": "Recall", "ap_at_1000": "Promedio AP"}
-        metric = st.radio("Métrica destacada", list(labels),
-                          index=None if "metrics_metric" in st.session_state else 2,
-                          horizontal=True, format_func=lambda name: f"{labels[name]} · {metric_names[name]}",
-                          key="metrics_metric",
-                          persist_state="session", help="Elige la métrica del gráfico, el resumen global y las diferencias. "
-                          "Las tablas conservan las tres métricas. P: precisión; R: recall; MAP: promedio de AP. "
-                          "Más es mejor, de 0 a 1.")
-        st.button("Restablecer filtros", key="metrics_reset", icon=":material/restart_alt:",
-                  on_click=_reset_filters, args=(report.qids[0],))
+                           key="metrics_methods", persist_state="session", wrap=True)
+        st.button("Restablecer", key="metrics_reset", icon=":material/restart_alt:", type="tertiary",
+                  on_click=_reset_filters, args=(report.qids[0],), help="Vuelve a los filtros iniciales.")
 
     table = filter_table(metric_table(report), porter, methods)
-    counts = report.summary["counts"]
-    for column, (label, value) in zip(st.columns(3), (
-        ("Consultas evaluadas", counts["n_queries"]),
-        ("Documentos", counts["n_corpus_docs"]),
-        ("Configuraciones visibles", len(table)),
-    ), strict=True):
-        column.metric(label, f"{value:,}".replace(",", " "))
     if table.empty:
+        st.caption(data_line(report, 0))
         st.info("No hay métodos seleccionados. Elija uno arriba o muestre todos los métodos.")
         st.button("Mostrar todos los métodos", key="metrics_restore_methods", on_click=_restore_methods)
         return
 
-    st.subheader("Resultados globales", anchor=False, help=metric_help(report)[metric] + " " + TABLE_HELP)
-    st.caption(metric_summary(table, metric, labels[metric]))
-    st.vega_lite_chart(spec=chart_spec(table, metric, labels[metric]), width="stretch",
-                       height=max(280, 44 * len(table) + 70),
-                       key="metrics_chart",
-                       alt=f"{labels[metric]}: {porter}; {len(table)} configuraciones; escala de 0 a 1.")
-    _show_table(table, labels, description=f"Medias globales: {porter}.",
-                help_text=metric_help(report), key="metrics_global_table")
-    st.caption("Negrita: mejores valores.")
+    with st.container(key="metrics_heading_row", horizontal=True, gap="medium"):
+        st.subheader("Resultados globales", anchor=False)
+        st.caption(metric_summary(table, metric, labels[metric]))
+    left, right = st.columns([9, 10], gap="medium")
+    with left:
+        st.vega_lite_chart(spec=chart_spec(table, metric, labels[metric]), width="stretch",
+                           key="metrics_chart",
+                           alt=f"{labels[metric]}: {porter}; {len(table)} configuraciones; escala de 0 a 1.")
+    with right:
+        _show_table(table, labels, description=f"Medias globales: {porter}.", key="metrics_global_table")
+    st.caption(f"{data_line(report, len(table))} · negrita: mejor valor; pulse un encabezado para ordenar.")
     if porter == "Comparar":
         _show_differences(table, metric, labels[metric], key="metrics_global_differences")
-    st.divider()
     _query_detail(directory, report, porter, methods, metric)
 
 
@@ -394,9 +406,6 @@ def _interpretation(report: MetricsReport) -> None:
 def render(context: AppContext) -> None:
     """Consume únicamente reports_dir; independiente del buscador y de su motor."""
     with st.container(key="jab_metrics"):
-        st.header("Métricas", anchor=False,
-                  help="Evaluación de FiQA en test, independiente del buscador. Las ayudas se abren con el "
-                       "cursor, el foco del teclado o tocando el signo de interrogación.")
         try:
             with st.spinner("Validando los reportes…"):
                 report = load_reports(context.reports_dir)

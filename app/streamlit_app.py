@@ -51,33 +51,37 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .st-key-jab_views { width: min(720px, 100% - 32px); margin: 0 auto; }
 .st-key-jab_views:has(.st-key-jab_metrics),
 .jab[data-view="metricas"] .jab-main { width: min(1040px, 100% - 32px); }
+/* Métricas: barra superior, logo y contenido comparten el mismo ancho centrado. */
+.jab[data-view="metricas"] .top { width: min(1040px, 100% - 32px); margin: 0 auto; padding: 0; }
+/* El logo sube a la fila de la navegación; solo él recibe clics en esa franja. */
+.jab[data-view="metricas"] .jab-main { margin-top: -54px; position: relative; pointer-events: none; }
+.jab[data-view="metricas"] .jab-main :is(a, button) { pointer-events: auto; }
 .st-key-jab_metrics {
   --metrics-line: #D4CFD3;
-  --metrics-shadow: 0 2px 8px rgb(32 26 31 / .04);
+  gap: 12px;
 }
-.st-key-jab_metrics .st-key-metrics_query_detail {
-  background: #FFF; border-color: var(--metrics-line);
-  border-top: 2px solid #7A2E5E; border-radius: 18px;
-  padding: 24px; box-shadow: var(--metrics-shadow);
+.st-key-jab_metrics .st-key-metrics_controls {
+  background: #F3F1F2; border-radius: var(--r-item, 10px); padding: 10px 16px 12px;
+  row-gap: 8px; align-items: flex-end;
 }
-.st-key-jab_metrics .st-key-metrics_query_detail [class*="st-key-jab_query_"] {
-  border-top: 1px solid var(--metrics-line); padding-top: 16px;
-  border-radius: 8px; animation: jab-query-update .45s ease-out;
+.st-key-jab_metrics .st-key-metrics_controls button { min-height: 36px; }
+.st-key-jab_metrics .st-key-metrics_reset { margin-left: auto; }
+.st-key-jab_metrics [data-testid="stHeading"] h3 { font-size: 1.125rem; line-height: 1.3; padding: 4px 0 0; }
+.st-key-jab_metrics [data-testid="stDataFrame"] { border-radius: var(--r-item, 10px); }
+.st-key-jab_metrics [data-testid="stCaptionContainer"] { opacity: 1; }
+.st-key-jab_metrics [data-testid="stCaptionContainer"] p { color: #5E5560; font-size: .8125rem; }
+.st-key-jab_metrics [data-testid="stAlertContainer"]:has([data-testid="stAlertContentInfo"]) {
+  background: #F3F1F2; color: #201A1F; border: 1px solid var(--metrics-line);
 }
-@keyframes jab-query-update {
-  from { box-shadow: 0 0 0 2px #7A2E5E40; }
-  to { box-shadow: 0 0 0 2px transparent; }
-}
-.st-key-jab_metrics [data-testid="stDataFrame"] {
-  border-radius: 10px; box-shadow: var(--metrics-shadow);
-}
-.st-key-jab_metrics [data-testid="stCaptionContainer"] p { color: #5E5560; }
-.st-key-jab_metrics .st-key-metrics_controls { background: #F3F1F2; }
-.st-key-jab_metrics .st-key-metrics_controls button { min-height: 44px; }
+.st-key-jab_metrics .st-key-metrics_heading_row { align-items: baseline; justify-content: space-between; row-gap: 0; }
+.st-key-jab_metrics .st-key-metrics_query_detail { gap: 12px; border-top: 1px solid var(--metrics-line); padding-top: 12px; margin-top: 4px; }
+.st-key-jab_metrics .st-key-metrics_detail_controls { align-items: flex-end; row-gap: 8px; }
 .st-key-jab_metrics :is(button, input, [role="radio"], [role="checkbox"], [role="combobox"]):focus-visible {
   outline: 2px solid #7A2E5E; outline-offset: 3px;
 }
-.st-key-jab_metrics .stTooltipIcon button { min-width: 28px; min-height: 28px; }
+@media (pointer: coarse) {
+  .st-key-jab_metrics .st-key-metrics_controls button { min-height: 44px; }
+}
 /* Retira el panel anterior mientras Streamlit cambia de ruta. */
 body:has(.jab:not([data-view="metricas"])) .st-key-jab_metrics,
 body:has(.jab[data-view="metricas"]) .st-key-jab_view_comparar { display: none; }
@@ -92,10 +96,10 @@ body:has(.jab[data-view="metricas"]) .st-key-jab_view_comparar { display: none; 
   to { opacity: 1; transform: none; }
 }
 @media (max-width: 600px) {
-  .st-key-jab_views:has(.st-key-jab_metrics),
-  .jab[data-view="metricas"] .jab-main { width: calc(100% - 24px); }
-  .st-key-jab_metrics [data-testid="stMetricValue"] { font-size: 1.75rem; }
-  .st-key-jab_metrics .st-key-metrics_query_detail { padding: 16px; }
+  .st-key-jab_views:has(.st-key-jab_metrics) { width: calc(100% - 24px); }
+  .jab[data-view="metricas"] .jab-main, .jab[data-view="metricas"] .top { width: calc(100% - 24px); }
+  .st-key-jab_metrics .st-key-metrics_controls { padding: 10px 12px 12px; }
+  .st-key-jab_metrics .st-key-metrics_reset { margin-left: 0; }
 }
 /* Streamlit atenúa la página mientras vuelve a ejecutar el script en cada interacción;
    jab ya muestra su propio estado de carga, así que se anula ese fundido gris. */
