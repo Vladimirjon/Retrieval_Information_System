@@ -1,6 +1,15 @@
 # Estado del proyecto
 
-Actualizado: martes 17 de noviembre de 2026 (#1–#13, #15 y #16 integradas en `main`, que está en `827fa6c`; la app funciona en <https://jab-retrieval-information-system.streamlit.app/>; de #16 quedan por comprobar el arranque tras el reposo de 12 h y Comparar; #14 en curso en la rama `feat/14-comparacion-ui` (ver su sección), sin commit; pendiente de #11: validación completa de los índices). Las notas históricas de ramas anteriores se conservan.
+Actualizado: 19 de noviembre de 2026. Rama de integración desde `main` (`66aea9d`): reúne los PR #42 (#14), #43 (#17) y #40 (seguimiento de #15) y un commit de pulido de interfaz; ver «Integración de #14, #15 y #17». Las notas históricas de ramas anteriores se conservan.
+
+## Integración de #14, #15 y #17 con pulido de interfaz (19 de noviembre, rama de integración)
+
+- **Base y contenido:** `main` en `66aea9d` + merge de los PR #42 (`b2980d9`), #43 (`4f3b766`) y #40 (`e302ab5`, que restituye las rutas en la URL) + un commit de pulido de Comparar, Métricas y el menú de la barra. Los conflictos con `e302ab5` (en `app.js`, `streamlit_app.py` y `app/README.md`) se resolvieron conservando su sincronización con la URL y reaplicando los cambios del pulido.
+- **Pulido:** Comparar sin consulta muestra los tres ejemplos del inicio en lugar del aviso azul; sin título repetido; contexto en una línea y ayuda en un desplegable; solapamiento en seis filas; Comparar usa un `ThreadPoolExecutor` con espera por `wait()` para que cambiar de vista no quede bloqueado por los cuatro modelos. Métricas: controles en una banda, gráfico y tabla lado a lado, mejor valor marcado con texto y contorno. Menú de la barra más compacto. Comparar usa un debounce de 450 ms (220 ms en Buscar) y, al volver a Buscar con la consulta editada, repite la búsqueda en lugar de mostrar la lista anterior como vigente.
+- **Probado localmente (Windows, Python 3.12):** `pytest` 515 pasan; `ruff check .` sin errores; navegador local (Playwright, artefactos reales): rutas `/search`, `/comparison` y `/metrics` con parámetros, atrás, adelante, recargar y enlaces directos; ejemplos pulsables en Comparar vacío; sin desbordamiento horizontal a 375 px en Comparar y Métricas.
+- **Revisión cruzada:** un agente Opus de solo lectura revisó el pulido antes de rebasarlo sobre `e302ab5`; su hallazgo obligatorio (un `TimeoutError` del motor giraba sin fin en `run_models`) se corrigió con prueba. La resolución de conflictos sobre `e302ab5` se revisa aparte.
+- **Sin comprobar:** CI de esta rama, despliegue en Community Cloud (Comparar sigue pendiente de #16), tema oscuro, lector de pantalla, táctil real y varias sesiones a la vez.
+- **Límites conocidos:** la primera búsqueda tras arrancar tarda 4–5 s porque MiniLM carga en segundo plano (medido en local; en la nube puede ser más); el pool de 4 hilos de Comparar es compartido por todas las sesiones y búsquedas interrumpidas pueden ocuparlo mientras MiniLM carga (inferido por revisión, no medido).
 
 ## #14: vista de comparación lado a lado (19 de noviembre, rama `feat/14-comparacion-ui`, sin commit)
 
