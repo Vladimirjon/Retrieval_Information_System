@@ -27,9 +27,9 @@ las métricas globales y el análisis por grupos con las fuentes. El diseño usa
 tipografía Times, cuerpo de 11,5 puntos, tablas con líneas horizontales y
 márgenes laterales de unos 22 mm.
 
-La bibliografía incluye siete fuentes externas y los enlaces al corpus y los
-juicios de relevancia facilitados por el profesor. La auditoría adjunta deja
-constancia de los reportes utilizados.
+La bibliografía muestra las URL de siete fuentes externas y las del corpus y
+los juicios de relevancia facilitados por el profesor. La auditoría adjunta
+deja constancia de los reportes utilizados.
 
 ## Reproducir desde la raíz
 
@@ -59,7 +59,7 @@ Get-FileHash docs/informe/informe_tecnico.pdf, artifacts/informe-segunda.pdf -Al
 
 Ambas salidas fueron idénticas con Python 3.12.16 y las versiones fijadas de
 `requirements-pdf.txt`. El SHA-256 registrado es
-`caf49386e97be6573b4efc2b43227380cf7153ab6713ee78d277101a338ec70d`.
+`978b90d9175fba1667ee81a3af82d1f74956d7604d1521189768c681b2bf2fff`.
 
 La extracción de texto no sustituye la revisión visual. Con Poppler disponible,
 renderizar **todas** las páginas en una carpeta ignorada y abrirlas:

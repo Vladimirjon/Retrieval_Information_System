@@ -7,7 +7,7 @@ Actualizado el 19 de noviembre de 2026. `main` está en `66aea9d` e incluye el g
 - La entrega parte de `main` en `66aea9d` (PR #41). Los datos de evaluación, el manifiesto y los aportes del informe coinciden con los de la revisión anterior. La vista Comparar se revisa en el PR #42.
 - La fuente editable y el PDF están en `docs/informe/`. El documento tiene las cuatro secciones exigidas y cinco páginas A4 sin carátula. La bibliografía incluye fuentes externas y el material facilitado por el profesor.
 - La auditoría local confirmó 4 536 filas de evaluación, siete configuraciones, 49 medias por grupo, las métricas de los dos casos y la correspondencia del texto y los enlaces con el PDF. Dos generaciones produjeron el mismo SHA-256. Se revisaron las cinco páginas y Ruff pasó.
-- En el PR #43 se verificó la corrección del apellido Johann Pasquel en la fuente, la primera página y los metadatos del PDF. Queda pendiente la revisión de los aportes por Ismael y Vladimirjon.
+- En el PR #43 se verificó el ajuste de formato del informe. Queda pendiente la revisión de los aportes por Ismael y Vladimirjon.
 
 ## Grafo 3D, rutas y escritura asistida (17 de noviembre, rama `feat/13-grafo-3d-consulta`, sin commit)
 

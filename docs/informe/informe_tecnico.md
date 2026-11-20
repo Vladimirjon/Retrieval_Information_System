@@ -163,20 +163,20 @@ El denso obtuvo el mayor MAP en los siete grupos. De las consultas, 73 contienen
 
 ### Fuentes y trazabilidad
 
-Las cifras de las tablas proceden de los reportes de evaluación. El registro de verificación adjunto permite reproducir su comprobación.
+El registro adjunto permite contrastar las cifras con los reportes de evaluación.
 
-[1] Maia, M., Handschuh, S., Freitas, A., Davis, B., McDermott, R., Zarrouk, M. y Balahur, A. (2018). [WWW'18 Open Challenge: Financial Opinion Mining and Question Answering](https://andrefreitas.org/papers/www_fiqa_2018.pdf). *Companion Proceedings of The Web Conference 2018*, 1941-1942.
+[1] Maia, M., Handschuh, S., Freitas, A., Davis, B., McDermott, R., Zarrouk, M. y Balahur, A. (2018). WWW'18 Open Challenge: Financial Opinion Mining and Question Answering. *Companion Proceedings of The Web Conference 2018*, 1941-1942. [https://andrefreitas.org/papers/www_fiqa_2018.pdf](https://andrefreitas.org/papers/www_fiqa_2018.pdf)
 
-[2] Thakur, N., Reimers, N., Rücklé, A., Srivastava, A. y Gurevych, I. (2021). [BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models](https://datasets-benchmarks-proceedings.neurips.cc/paper_files/paper/2021/hash/65b9eea6e1cc6bb9f0cd2a47751a186f-Abstract-round2.html). *NeurIPS Datasets and Benchmarks*.
+[2] Thakur, N., Reimers, N., Rücklé, A., Srivastava, A. y Gurevych, I. (2021). BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models. *NeurIPS Datasets and Benchmarks*. [https://arxiv.org/abs/2104.08663](https://arxiv.org/abs/2104.08663)
 
-[3] Material de la asignatura facilitado por Iván Carrera. BEIR, [corpus FiQA](https://huggingface.co/datasets/BeIR/fiqa) y [juicios de relevancia](https://huggingface.co/datasets/BeIR/fiqa-qrels).
+[3] Material de la asignatura facilitado por Iván Carrera. Corpus FiQA [https://huggingface.co/datasets/BeIR/fiqa](https://huggingface.co/datasets/BeIR/fiqa) y juicios de relevancia [https://huggingface.co/datasets/BeIR/fiqa-qrels](https://huggingface.co/datasets/BeIR/fiqa-qrels)
 
-[4] Porter, M. F. (1980). [An algorithm for suffix stripping](https://tartarus.org/martin/PorterStemmer/def.txt). *Program*, 14(3), 130-137.
+[4] Porter, M. F. (1980). An algorithm for suffix stripping. *Program*, 14(3), 130-137. [https://tartarus.org/martin/PorterStemmer/def.txt](https://tartarus.org/martin/PorterStemmer/def.txt)
 
-[5] Manning, C. D., Raghavan, P. y Schütze, H. (2008). [Introduction to Information Retrieval](https://nlp.stanford.edu/IR-book/information-retrieval-book.html). Cambridge University Press.
+[5] Manning, C. D., Raghavan, P. y Schütze, H. (2008). *Introduction to Information Retrieval*. Cambridge University Press. [https://nlp.stanford.edu/IR-book/information-retrieval-book.html](https://nlp.stanford.edu/IR-book/information-retrieval-book.html)
 
-[6] Robertson, S. y Zaragoza, H. (2009). [The Probabilistic Relevance Framework: BM25 and Beyond](https://www.ccs.neu.edu/home/vip/teach/IRcourse/IR_surveys/robertson_foundations.pdf). *Foundations and Trends in Information Retrieval*, 3(4), 333-389.
+[6] Robertson, S. y Zaragoza, H. (2009). The Probabilistic Relevance Framework: BM25 and Beyond. *Foundations and Trends in Information Retrieval*, 3(4), 333-389. [https://www.ccs.neu.edu/home/vip/teach/IRcourse/IR_surveys/robertson_foundations.pdf](https://www.ccs.neu.edu/home/vip/teach/IRcourse/IR_surveys/robertson_foundations.pdf)
 
-[7] Sentence Transformers (s. f.). [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2). Ficha del modelo.
+[7] Sentence Transformers (s. f.). *all-MiniLM-L6-v2*. Ficha del modelo. [https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 
-[8] Faiss (s. f.). [Faiss indexes](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes). Documentación de `IndexFlatIP`.
+[8] Faiss (s. f.). *Faiss indexes*. [https://github.com/facebookresearch/faiss/wiki/Faiss-indexes](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes)

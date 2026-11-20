@@ -101,7 +101,7 @@ def styles() -> dict[str, ParagraphStyle]:
             "table_header_right", parent=table_header, alignment=TA_RIGHT,
         ),
         "reference": ParagraphStyle(
-            "reference", parent=block, fontSize=10.5, leading=13.2, spaceAfter=5,
+            "reference", parent=block, fontSize=10.5, leading=12, spaceAfter=4,
         ),
     }
 
