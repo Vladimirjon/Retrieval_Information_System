@@ -23,6 +23,8 @@ const DEBOUNCE = 220;
 const COMPARE_DEBOUNCE = 450;
 const PAGE_SIZE = 5;
 const CORPUS_SIZE = "57 638";
+const EXAMPLE_MAX = 28;  // caracteres: tres ejemplos caben en una fila de 720 px (91 preguntas)
+const QID_MAX = 5;       // dígitos del mayor qid de reports/metrics_per_query.csv (todos son solo dígitos)
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const decimal = (v) => v.toFixed(2).replace(".", ",");
 const listEs = (items) => items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
@@ -36,6 +38,71 @@ export default function ({ parentElement, data, setStateValue }) {
   root._jab.receive(data || {});
 }
 
+// Delegación: Comparar se monta con st.html fuera del componente.
+function mountComparison(on, signal) {
+  // El filtro vive en window: sobrevive a repintados de la vista y a remontajes del componente.
+  const store = (window.__jabCmp ??= { onlyShared: false });
+  let hoverId = null, tapId = null, panel = null, firstCard = null;
+  // Una tarjeta de un solo modelo no tiene nada que resaltar en las otras columnas.
+  const sharedCard = (target) => {
+    const card = target?.closest?.(".cmp-doc");
+    return card && card.dataset.coverage !== "1" ? card : null;
+  };
+  function paint() {
+    if (!panel) return;
+    const id = tapId ?? hoverId;
+    panel.dataset.onlyShared = String(store.onlyShared);
+    panel.querySelectorAll(".cmp-doc").forEach((card) => {
+      card.dataset.active = String(id !== null && card.dataset.docId === id);
+    });
+    panel.querySelectorAll(".cmp-seg").forEach((b) => b.setAttribute("aria-pressed", String((b.dataset.only === "true") === store.onlyShared)));
+  }
+  function reconcile() {
+    const next = document.querySelector(".cmp:has(.cmp-doc)");
+    const card = next?.querySelector(".cmp-doc");
+    if (next === panel && card === firstCard) return;
+    panel = next; firstCard = card;
+    hoverId = tapId = null;
+    paint();
+  }
+  function follow(card) { reconcile(); hoverId = card ? card.dataset.docId : null; paint(); }
+  on(document, "pointerover", (e) => { if (e.pointerType === "mouse") follow(sharedCard(e.target)); });
+  on(document, "pointerout", (e) => {
+    if (e.pointerType === "mouse" && sharedCard(e.target) !== sharedCard(e.relatedTarget)) {
+      follow(sharedCard(e.relatedTarget) ?? sharedCard(document.activeElement));
+    }
+  });
+  on(document, "focusin", (e) => { if (sharedCard(e.target)) follow(sharedCard(e.target)); });
+  on(document, "focusout", (e) => { if (sharedCard(e.target)) follow(sharedCard(e.relatedTarget)); });
+  on(document, "click", (e) => {
+    reconcile();
+    const seg = e.target.closest?.(".cmp-seg");
+    if (seg) { store.onlyShared = seg.dataset.only === "true"; paint(); return; }
+    const jump = e.target.closest?.(".cmp-jump");
+    if (jump) {
+      const from = jump.closest(".cmp-doc");
+      const to = [...panel.querySelectorAll(".cmp-doc")].find((c) => c.dataset.docId === from.dataset.docId && c.dataset.model === jump.dataset.jumpModel);
+      if (to) {
+        tapId = from.dataset.docId; paint();
+        to.focus({ preventScroll: true });
+        to.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+      }
+      return;
+    }
+    // Con el dedo no hay hover: un toque fija el documento y otro toque, en cualquier lado, lo suelta.
+    const card = sharedCard(e.target);
+    tapId = card && e.pointerType !== "mouse" && tapId !== card.dataset.docId ? card.dataset.docId : null;
+    paint();
+  });
+  on(document, "keydown", (e) => {
+    if (e.key === "Escape") { hoverId = tapId = null; paint(); }
+  });
+  const observer = new MutationObserver(reconcile);
+  observer.observe(document.body, { childList: true, subtree: true });
+  signal.addEventListener("abort", () => observer.disconnect());
+  reconcile();
+}
+
 function mount(root, data) {
   const $ = (s) => root.querySelector(s);
   const init = data.initial || {};
@@ -47,6 +114,7 @@ function mount(root, data) {
   const bar = $(".bar"), input = $("#jab-q"), clear = $(".clear"), chip = $(".chip"), menu = $("#jab-menu");
   const suggest = $("#jab-suggest"), list = $(".list"), status = $(".status"), pager = $(".pager"), tip = $("#jab-tip");
   const sw = $("[data-stem-row] .switch"), gsw = $("[data-graph-switch]"), ghost = $(".ghost"), dym = $(".dym"), dymBtn = $("[data-dym]");
+  const grow = $(".grow");
   const send = (name, value) => root._send(name, value);
 
   // Una sola señal de cancelación para los oyentes globales si el componente se vuelve a montar.
@@ -54,6 +122,7 @@ function mount(root, data) {
   window.__jabListeners?.abort();
   const listeners = (window.__jabListeners = new AbortController());
   const on = (target, type, fn, options = {}) => target.addEventListener(type, fn, { signal: listeners.signal, ...options });
+  mountComparison(on, listeners.signal);
   const frames = new Set();
   function requestFrame(callback) {
     const id = requestAnimationFrame((now) => {
@@ -101,6 +170,8 @@ function mount(root, data) {
       const keep = focused || document.activeElement === input;
       root.dataset.mode = mode; placeBar(mode);
       if (keep) input.focus({ preventScroll: true });
+      // Moverlo también pone su desplazamiento horizontal a 0: el cursor al final sigue a la vista.
+      if (keep && input.selectionEnd === input.value.length) input.scrollLeft = input.scrollWidth;
       if (reopen) showSuggest(input.value);
       moving = false;
       updateGhost();
@@ -135,8 +206,9 @@ function mount(root, data) {
   // Comparar ejecuta los cuatro modelos: espera a una pausa más larga antes de pedirlos.
   const schedule = () => { clearTimeout(state.timer); state.timer = setTimeout(search, state.view === "comparar" ? COMPARE_DEBOUNCE : DEBOUNCE); };
   const searchNow = () => { hop(); search(); };
-  // Diseño de inicio (logo grande): Buscar sin consulta y fuera de /search.
-  const isHome = () => state.view === "buscar" && !state.q.trim() && state.route !== "search";
+  // Diseño de inicio (logo grande): Buscar sin consulta, sea cual sea la ruta. Con /search y la
+  // consulta vacía (×, Comparar vaciado, atrás) el modo «results» dejaba la página en blanco.
+  const isHome = () => state.view === "buscar" && !state.q.trim();
   // Acción explícita (Enter, sugerencia, ejemplo, «Quizás quisiste decir»): pasa a /search.
   // Ese cambio de página vuelve a montar el componente; el aviso devuelve el foco al campo.
   const commitSearch = () => {
@@ -321,11 +393,12 @@ function mount(root, data) {
     placeTip({ left: point.clientX - 14, right: point.clientX + 4, top: point.clientY + 14 });
     tip.classList.add("visible");
   }
-  on(root, "pointerover", (e) => { const target = e.target.closest("[data-tip]"); if (target) openTip(target); });
-  on(root, "pointerout", (e) => { if (tipTarget?.contains(e.target) && !tipTarget.contains(e.relatedTarget)) closeTip(); });
+  // En document: también sirve a los [data-tip] que Streamlit dibuja fuera del componente.
+  on(document, "pointerover", (e) => { const target = e.target.closest?.("[data-tip]"); if (target) openTip(target); });
+  on(document, "pointerout", (e) => { if (tipTarget?.contains(e.target) && !tipTarget.contains(e.relatedTarget)) closeTip(); });
   let suppressMenuFocusTip = false;
-  on(root, "focusin", (e) => { const target = e.target.closest("[data-tip]"); if (target && !suppressMenuFocusTip) openTip(target); });
-  on(root, "focusout", (e) => { if (tipTarget?.contains(e.target)) closeTip(); });
+  on(document, "focusin", (e) => { const target = e.target.closest?.("[data-tip]"); if (target && !suppressMenuFocusTip) openTip(target); });
+  on(document, "focusout", (e) => { if (tipTarget?.contains(e.target)) closeTip(); });
   on(document, "keydown", (e) => { if (e.key === "Escape" && tipTarget) closeTip(); });
 
   // ---------- Grafo 3D de la consulta (canvas propio, sin bibliotecas) ----------
@@ -753,18 +826,29 @@ function mount(root, data) {
     const part = m[1].toLowerCase(), word = VOCAB.find((w) => w.length > part.length && w.startsWith(part));
     return word ? word.slice(part.length) : "";
   }
+  // Una línea fija (el texto largo se desplaza en horizontal). Solo el botón «grow» la
+  // amplía hasta 138 px; aparece cuando el texto no cabe y se contrae al caber o vaciar.
   function sizeInput() {
-    const focused = document.activeElement === input;
+    let open = bar.dataset.expanded === "true";
     const scroll = input.scrollTop;
     input.style.overflowY = "hidden";
     input.style.height = "42px";
-    input.style.height = `${focused ? Math.min(138, input.scrollHeight) : 42}px`;
-    input.style.overflowY = focused && input.scrollHeight > input.clientHeight ? "auto" : "hidden";
-    input.scrollTop = focused ? scroll : 0;
+    // Sin texto no cuenta: el scrollHeight de Chrome incluye el placeholder.
+    const long = !!input.value && (open ? input.scrollHeight > input.clientHeight + 1 : input.scrollWidth > input.clientWidth + 1);
+    if (open && !long) setExpanded(open = false);
+    grow.hidden = !long;
+    input.style.height = `${open ? Math.min(138, input.scrollHeight) : 42}px`;
+    input.style.overflowY = open && input.scrollHeight > input.clientHeight ? "auto" : "hidden";
+    input.scrollTop = open ? scroll : 0;
+  }
+  function setExpanded(open) {
+    bar.dataset.expanded = open; grow.setAttribute("aria-expanded", open);
   }
   function updateGhost() {
     const v = input.value, atEnd = input.selectionStart === v.length && input.selectionEnd === v.length;
-    ghostRest = document.activeElement === input && atEnd && active < 0 && v.trim() ? completion(v) : "";
+    // Con el texto desplazado el gris quedaría fuera de vista: no se ofrece a ciegas.
+    const clipped = bar.dataset.expanded !== "true" && input.scrollWidth > input.clientWidth + 1;
+    ghostRest = document.activeElement === input && atEnd && active < 0 && v.trim() && !clipped ? completion(v) : "";
     ghostRest = ghostRest.slice(0, Math.max(0, input.maxLength - v.length));
     ghost.innerHTML = ghostRest ? `<span class="typed">${esc(v)}</span>${esc(ghostRest)}` : "";
     sizeInput();
@@ -775,13 +859,14 @@ function mount(root, data) {
     ghost.style.top = `${field.top - box.top - bar.clientTop}px`;
     ghost.style.width = `${field.width - scrollbar}px`; ghost.style.height = `${input.clientHeight}px`;
     // El espejo mide el texto completo, incluido el gris, con el mismo ancho y límite.
-    if (ghostRest) {
+    if (ghostRest && bar.dataset.expanded === "true") {
       ghost.style.height = "auto";
       input.style.height = `${Math.min(138, Math.max(input.scrollHeight, ghost.scrollHeight))}px`;
       ghost.style.height = `${input.clientHeight}px`;
     }
-    ghost.scrollTop = input.scrollTop;
+    syncGhostScroll();
   }
+  function syncGhostScroll() { ghost.scrollTop = input.scrollTop; ghost.scrollLeft = input.scrollLeft; }
   function acceptGhost() {
     editInput(ghostRest, input.value.length, input.value.length);
     syncClear(); showSuggest(input.value); updateGhost(); schedule();
@@ -825,22 +910,28 @@ function mount(root, data) {
     const room = input.maxLength - (input.value.length - (input.selectionEnd - input.selectionStart));
     editInput(text.replace(/\r\n|[\r\n]/g, " ").slice(0, Math.max(0, room)), input.selectionStart, input.selectionEnd);
   });
-  on(input, "scroll", () => { ghost.scrollTop = input.scrollTop; });
+  on(input, "scroll", syncGhostScroll);
+  // Con el puntero el foco vuelve al campo; con teclado se queda en el botón (aria-expanded avisa del cambio).
+  on(grow, "click", (e) => { setExpanded(bar.dataset.expanded !== "true"); updateGhost(); if (e.detail) input.focus(); });
   on(input, "select", updateGhost);
   on(input, "keyup", updateGhost);
   on(input, "click", updateGhost);
   on(input, "focus", updateGhost);
   let blurTimer;
   on(input, "blur", () => { clearTimeout(blurTimer); blurTimer = setTimeout(() => { updateGhost(); if (!moving && !bar.contains(document.activeElement)) hideSuggest(); }, 0); });
-  on(clear, "click", () => { editInput(""); syncClear(); hideSuggest(); input.focus(); search(); updateGhost(); });
-  // Ejemplos de inicio: tres preguntas reales de FiQA (train), distintas en cada visita.
-  const pool = SUGG.filter((s) => s.length >= 18 && s.length <= 52 && s.endsWith("?"));
-  if (pool.length >= 3) {
+  on(clear, "click", () => { editInput(""); syncClear(); hideSuggest(); input.focus(); search(); updateGhost(); shuffleExamples(); });
+  // Ejemplos y placeholder: preguntas cortas reales de FiQA (train), nuevas cada vez que se
+  // vuelve a mostrar el inicio o Comparar vacío (montar, logo, ×, cambio de vista).
+  const pool = SUGG.filter((s) => s.length >= 14 && s.length <= EXAMPLE_MAX && s.endsWith("?"));
+  function shuffleExamples() {
+    if (pool.length < 4) return;
     const picks = new Set();
-    while (picks.size < 3) picks.add(pool[Math.floor(Math.random() * pool.length)]);
-    const chosen = [...picks];
-    root.querySelectorAll(".example span").forEach((span, i) => { span.textContent = chosen[i]; });
+    while (picks.size < 4) picks.add(pool[Math.floor(Math.random() * pool.length)]);
+    const [placeholder, ...chosen] = picks;
+    input.placeholder = placeholder;
+    root.querySelectorAll(".example").forEach((b, i) => { b.querySelector("span").textContent = chosen[i]; b.title = chosen[i]; });
   }
+  shuffleExamples();
   root.querySelectorAll(".example").forEach((b) => on(b, "click", () => { editInput(b.textContent.trim()); syncClear(); commitSearch(); input.focus(); }));
   root.querySelectorAll("[data-logo]").forEach((a) => on(a, "click", (e) => { e.preventDefault(); hop(); state.route = "home"; setView("buscar"); clear.click(); }));
 
@@ -855,7 +946,7 @@ function mount(root, data) {
     if (open) {
       hideSuggest();
       suppressMenuFocusTip = true;
-      (menu.querySelector('[aria-checked="true"]') || menu.querySelector(".opt")).focus({ preventScroll: true });
+      (state.view === "comparar" ? menu.querySelector('[data-kval][aria-pressed="true"]') : menu.querySelector('[aria-checked="true"]') || menu.querySelector(".opt")).focus({ preventScroll: true });
       suppressMenuFocusTip = false;
       // Si el menú no cabe bajo la barra (p. ej. en el inicio con la ventana baja), se
       // desplaza la página lo justo para verlo entero en vez de dejarlo cortado.
@@ -865,10 +956,11 @@ function mount(root, data) {
     }
   }
   function syncControls() {
-    root.querySelector("[data-model-name]").textContent = MODELS.find((m) => m.id === state.model).name;
+    const compare = state.view === "comparar";  // allí corren los cuatro modelos: el menú solo ajusta k y Porter
+    root.querySelector("[data-model-name]").textContent = compare ? "Ajustes" : MODELS.find((m) => m.id === state.model).name;
     menu.querySelectorAll("[data-model]").forEach((b) => b.setAttribute("aria-checked", b.dataset.model === state.model));
     menu.querySelectorAll("[data-kval]").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.kval === state.k));
-    const dense = state.model === "dense";
+    const dense = state.model === "dense" && !compare;
     sw.disabled = dense; sw.setAttribute("aria-checked", state.stem && !dense);
     root.querySelector("[data-stem-row]").setAttribute("aria-disabled", dense);
     gsw.setAttribute("aria-checked", state.graph); root.dataset.graph = state.graph ? "on" : "off";
@@ -887,7 +979,7 @@ function mount(root, data) {
     const opts = [...menu.querySelectorAll(".opt")], i = opts.indexOf(document.activeElement);
     if (e.key === "ArrowDown") { e.preventDefault(); opts[(i + 1) % opts.length].focus(); }
     if (e.key === "ArrowUp") { e.preventDefault(); opts[(i - 1 + opts.length) % opts.length].focus(); }
-    if (/^[1-4]$/.test(e.key)) { e.preventDefault(); setModel(MODELS[+e.key - 1].id); openMenu(false); input.focus(); }
+    if (/^[1-4]$/.test(e.key) && state.view !== "comparar") { e.preventDefault(); setModel(MODELS[+e.key - 1].id); openMenu(false); input.focus(); }
     if (e.key === "Escape") { openMenu(false); chip.focus(); }
   });
   on(document, "pointerdown", (e) => { if (!menu.hidden && !menu.contains(e.target) && !chip.contains(e.target)) openMenu(false); });
@@ -897,9 +989,31 @@ function mount(root, data) {
     else if (e.key === "/" && !typing) { e.preventDefault(); input.focus(); }
   });
 
+  // Métricas: los campos de qid de Streamlit (selector y filtro) solo admiten dígitos,
+  // al teclear, soltar o pegar; del pegado se insertan solo los dígitos.
+  const qidField = (el) => el?.matches?.(".st-key-metrics_qid input, .st-key-metrics_qid_filter input") ? el : null;
+  on(document, "focusin", (e) => { const el = qidField(e.target); if (el) { el.inputMode = "numeric"; el.maxLength = QID_MAX; } });
+  on(document, "beforeinput", (e) => {
+    const text = e.data ?? e.dataTransfer?.getData("text/plain");
+    if (qidField(e.target) && e.inputType !== "insertFromPaste" && text && /\D/.test(text)) e.preventDefault();
+  }, { capture: true });
+  on(document, "paste", (e) => {
+    const el = qidField(e.target), text = e.clipboardData?.getData("text/plain");
+    if (!el || text === undefined) return;
+    e.preventDefault();
+    const room = QID_MAX - (el.value.length - (el.selectionEnd - el.selectionStart));
+    const digits = text.replace(/\D/g, "").slice(0, Math.max(0, room));
+    if (!digits || document.execCommand("insertText", false, digits)) return;
+    // Respaldo: React de Streamlit solo ve el valor si pasa por el setter nativo y un evento input.
+    const next = el.value.slice(0, el.selectionStart) + digits + el.value.slice(el.selectionEnd);
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(el, next);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }, { capture: true });
+
   // ---------- Vistas: Buscar / Comparar / Métricas (cada una con su ruta) ----------
   function markView() {
     root.dataset.view = state.view;
+    syncControls();
     placeExamples();
     root.querySelectorAll("[data-view-link]").forEach((a) => {
       if (a.dataset.viewLink === state.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
@@ -909,6 +1023,7 @@ function mount(root, data) {
     if (state.view === view) return;
     state.view = view;
     markView(); hop();
+    if (!state.q.trim()) shuffleExamples();
     setMode(isHome() ? "home" : "results");
     // Si la consulta cambió en otra vista y aún no se buscó, Buscar no muestra la lista
     // anterior como vigente: la marca como desactualizada mientras llega la respuesta.
@@ -929,7 +1044,7 @@ function mount(root, data) {
     root.dataset.query = state.q.trim() ? "on" : "off"; state.searchedKey = searchKey();
     setMode(isHome() ? "home" : "results");
     if (state.q.trim()) { bar.dataset.busy = "true"; renderSkeleton(); }
-    else { list.innerHTML = ""; status.innerHTML = ""; pager.hidden = true; dym.hidden = true; showGraph(null); }
+    else { list.innerHTML = ""; status.innerHTML = ""; pager.hidden = true; dym.hidden = true; showGraph(null); shuffleExamples(); }
   }
 
   // ---------- Estado inicial (también tras volver a montar) ----------

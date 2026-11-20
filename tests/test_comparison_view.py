@@ -1,5 +1,7 @@
 """Solapamiento y vista de comparación lado a lado (#14), sin motor ni red."""
 
+import html
+import re
 import time
 from pathlib import Path
 
@@ -14,8 +16,10 @@ from app.overlap import (
     overlaps,
     pair_overlap,
 )
+from app.ui import highlight_html, highlight_spans
 from app.views import comparison
-from ris.engine import MODELS, Hit, ModelUnavailableError, SearchResponse
+from ris.engine import MODELS, Hit, ModelUnavailableError, SearchEngine, SearchResponse
+from ris.preprocessing import preprocess
 
 # ------------------------------------------------------------------ solapamiento
 
@@ -104,21 +108,27 @@ def test_snippet_cuts_on_whole_words_and_flattens_lines():
     assert comparison.snippet("", 20) == ""
 
 
-def test_coverage_badge_levels():
-    names = comparison.MODEL_NAMES
-    assert comparison.coverage_badge(("bm25",), "bm25", 4)[:2] == ("Solo aquí", "solo")
-    text, level, help_text = comparison.coverage_badge(("bm25", "dense"), "bm25", 4)
-    assert (text, level) == ("En 2 de 4", "varios")
-    assert names["dense"] in help_text and names["bm25"] not in help_text
-    assert comparison.coverage_badge(tuple(MODELS), "bm25", 4)[:2] == ("En 4 de 4", "todos")
-    assert comparison.coverage_badge(("bm25",), "bm25", 1) is None
-
-
 def test_formatting():
     assert comparison.format_ms(3.456) == "3.5 ms"
     assert comparison.format_ms(148.6) == "149 ms"
-    assert comparison.format_percent(None) == "—"
-    assert comparison.format_percent(66.66) == "67 %"
+
+
+def test_highlight_html_marks_query_words_and_escapes_the_rest():
+    text = "Index <b>funds</b> 🚀 y fondos de índice: cheap Funds."
+    marked = highlight_html(text, ("fund",), stem=True)
+    assert marked == ("Index &lt;b&gt;<mark>funds</mark>&lt;/b&gt; 🚀 y fondos de índice: "
+                      "cheap <mark>Funds</mark>.")
+    assert highlight_html(text, (), stem=False) == html.escape(text)
+
+
+def test_highlight_html_marks_the_same_words_as_the_utf16_spans():
+    text = "😀 Índice: invest, investing 🚀 and investment café"
+    matched = ("invest",)
+    spans = highlight_spans(text, matched, stem=True)
+    units = text.encode("utf-16-le")
+    expected = [units[2 * a:2 * b].decode("utf-16-le") for a, b in spans]
+    marked = re.findall(r"<mark>(.*?)</mark>", highlight_html(text, matched, stem=True))
+    assert marked == expected and len(marked) >= 2
 
 
 # --------------------------------------------------------------- motor simulado
@@ -145,6 +155,12 @@ class FakeEngine:
             for rank, doc_id in enumerate(self.rankings.get(model, [])[:k], start=1)
         )
         return SearchResponse(model=model, stem=stem, query=query, k=k, hits=hits, elapsed_ms=7.0)
+
+    query_terms = staticmethod(SearchEngine.query_terms)
+
+    def matched_terms(self, doc_id, terms, *, stem=False):
+        present = set(preprocess(self.texts.get(doc_id, ""), stem=stem))
+        return tuple(term for term in terms if term in present)
 
 
 def make_context(engine, query="index funds", k=5):
@@ -244,54 +260,93 @@ def test_empty_query_draws_nothing_and_leaves_the_empty_state_to_the_bar():
         assert at.info == [] and at.header == [] and at.get("html") == []
 
 
-def test_results_have_no_page_title_and_one_short_context_line():
+def test_results_have_no_page_title_and_a_minimal_context_line():
     at = _view(FULL)
     page = _html(at)
     assert at.header == [] and at.caption == [] and at.info == []
     assert "Comparación</" not in page
-    assert '<p class="cmp-context"><b>Top-5</b> por modelo · Porter desactivado</p>' in page
-    assert "Porter activado" in _html(_view(FULL, stem=True))
-    # Las explicaciones largas quedan en una ayuda desplegable, no en párrafos visibles
-    help_box = page.split('<details class="cmp-help">', 1)[1].split("</details>", 1)[0]
-    assert "<summary>" in help_box and "no se comparan" in help_box
-    assert "menor de los" in help_box and "5 si ambos están completos" in help_box
-    assert "Cobertura" in help_box
+    assert '<span class="cmp-pill">Top 5</span>' in page and ">Porter<" not in page
+    assert '<span class="cmp-pill" data-kind="porter">Porter</span>' in _html(_view(FULL, stem=True))
+    # Ayuda: un botón «?» con el tooltip de la página, sin desplegable
+    assert "<details class=\"cmp-help\"" not in page and "Cómo leerla" not in page
+    button = page.split('<button type="button" class="cmp-help"', 1)[1].split("</button>", 1)[0]
+    assert 'aria-label="Cómo leer la comparación"' in button and ">?" in button
+    assert "documento compartido" in button and "Ver en" in button
+    assert "no se comparan" in button
+    # Sin copy viejo: ni rayas largas ni frases de carga o de resumen por columna
+    visible = page.split("</style>", 1)[1]
+    for gone in ("—", "Buscando con los", "solo aquí", "Solo aquí", "resultados</p>", "media "):
+        assert gone not in visible
     # Con la vista pintada, la línea «Buscando…» del componente se oculta
     assert ".jab .cmp-pending { display: none !important; }" in page
 
 
-def test_full_rankings_render_four_columns_and_counts():
-    at = _view(FULL)
-    assert not at.exception
-    page = _html(at)
+def test_full_rankings_render_a_counted_segmented_filter_and_neutral_positions():
+    page = _html(_view(FULL))
     assert page.count('class="cmp-col"') == 4
-    for name in comparison.MODEL_NAMES.values():
-        assert name in page
     assert page.count('<li class="cmp-doc"') == 20
-    # jaccard∩tfidf = {1,2}: 2 / 5, 40 %; seis pares en dos grupos de tres
-    assert '<span class="cmp-count"><b>2</b> / 5</span><span class="cmp-pct">40 %</span>' in page
-    assert page.count('<li class="cmp-pair"') == 6 and page.count('class="cmp-group"') == 2
-    assert 'title="Jaccard ∩ TF-IDF: 2 de 5 documentos en común, 40 %"' in page
-    assert "media 40 %" in page  # léxicos: (40 + 40 + 40) / 3
-    # el documento 1 sale en los cuatro modelos; el 14 solo en Embeddings
-    assert page.count("En 4 de 4") >= 4
-    assert "Solo aquí" in page
-    assert "Texto del documento 1" in page and "**" not in page
+    visible = page.split("</style>", 1)[1]
+    for removed in ('data-heat', 'cmp-matrix', 'cmp-scale', 'cmp-chip', 'cmp-consensus', 'coinciden en'):
+        assert removed not in page
+    assert 'data-only="false" aria-pressed="true">Todos</button>' in visible
+    assert 'data-only="true" aria-pressed="false">Coincidencias (4)</button>' in visible
+    assert "Texto del documento 1" in page and "**" not in visible
 
 
-def test_short_and_empty_rankings_do_not_break_the_view():
-    rankings = {"jaccard": [], "tfidf": ["1", "2"], "bm25": ["1", "2", "3", "4", "5"], "dense": ["2"]}
-    at = _view(rankings)
-    assert not at.exception
-    page = _html(at)
-    assert "Sin resultados para esta consulta." in page
-    assert "2 de 5 resultados" in page and "1 de 5 resultados" in page
-    # denominador efectivo: tfidf (2) frente a bm25 (5) comparte 2 de 2
-    assert '<span class="cmp-count"><b>2</b> / 2</span><span class="cmp-pct">100 %</span>' in page
-    # pares con Jaccard vacío: «—», sin porcentaje y con la explicación en el título
-    assert page.count('<li class="cmp-pair" data-empty="true"') == 3
-    assert '<span class="cmp-count">—</span><span class="cmp-pct">—</span>' in page
-    assert "sin documentos que comparar" in page
+def test_jump_button_points_to_the_next_column_and_wraps_around():
+    page = _html(_view(FULL))
+    tfidf = page.split('<section class="cmp-col">')[2]
+    shared = tfidf.split('data-doc-id="1"', 1)[1].split('</li>', 1)[0]
+    assert 'data-jump-model="bm25"' in shared and "Ver en BM25 #1" in shared
+    assert 'data-tip="También en Jaccard #1, BM25 #1, Embeddings #1"' in shared
+    assert 'TF-IDF #' not in shared
+    dense = page.split('<section class="cmp-col">')[4]
+    wrapped = dense.split('data-doc-id="1"', 1)[1].split('</li>', 1)[0]
+    assert 'data-jump-model="jaccard"' in wrapped and "Ver en Jaccard #1" in wrapped
+    unique = tfidf.split('data-doc-id="8"', 1)[1].split('</li>', 1)[0]
+    assert 'cmp-jump' not in unique and 'data-model="tfidf"' in unique
+    assert "tabindex" not in unique and "tabindex=0" in shared
+
+
+def test_short_empty_and_unavailable_rankings_use_only_shown_documents():
+    rankings = {"jaccard": [], "tfidf": ["1", "2"], "bm25": ["1", "2", "3"], "dense": ["2"]}
+    page = _html(_view(rankings, k=1, errors={"dense": ModelUnavailableError("Unavailable")}))
+    assert "Sin resultados para esta consulta." in page and "Unavailable" in page
+    assert "Coincidencias (1)</button>" in page
+
+
+def test_disjoint_rankings_show_no_toggle_or_tags():
+    page = _html(_view({"tfidf": ["a"], "bm25": ["b"]}))
+    visible = page.split("</style>", 1)[1]
+    assert 'cmp-seg' not in visible and 'cmp-jump' not in visible
+
+
+def test_tags_escape_ids_and_model_names(monkeypatch):
+    attack = '<img src=x onerror="alert(1)">'
+    monkeypatch.setitem(comparison.MODEL_NAMES, "bm25", attack)
+    page = _html(_view({"tfidf": [attack], "bm25": [attack]}))
+    assert attack not in page
+    assert f'Ver en {html.escape(attack)} #1' in page
+    assert f'data-tip="También en {html.escape(attack)} #1"' in page
+
+
+def test_many_shared_documents_are_only_counted():
+    page = _html(_view({model: [str(i) for i in range(50)] for model in MODELS}, k=50))
+    assert "Coincidencias (50)</button>" in page
+    assert 'prefers-reduced-motion: reduce' in comparison.CSS
+
+
+def test_classical_models_highlight_query_words_and_embeddings_does_not():
+    texts = {"1": "Index funds 🚀 and Índice: <low> fees for funds. " + "filler " * 60,
+             "11": "Index funds again"}
+    page = _html(_view(FULL, texts=texts))
+    jaccard, tfidf, bm25, dense = page.split('<section class="cmp-col">')[1:]
+    for column in (jaccard, tfidf, bm25):
+        assert "<mark>Index</mark> <mark>funds</mark> 🚀 and Índice: &lt;low&gt;" in column
+        # el texto completo de «Ver más» también resalta
+        assert "<summary><span class=\"cmp-more\">Ver más</span>" in column
+        assert "fees for <mark>funds</mark>." in column.split("<details>", 1)[1]
+    assert "<mark>" not in dense
 
 
 def test_no_results_in_any_model_shows_a_notice():
@@ -311,16 +366,6 @@ def test_corpus_text_ids_and_errors_are_escaped():
     page = _html(at)
     assert attack not in page and "<script>x" not in page and "<b>1</b>" not in page
     assert "&lt;img src=x" in page and "&lt;script&gt;x" in page and "&lt;b&gt;1" in page
-
-
-def test_unavailable_model_is_reported_and_the_rest_still_show():
-    at = _view(FULL, errors={"dense": ModelUnavailableError("Embeddings no disponible")})
-    assert not at.exception
-    page = _html(at)
-    assert "Embeddings no disponible" in page and "No disponible" in page
-    assert page.count('<li class="cmp-doc"') == 15
-    assert "En 3 de 3" in page
-    assert "Cobertura:" in page and "En 2 de 3" in page  # la leyenda usa los 3 disponibles
 
 
 def test_view_follows_the_agreed_contract():

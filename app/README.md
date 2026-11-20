@@ -19,7 +19,7 @@ Community Cloud instala `app/requirements.txt`, con las dependencias de ejecuci�
 | `app/ui.py` | Registra el componente, valida lo que envía el navegador y arma la respuesta. |
 | `app/streamlit_app.py` | Página, caché del motor y vistas de los compañeros. |
 | `app/context.py` | `AppContext`: lo que reciben las vistas. |
-| `app/views/comparison.py` | Comparar: los cuatro rankings lado a lado, etiquetas de cobertura y panel de solapamiento (#14). |
+| `app/views/comparison.py` | Comparar: los cuatro rankings lado a lado, botón «Ver en…» por tarjeta, resalte cruzado y selector «Todos | Coincidencias» (#14). |
 | `app/overlap.py` | Solapamiento entre rankings (funciones puras, sin Streamlit; #14). |
 | `app/views/metrics.py` | Métricas guardadas: resumen, comparación global, detalle por qid y procedencia (#15). |
 | `app/metrics_data.py` | Lectura y validación completa del par CSV/JSON, sin usar el motor. |
@@ -46,14 +46,14 @@ El mismo estado vive en la URL, para recargar, compartir o usar atrás y adelant
 
 Parámetros: `q`, `model` (`jaccard`, `tfidf`, `bm25` o `embeddings`), `results` (5, 10, 20 o 50), `stemming` (`true`/`false`; no aparece con Embeddings) y `graph` (`true`/`false`). En el inicio solo aparecen los que difieren de lo predeterminado. Ejemplo: `/search?q=index+funds&model=bm25&results=10&stemming=false&graph=true`.
 
-Cada ruta es una página de `st.navigation` (oculta) sin contenido propio; la interfaz se dibuja en `main()`. Cambiar de página con `st.switch_page` vuelve a montar el componente (comprobado en el navegador: se pierden foco y texto a medio escribir), por eso escribir nunca cambia de página: el estado lleva `route` (`home` o `search`) y solo una acción explícita lo pasa a `search`; el logo vuelve a `home`. En `/search`, borrar la consulta deja la vista de resultados vacía en vez de volver al inicio. Tras Enter, el campo recupera el foco al volver a montarse.
+Cada ruta es una página de `st.navigation` (oculta) sin contenido propio; la interfaz se dibuja en `main()`. Cambiar de página con `st.switch_page` vuelve a montar el componente (comprobado en el navegador: se pierden foco y texto a medio escribir), por eso escribir nunca cambia de página: el estado lleva `route` (`home` o `search`) y solo una acción explícita lo pasa a `search`; el logo vuelve a `home`. Buscar con la consulta vacía muestra siempre el inicio, también en `/search` (antes quedaba la página en blanco). Tras Enter, el campo recupera el foco al volver a montarse.
 
 `resolve_state` (en `app/ui.py`) decide qué estado manda en cada ejecución: si el navegador envió un `seq` mayor, el del navegador, y Python mueve la URL con `st.switch_page` o `st.query_params`; si la URL cambió sin que lo hiciera la app (recargar, atrás, un enlace), la URL, con un `seq` nuevo y `nav` + 1 para que el componente la adopte. Solo cuenta como cambio una URL distinta de la vista en la ejecución anterior: una ejecución pedida antes de procesar un `switch_page` trae la URL vieja y no debe deshacer lo último que hizo el usuario.
 
 ## Escritura asistida
 
-- **Campo como en Google:** es un `textarea` de una línea que, con el foco, crece hasta mostrar toda la consulta (hasta 5 líneas; luego desplaza) y sin foco vuelve a una línea. Enter busca; los saltos de línea al escribir o pegar se convierten en espacios; máximo 300 caracteres. Borrar con ×, aceptar el gris, pegar o elegir una sugerencia pasan por el historial nativo de deshacer (`editInput` con `execCommand` y respaldo), así que Ctrl+Z y Ctrl+Y funcionan.
-- **Autocompletado en gris:** mientras se escribe, aparece en gris lo que falta de la primera consulta de FiQA (train) que empieza igual; si no hay, se completa la última palabra con las 12 000 más frecuentes del índice (`SearchEngine.top_terms`). Se dibuja en un espejo superpuesto con las mismas medidas que el campo, así queda alineado también con varias líneas, y el campo crece para mostrar entera la sugerencia. Si lo escrito está en minúsculas, el resto también («he» → «heloc vs. …», no «heLOC»). Tab o flecha derecha lo aceptan.
+- **Campo como en Google:** es un `textarea` de una línea fija; el texto largo se desplaza en horizontal. Si no cabe, aparece un botón para ampliarlo hasta 138 px (luego desplaza); se contrae al pulsarlo otra vez, al caber o al vaciar. Enfocar no cambia la altura. Enter busca; los saltos de línea al escribir o pegar se convierten en espacios; máximo 300 caracteres. Borrar con ×, aceptar el gris, pegar o elegir una sugerencia pasan por el historial nativo de deshacer (`editInput` con `execCommand` y respaldo), así que Ctrl+Z y Ctrl+Y funcionan.
+- **Autocompletado en gris:** mientras se escribe, aparece en gris lo que falta de la primera consulta de FiQA (train) que empieza igual; si no hay, se completa la última palabra con las 12 000 más frecuentes del índice (`SearchEngine.top_terms`). Se dibuja en un espejo superpuesto con las mismas medidas que el campo, y sigue su desplazamiento horizontal y vertical, así queda alineado en una línea o ampliado. Si lo escrito está en minúsculas, el resto también («he» → «heloc vs. …», no «heLOC»). Tab o flecha derecha lo aceptan.
 - **Quizás quisiste decir:** `SearchEngine.correct_query` corrige palabras en minúscula que no están en el índice sin Porter, o que están en menos de 10 documentos cuando hay una forma parecida al menos 20 veces más frecuente (FiQA tiene erratas como «morgage»). Puntúa ln(df) − 2 × distancia de edición (hasta 1 en palabras de hasta 7 letras, 2 en las más largas) y completa palabras empezadas («diabet» → diabetes). No toca palabras con mayúsculas (siglas y nombres propios). Medido sobre las 648 consultas de test: sugiere en 5 (3 erratas reales y 2 discutibles: «excl» → excel, «dishonour» → dishonor).
 
 ## Grafo 3D de la consulta (opcional)
@@ -93,25 +93,24 @@ Cada vista es un módulo de `app/views/` con `render(context: AppContext) -> Non
 ## Métricas (#15)
 
 Abra **Métricas**; funciona sin consulta libre. El selector **Sin Porter / Con Porter /
-Comparar** y los cuatro botones múltiples **Métodos visibles** afectan al gráfico, las tablas globales,
+Comparar** y los cuatro botones múltiples **Métodos** afectan al gráfico, las tablas globales,
 el detalle por qid y el listado de consultas. Con todos los métodos hay cuatro
 configuraciones en cada variante individual y siete al comparar. Embeddings se
-mantiene una sola vez como referencia «No aplica»: no existe su versión Porter.
+mantiene una sola vez como referencia «No usa»: no existe su versión Porter.
 Los filtros se conservan al cambiar de vista durante la sesión. **Restablecer**
 recupera Comparar, los cuatro métodos, MAP@1000 y el primer qid. Cada método
 se activa o desactiva con un clic; los botones pueden pasar a varias líneas en móvil.
 Al no haber un desplegable, seleccionar los cuatro no deja una lista vacía abierta.
 Si no hay métodos seleccionados, **Mostrar todos los métodos** recupera únicamente
-ese filtro. **Limpiar filtro de consultas** borra solo la búsqueda de qids.
+ese filtro. **Limpiar filtro** borra solo la búsqueda de qids.
 
 Elija P@k, R@k o MAP@1000 para el gráfico global, o un **qid** para ver P@k,
 R@k y **AP@1000** de una consulta. Las medias globales incluyen todos los qids
 y se mantienen al cambiar de consulta o filtrar el listado. Las opciones del
 buscador son independientes de la evaluación.
 
-No hay ayudas repartidas junto a cada control o encabezado: **Cómo interpretar
-estos resultados** reúne las explicaciones largas. Las tablas se ordenan pulsando sus
-encabezados, usan seis decimales y resaltan en negrita los máximos positivos visibles
+No hay ayudas repartidas junto a cada control o encabezado: **Definiciones** reúne las explicaciones. Las tablas se ordenan pulsando sus
+encabezados, usan cuatro decimales (seis en el detalle por consulta y en el efecto de Porter) y resaltan en negrita los máximos positivos visibles
 (con empates). Los máximos se determinan antes del redondeo; las columnas
 completamente a cero no se resaltan. Junto al gráfico se resume el máximo de la
 métrica elegida entre las configuraciones visibles; el detalle por consulta agrupa
@@ -130,8 +129,8 @@ el mecanismo descrito en **Rutas y URL**.
 Los cortes, split, profundidad y conteos proceden del JSON validado. El esquema 1
 admite test, AP/MAP@1000 y cualquier k entero positivo hasta `depth` (que debe ser
 al menos 1000); las etiquetas de P/R usan ese k. El gráfico conserva la escala
-[0,1] y distingue las variantes con etiquetas, sin depender del color. Las tablas
-muestran seis decimales; **Procedencia y configuración** permite inspeccionar
+[0,1] y distingue las variantes con etiquetas (Sin/Con), sin depender del color. Las tablas
+muestran cuatro o seis decimales según su uso; **Procedencia** permite inspeccionar
 conteos, parámetros, revisiones, hashes, versiones y descargar ambos originales
 con todos sus decimales.
 
@@ -161,8 +160,13 @@ Streamlit; no necesitan red, corpus ni modelos.
 
 Abra **Comparar** en la navegación de jab: usa la consulta, el top-n y Porter de la barra (el modelo elegido no cambia nada, siempre salen los cuatro). Sin consulta no busca y ofrece los tres ejemplos del inicio. Cada ejecución repite las cuatro búsquedas con `context.search(m, skip_empty=True)`, así que los documentos son los mismos que en Buscar (sin documentos vacíos y completando hasta k); si un modelo falla (p. ej. Embeddings aún cargando) su columna lo explica y las demás se muestran.
 
-- **Cuatro columnas** (dos en pantallas medianas y una en teléfono): modelo, tiempo de la búsqueda, y por documento posición, `doc_id`, score propio del modelo, fragmento de 200 caracteres (texto limpiado con `app.ui.clean_text`) y «Ver texto completo». Los scores no son comparables entre modelos y no se dibujan como barras.
-- **Etiquetas de cobertura:** «En n de 4» (relleno ciruela si salió en los cuatro, suave si en 2 o 3) y «Solo aquí» (borde gris) para lo que recuperó un único modelo; los puntos repiten n y el texto de ayuda nombra a los otros modelos.
-- **Solapamiento** (`app/overlap.py`, funciones puras): para cada par, la intersección de `doc_id` de sus rankings. **Denominador: el menor de los dos tamaños**, es decir, el máximo que podrían coincidir; vale k con rankings completos y no castiga a un modelo clásico que devolvió menos de k documentos. Si un ranking está vacío el denominador es 0 y se muestra «—». Seis filas por pares, en dos grupos (léxicos entre sí, léxicos frente a Embeddings) con la media de cada grupo.
+- **Cuatro columnas** (dos en pantallas medianas y una en teléfono): modelo, tipo y tiempo; por documento, puesto, `doc_id`, score propio del modelo, fragmento de 200 caracteres (texto limpiado con `app.ui.clean_text`) y «Ver más» / «Ver menos». Solo si un modelo devolvió menos de k se indica «n de k». Los scores no son comparables entre modelos.
+- **Resaltado:** Jaccard, TF-IDF y BM25 marcan con `<mark>` las palabras de la consulta que coinciden, igual que Buscar (`engine.query_terms`, `engine.matched_terms` y `app.ui.highlight_html`, con la misma configuración de Porter); Embeddings no resalta.
+- **Coincidencias:** un documento compartido es el que aparece en dos o más modelos dentro del Top K. Arriba solo hay «Top K», la ayuda «?» y un selector «Todos | Coincidencias (N)» (N = documentos compartidos; no aparece si no hay ninguno). «Coincidencias» oculta las tarjetas de un solo modelo. El filtro vive en `window.__jabCmp`, así que no se apaga al cambiar Top K o Porter ni al repintar la vista.
+- **«Ver en BM25 #1»:** cada tarjeta compartida termina con un botón que lleva a la siguiente columna donde sale ese documento (en orden Jaccard, TF-IDF, BM25, Embeddings, dando la vuelta); enfoca y centra esa tarjeta y fija el resalte en las demás. Los otros modelos y puestos van en el `data-tip` del botón. Las tarjetas únicas no llevan botón.
+- **Resalte cruzado** (`mountComparison` en `app/frontend/app.js`, delegado en `document` porque `st.html` no ejecuta scripts): pasar el puntero o el foco por una tarjeta compartida pinta de crema (`--ochre-soft`) ese mismo `doc_id` en las cuatro columnas; nada se atenúa. El ratón no fija nada al hacer clic en la tarjeta; el dedo fija con un toque y lo suelta con otro; el botón «Ver en…» fija con cualquier puntero. Escape o un clic fuera lo limpian. Las tarjetas únicas no son enfocables. Sin mapa de calor, sin leyenda y sin celeste (tiempos y «Top K» en gris de superficie).
+- **Menú de ajustes en Comparar:** corren los cuatro modelos, así que el chip dice «Ajustes» y el menú solo muestra Resultados y Porter (sin Modelo ni Grafo 3D); cambiar el modelo ya no recarga la vista porque no hay modelo que cambiar.
+- **Solapamiento** (`app/overlap.py`, funciones puras): ya no se dibuja en la vista; `appearances` sigue alimentando el botón «Ver en…» y el selector, y el resto (`overlaps`, `pair_overlap`, `mean_percent`, `exclusive_counts`) solo lo usan las pruebas.
+- **Ayuda:** un botón «?» con el tooltip `data-tip` de la página.
 - **Estilo:** tarjetas y colores con los tokens de `styles.css` (`:root`) con la paleta ciruela como respaldo; el CSS de la vista va acotado a `.cmp` y solo ensancha `.st-key-jab_views` mientras se muestra Comparar.
 - Pruebas: `tests/test_comparison_view.py` (el `tests/test_comparison.py` existente es de #12).
