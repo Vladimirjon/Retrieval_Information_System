@@ -12,6 +12,14 @@ Actualizado: martes 17 de noviembre de 2026 (#1–#13, #15 y #16 integradas en `
 - **Probado localmente** (Windows, Python 3.12.10): `pytest -q` pasa 479 pruebas y 5 se omiten (antes de la rama: 457 y 5); `ruff check .` sin errores; `git diff --check` sin errores. El motor de las pruebas de la vista es simulado.
 - **Comprobado en navegador** (app local, puerto 8519, artefactos reales, revisión visual hecha por un subagente de navegador, capturas en su carpeta de evidencias): con «how to invest in index funds» y top-10 se ven el panel de solapamiento (p. ej. Jaccard∩TF-IDF 3/10, TF-IDF∩BM25 5/10, BM25∩Embeddings 5/10), la leyenda y las cuatro columnas con tiempos; «Ver texto completo» despliega sin recargar; a 800 px pasan a 2 columnas y a 500 px a 1 sin desbordes; sin consulta aparece el aviso; con «xyzzyqwerty» los tres clásicos muestran «Sin resultados» y Embeddings sus 5 documentos con «Solo aquí». La primera búsqueda con Embeddings tardó 7 s (esperaba a que terminara de cargar MiniLM). Se corrigió la sangría de la lista (el estilo de Streamlit añadía 32 px a `ol`) y la leyenda, que no mostraba «En 3 de 4».
 - **Sin comprobar:** CI, despliegue en Community Cloud (el recorrido de Comparar allí sigue pendiente de #16), Safari/Firefox, lectores de pantalla y revisión cruzada de otro modelo. Falta abrir el PR (`Closes #14`) y la aprobación de @Vladimirjon.
+Actualizado el 19 de noviembre de 2026. `main` está en `66aea9d` e incluye el grafo 3D, las rutas y la escritura asistida del PR #41. El registro histórico conserva las comprobaciones de despliegue y los pendientes.
+
+## Informe técnico #17 (19 de noviembre)
+
+- La entrega parte de `main` en `66aea9d` (PR #41). Los datos de evaluación, el manifiesto y los aportes del informe coinciden con los de la revisión anterior. La vista Comparar se revisa en el PR #42.
+- La fuente editable y el PDF están en `docs/informe/`. El documento tiene las cuatro secciones exigidas y cinco páginas A4 sin carátula. La bibliografía incluye fuentes externas y el material facilitado por el profesor.
+- La auditoría local confirmó 4 536 filas de evaluación, siete configuraciones, 49 medias por grupo, las métricas de los dos casos y la correspondencia del texto y los enlaces con el PDF. Dos generaciones produjeron el mismo SHA-256. Se revisaron las cinco páginas y Ruff pasó.
+- En el PR #43 se verificó el ajuste de formato del informe. Queda pendiente la revisión de los aportes por Ismael y Vladimirjon.
 
 ## Grafo 3D, rutas y escritura asistida (17 de noviembre, rama `feat/13-grafo-3d-consulta`, sin commit)
 
