@@ -32,31 +32,22 @@ En la vista Buscar, `app/ui.py` llama a `SearchEngine.search(..., skip_empty=Tru
 
 El componente envía un único estado `request = {q, model, k, stem, graph, view, seq}`. Cada cambio sube `seq`, así ningún cambio se pierde aunque llegue mientras Python atiende otro. Python valida todo (modelo y vista en lista blanca, `k` en 5/10/20/50, consulta de 300 caracteres como máximo, `graph` solo si llega `true`), busca y responde con el mismo `seq` y una `key` de la búsqueda. La interfaz descarta respuestas de un `seq` viejo y no repinta si solo cambió la vista. Si detecta que Python atendió un estado anterior, lo reenvía una vez.
 
-## Dirección e historial
+## Rutas y URL
 
-Al buscar o cambiar entre Buscar, Comparar y Métricas, la barra de direcciones
-muestra solo la dirección base de la app. Atrás, Adelante y recargar recuperan
-la vista y las opciones de búsqueda desde el historial de esa pestaña.
-Para compartir un estado concreto, se puede copiar el enlace de la vista desde
-el menú contextual de su nombre en la barra de navegación.
-
-Los enlaces directos existentes siguen funcionando. La app lee la ruta y sus
-opciones al abrirlos y pasa a la dirección base:
+El mismo estado vive en la URL, para recargar, compartir o usar atrás y adelante:
 
 | Ruta | Vista |
 |---|---|
-| `/` | Inicio o resultados en vivo si el enlace incluye `q` |
+| `/` | Inicio; mientras se escribe, los resultados en vivo aparecen aquí (`/?q=…`) |
 | `/search` | Búsqueda confirmada (Enter, una sugerencia, un ejemplo o «Quizás quisiste decir») |
 | `/comparison` | Comparar (#14) |
 | `/metrics` | Métricas (#15) |
 
 Parámetros: `q`, `model` (`jaccard`, `tfidf`, `bm25` o `embeddings`), `results` (5, 10, 20 o 50), `stemming` (`true`/`false`; no aparece con Embeddings) y `graph` (`true`/`false`). En el inicio solo aparecen los que difieren de lo predeterminado. Ejemplo: `/search?q=index+funds&model=bm25&results=10&stemming=false&graph=true`.
 
-El buscador permanece montado al cambiar de vista. La interfaz añade una entrada
-al cambiar de vista o confirmar desde el inicio y actualiza la entrada actual
-al escribir o cambiar opciones. Borrar la consulta después de confirmarla deja
-vacía la vista de resultados. El logo vuelve al inicio. Python adopta las
-peticiones con un `seq` mayor para respetar el orden de las acciones.
+Cada ruta es una página de `st.navigation` (oculta) sin contenido propio; la interfaz se dibuja en `main()`. Cambiar de página con `st.switch_page` vuelve a montar el componente (comprobado en el navegador: se pierden foco y texto a medio escribir), por eso escribir nunca cambia de página: el estado lleva `route` (`home` o `search`) y solo una acción explícita lo pasa a `search`; el logo vuelve a `home`. En `/search`, borrar la consulta deja la vista de resultados vacía en vez de volver al inicio. Tras Enter, el campo recupera el foco al volver a montarse.
+
+`resolve_state` (en `app/ui.py`) decide qué estado manda en cada ejecución: si el navegador envió un `seq` mayor, el del navegador, y Python mueve la URL con `st.switch_page` o `st.query_params`; si la URL cambió sin que lo hiciera la app (recargar, atrás, un enlace), la URL, con un `seq` nuevo y `nav` + 1 para que el componente la adopte. Solo cuenta como cambio una URL distinta de la vista en la ejecución anterior: una ejecución pedida antes de procesar un `switch_page` trae la URL vieja y no debe deshacer lo último que hizo el usuario.
 
 ## Escritura asistida
 
@@ -100,62 +91,34 @@ Cada vista es un módulo de `app/views/` con `render(context: AppContext) -> Non
 
 ## Métricas (#15)
 
-Abra **Métricas**; funciona sin consulta libre. El selector **Sin Porter / Con Porter /
-Comparar** y los cuatro botones múltiples **Métodos visibles** afectan al gráfico, las tablas globales,
-el detalle por qid y el listado de consultas. Con todos los métodos hay cuatro
-configuraciones en cada variante individual y siete al comparar. Embeddings se
-mantiene una sola vez como referencia «No aplica»: no existe su versión Porter.
-Los filtros se conservan al cambiar de vista durante la sesión. **Restablecer filtros**
-recupera Comparar, los cuatro métodos, MAP@1000 y el primer qid. Cada método
-se activa o desactiva con un clic; los botones pueden pasar a varias líneas en móvil.
-Al no haber un desplegable, seleccionar los cuatro no deja una lista vacía abierta.
-Si no hay métodos seleccionados, **Mostrar todos los métodos** recupera únicamente
-ese filtro. **Limpiar filtro de consultas** borra solo la búsqueda de qids.
+Abra **Métricas** en la navegación de jab; funciona con la barra de búsqueda vacía.
+Los filtros **Sin Porter**, **Con Porter** y **Comparar** y los botones de métodos
+se aplican al gráfico, las tablas y el detalle. Con todos los métodos se muestran
+siete configuraciones al comparar, o cuatro por variante individual. Embeddings
+aparece una vez como «No aplica». **Restablecer filtros** recupera las opciones
+iniciales. Los filtros se conservan durante la sesión al cambiar de vista.
 
-La jerarquía es controles → cobertura → gráfico/tabla global → detalle por consulta.
-P@k y R@k globales son medias sobre todos los qids; MAP@1000 es la media de AP@1000.
-El detalle muestra **AP**, no MAP. Los filtros no recalculan ni modifican las medias.
-El buscador y sus opciones no filtran la evaluación.
+Elija P@k, R@k o MAP@1000 para el gráfico global, o un **qid** para ver P@k,
+R@k y **AP@1000** de una consulta. Las medias globales incluyen todos los qids
+y se mantienen al cambiar de consulta o filtrar el listado. Las opciones del
+buscador son independientes de la evaluación.
 
-Las ayudas junto a encabezados y controles son nativas de Streamlit: admiten cursor,
-foco del teclado y toque. Las columnas también explican sus métricas. **Cómo interpretar
-estos resultados** reúne las explicaciones largas. Las tablas se ordenan pulsando sus
-encabezados, usan seis decimales y resaltan en negrita los máximos positivos visibles
-(con empates). Los máximos se determinan antes del redondeo; las columnas
-completamente a cero no se resaltan. Junto al gráfico se resume el máximo de la
-métrica elegida entre las configuraciones visibles; el detalle por consulta agrupa
-selector, tabla y diferencias en un panel propio.
-El listado opcional **Explorar todas las consultas** permite filtrar qids por coincidencia
-literal sin afectar las medias. Los encabezados quedan fijos al recorrer ese listado;
-el qid permanece fijado en ese listado, y el método en las tablas global y por
-consulta. Una sola columna fija deja más espacio útil al desplazar horizontalmente
-en móvil. Las tablas permiten pantalla completa.
+Las tablas se ordenan por encabezado y muestran seis decimales. La negrita
+señala los máximos positivos visibles, incluidos empates. En **Comparar** los
+desplegables muestran la diferencia absoluta **Con Porter − Sin Porter** para
+pares del mismo método y corte. **Explorar todas las consultas** permite filtrar
+el listado por identificador. Las ayudas nativas y **Cómo interpretar estos
+resultados** explican las métricas y los métodos.
 
-Con el modo **Comparar** de Porter, los paneles de diferencias se cargan al abrirlos. Muestran, para la
-métrica elegida, **Con Porter − Sin Porter** del mismo método, corte y consultas.
-Son diferencias absolutas, no porcentajes ni pruebas de significancia. El signo y
-«Aumenta/Disminuye/Sin cambio» acompañan los valores; Embeddings queda excluido.
-Una variante ausente nunca se convierte en cero: un reporte incompleto se rechaza;
-la función de comparación representa la ausencia sin calcular una diferencia.
-
-Los filtros globales actualizan la vista completa. El detalle usa un fragmento
-de Streamlit para que el cambio de qid o del filtro del explorador actualice solo
-esa sección.
-El detalle identifica la consulta con un título y un resaltado breve al cambiarla
-(desactivado si se prefiere movimiento reducido).
-Al salir de Métricas, el navegador oculta esa vista mientras Python retira su
-contenido. El logo completo se anima desde su posición y tamaño anteriores
-durante 340 ms y la barra durante 260 ms. Cuando dos cabeceras coinciden, el
-logo sube y vuelve a su posición para hacer visible el cambio. Un clic rápido
-retoma el movimiento desde la posición en pantalla. Comparar, Métricas y la
-lista de Buscar tienen una entrada de 260 ms y 8 px. Los filtros conservan el
-contenedor de Métricas. Con movimiento reducido, el logo usa un fundido breve
-de 180 ms, sin desplazamiento ni cambio de tamaño.
+Al salir de Métricas, el panel se oculta en cuanto se activa el destino.
+Comparar y Métricas tienen una entrada breve del panel y el logo, que se
+omite con movimiento reducido. Las rutas y parámetros compartibles siguen
+el mecanismo descrito en **Rutas y URL**.
 
 Los cortes, split, profundidad y conteos proceden del JSON validado. El esquema 1
 admite test, AP/MAP@1000 y cualquier k entero positivo hasta `depth` (que debe ser
 al menos 1000); las etiquetas de P/R usan ese k. El gráfico conserva la escala
-[0,1] y distingue las variantes con etiquetas y colores constantes, sin depender solo del color. Las tablas
+[0,1] y distingue las variantes con etiquetas, sin depender del color. Las tablas
 muestran seis decimales; **Procedencia y configuración** permite inspeccionar
 conteos, parámetros, revisiones, hashes, versiones y descargar ambos originales
 con todos sus decimales.
@@ -169,16 +132,11 @@ Las consultas declaradas sin relevantes deben tener las tres métricas a cero
 en todas las configuraciones. Los conteos de relevancia solo se contrastan por coherencia interna: verificar
 de nuevo los qrels y los artefactos originales corresponde a la evaluación.
 
-Al entrar o cambiar un filtro global se valida el par completo. Una segunda lectura
-detecta cambios durante la validación. **Reintentar carga** aparece si los reportes
-fallan. Al interactuar con el detalle por consulta se releen ambos archivos y se
-comparan sus bytes con el par ya validado.
-Si siguen idénticos, se reutilizan los datos de esa vista sin volver a analizar
-4.536 filas. Si cambian o falta alguno, se fuerza una ejecución completa para
-validar de nuevo y actualizar también el resumen y la procedencia. No hay caché
-global ni se depende de fechas o tamaños de archivo. Si el par es inválido, se
-muestra el motivo y cómo restaurarlo; no se presentan tablas/gráficos parciales
-ni resultados anteriores. La vista nunca reescribe los reportes.
+Al entrar o cambiar un filtro global se valida el par completo. Las interacciones
+del detalle comprueban los bytes de ambos archivos y reutilizan los datos
+validados mientras sean idénticos. Si el par cambia, la página vuelve a validarlo.
+Si falla la validación, la vista muestra el motivo y retira los resultados.
+**Reintentar carga** vuelve a leer los reportes después de restaurar el par.
 
 Para revisar errores sin alterar los originales, copie ambos archivos a una
 carpeta temporal dentro de `artifacts/`, establezca `JAB_REPORTS_DIR` con esa ruta
@@ -186,55 +144,3 @@ antes de arrancar Streamlit y modifique solo las copias. Restaure ambos archivos
 válidos y pulse **Reintentar carga**. Las pruebas deterministas de lectura,
 presentación y recuperación están en `tests/test_metrics.py` y usan `AppTest` de
 Streamlit; no necesitan red, corpus ni modelos.
-
-## Decisiones visuales y alcance del seguimiento de #15
-
-### Colores de las barras
-
-El gráfico codifica la **variante de preprocesamiento**, con una asignación fija:
-
-| Variante | Color | Motivo |
-|---|---|---|
-| Sin Porter | Ciruela `#7A2E5E` | Conserva el acento aprobado para la referencia clásica sin stemming. |
-| Con Porter | Azul verdoso `#246477` | Distingue la segunda condición experimental al comparar el mismo método. |
-| No aplica | Gris `#5E5560` | Identifica la referencia única de Embeddings, que no usa Porter. |
-
-El segundo color sirve para comparar variantes contiguas; no señala al ganador ni
-implica que Porter mejore el resultado. La asignación no cambia al filtrar métodos
-o elegir otra métrica. Las etiquetas, los tooltips y la tabla aportan el mismo
-significado sin depender solo del color. La escala sigue siendo [0,1] y los valores
-proceden de los reportes originales. El azul verdoso se limita a la serie de datos;
-la identidad de la interfaz conserva la ciruela.
-
-### Tablas y controles
-
-Cabeceras gris claro, bordes definidos, texto oscuro y filas de 40 px facilitan
-seguir los datos. La negrita destaca valores positivos máximos sin cambiar las
-cifras. El panel blanco del detalle separa la consulta de los resultados globales;
-las explicaciones extensas están en ayudas y desplegables para reducir texto repetido.
-
-El resaltado de fila al pasar el puntero es el nativo de Streamlit. Se conserva
-evitando fondos por celda que lo oculten y sin añadir selección persistente a la
-aplicación; el foco del teclado mantiene su indicador. El contraste calculado de
-texto es 14,19:1 en cabeceras y 16,39:1 en el cuerpo. Estas medidas no sustituyen
-una prueba visual o con lector de pantalla.
-
-### Cambios compartidos adicionales
-
-La issue original pedía mostrar tablas y gráficos, distinguir configuraciones y
-validar los reportes. Los filtros persistentes, las diferencias de Porter y las
-acciones de recuperación amplían su usabilidad; no son nuevos requisitos académicos
-ni vuelven a evaluar test.
-
-Las transiciones, la eliminación de anclas antiguas y los contenedores por pestaña
-tocan la navegación compartida de #13 para integrar Métricas con el resto de la app.
-No implementan la comparación de rankings de #14 ni cambian el buscador, el motor
-o `render(context)`.
-
-Las opciones `dataframeBorderColor`, `dataframeHeaderBackgroundColor` y
-`dataframeHeaderTextColor` afectan a las tablas nativas. El ajuste de
-`secondaryBackgroundColor` a `#DCD8DC` también se hereda en controles nativos y
-refuerza el contraste del hover. Este efecto es global al tema y debe revisarse
-junto con las otras vistas nativas; el fondo de página, el color primario y el
-CSS del buscador personalizado se mantienen. No se añaden dependencias ni se
-modifican `reports/`, modelos, índices o fórmulas.

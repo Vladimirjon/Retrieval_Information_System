@@ -27,12 +27,7 @@ TABLE_HELP = (
     "En pantallas pequeñas, deslice la tabla horizontalmente o abra su vista de pantalla completa."
 )
 ROOT = Path(__file__).resolve().parents[2]
-_DEFAULT_THEME = {
-    "primaryColor": "#7A2E5E", "backgroundColor": "#FBFAF9",
-    "secondaryBackgroundColor": "#DCD8DC", "textColor": "#201A1F",
-    "dataframeBorderColor": "#D4CFD3", "dataframeHeaderBackgroundColor": "#ECE9EC",
-    "dataframeHeaderTextColor": "#201A1F",
-}
+_DEFAULT_THEME = {"backgroundColor": "#FBFAF9", "textColor": "#201A1F"}
 try:
     with (ROOT / ".streamlit/config.toml").open("rb") as _theme_file:
         THEME = tomllib.load(_theme_file)["theme"]

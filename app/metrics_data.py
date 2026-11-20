@@ -1,6 +1,6 @@
 """Lectura de los reportes de #11, sin corpus, recuperación ni reevaluación.
 
-Este cargador no guarda caché: cada llamada valida los dos archivos. El
+No hay caché: se validan los dos archivos en cada ejecución de la vista. El
 validador de #12 exige k=10 y qids externos, por eso aquí solo se comparten sus
 configuraciones y su tolerancia. Las medias se contrastan con fsum, rtol=0 y
 atol=1e-12 para admitir únicamente diferencias de redondeo de coma flotante.

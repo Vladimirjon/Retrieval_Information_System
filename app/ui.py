@@ -6,8 +6,9 @@ responde con el `seq` atendido y una `key` de la búsqueda, para que la interfaz
 descarte respuestas viejas y no repinte al cambiar solo de vista. Todo lo que
 llega del navegador se trata como no confiable.
 
-La interfaz guarda el estado en el historial de la pestaña. Los enlaces directos
-siguen usando las rutas y parámetros anteriores.
+El mismo estado vive en la URL: la vista es la ruta (/search, /comparison, /metrics;
+"/" es el inicio) y las opciones van en los parámetros q, model, results, stemming y
+graph. Así una búsqueda se puede recargar, compartir o recorrer con atrás y adelante.
 """
 
 from __future__ import annotations
@@ -20,7 +21,6 @@ from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
 from time import perf_counter
-from urllib.parse import urlencode
 
 import streamlit as st
 import streamlit.components.v2 as components
@@ -53,7 +53,9 @@ class Request:
     view: str
     seq: int
     graph: bool = False
-    # Distingue el inicio de una búsqueda confirmada, incluso si se borra su texto.
+    # En Buscar, "/" o "/search". Escribir no cambia la ruta: cambiar de página vuelve a
+    # montar el componente y se perdería el foco. Solo una acción explícita (Enter, una
+    # sugerencia, un ejemplo) pasa a /search, y el logo vuelve al inicio.
     route: str = "home"
 
     @property
@@ -89,6 +91,11 @@ def parse_view(raw: object) -> str:
     return raw if raw in VIEWS else "buscar"
 
 
+def same_state(a: Request, b: Request) -> bool:
+    """Misma búsqueda, vista y ruta, sin mirar el seq."""
+    return a.key == b.key and a.view == b.view and page_for(a) == page_for(b)
+
+
 def _flag(raw: object) -> bool:
     return isinstance(raw, str) and raw.strip().lower() == "true"
 
@@ -109,12 +116,27 @@ def request_from_url(page: str, params: Mapping[str, object], seq: int = 0) -> R
 
 def resolve_state(
     current: Request | None, sent: Request | None, page: str, params: Mapping[str, object],
-) -> Request:
-    """Adopta los enlaces directos al entrar y las acciones nuevas del navegador."""
-    if current is None or page != "home":
-        seq = 0 if current is None else current.seq + 1
-        current = request_from_url(page, params, seq)
-    return sent if sent is not None and sent.seq > current.seq else current
+    seen: tuple | None, nav: int,
+) -> tuple[Request, int, tuple]:
+    """Estado vigente entre lo que envió el navegador y lo que dice la URL.
+
+    Devuelve (estado, nav, url_vista). Gana lo último que ocurrió: una acción de la
+    interfaz llega con un seq mayor; un cambio de la URL que no hizo la app (recargar,
+    atrás, adelante, un enlace) llega sin cambiar el seq y se adopta con un seq nuevo y
+    `nav` + 1, para que la interfaz lo aplique. Solo cuenta como cambio una URL distinta
+    de la vista en la ejecución anterior (`seen`): una ejecución que el navegador pidió
+    antes de procesar un `switch_page` todavía trae la URL vieja, y adoptarla devolvería
+    la interfaz a un estado ya abandonado.
+    """
+    from_url = request_from_url(page, params)
+    url_now = (page, from_url.key, from_url.view, from_url.route)
+    if current is None:
+        return from_url, nav + 1, url_now
+    if sent is not None and sent.seq > current.seq:
+        return sent, nav, url_now
+    if not same_state(from_url, current) and url_now != seen:
+        return replace(from_url, seq=current.seq + 1), nav + 1, url_now
+    return current, nav, url_now
 
 
 def page_for(request: Request) -> str:
@@ -142,18 +164,6 @@ def url_params(request: Request) -> dict[str, str]:
 
 
 _HOME_DEFAULTS = {"model": "bm25", "results": "10", "stemming": "false", "graph": "false"}
-
-
-def view_links(request: Request, base_path: str) -> dict[str, str]:
-    """Enlaces para abrir cada vista en otra pestaña o compartirla."""
-    links = {}
-    for view in VIEWS:
-        target = replace(request, view=view)
-        page = page_for(target)
-        path = base_path if page == "home" else base_path + page
-        params = urlencode(url_params(target))
-        links[view] = f"{path}?{params}" if params else path
-    return links
 
 
 _MD_LINK = re.compile(r"\[([^\]]*)\]\([^)\s]*\)")

@@ -78,8 +78,7 @@
 
 /* Inicio: logo y barra centrados en el tercio superior */
 .jab .home { padding-top: clamp(64px, 18vh, 168px); display: grid; justify-items: center; gap: var(--s6); }
-.jab .logo { display: block; justify-self: start; color: var(--ink); }
-.jab .home .logo { justify-self: center; }
+.jab .logo { display: block; color: var(--ink); view-transition-name: logo; }
 .jab .logo svg { display: block; height: 88px; width: auto; }
 .jab .logo .dot { fill: var(--accent); }
 .jab .logo.first .dot { animation: jab-dot var(--d-page) 120ms var(--ease-out) both; }
@@ -111,7 +110,8 @@
   display: flex; align-items: flex-start; gap: var(--s1);
   background: #fff; border: 1px solid var(--line); border-radius: var(--r-bar);
   corner-shape: squircle; box-shadow: var(--shadow-bar);
-  z-index: 10;  /* el menú debe quedar sobre los resultados */
+  view-transition-name: bar;
+  z-index: 10;  /* view-transition-name crea un contexto de apilamiento: el menú debe quedar sobre los resultados */
   transition: border-color var(--d-fast) ease-out, box-shadow var(--d-fast) ease-out;
 }
 .jab .bar:focus-within { border-color: color-mix(in srgb, var(--accent-ink) 55%, var(--line)); box-shadow: var(--shadow-bar), 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
@@ -431,10 +431,10 @@
 .jab[data-view="metricas"] .bar { display: none; }
 .jab .results-head .logo { cursor: pointer; }
 
-/* ---------- Entrada de los resultados ---------- */
-.jab[data-view="buscar"][data-mode="results"] .results-main {
-  animation: jab-view-enter var(--d-page) var(--ease-out);
-}
+/* ---------- Transición inicio → resultados ---------- */
+::view-transition-old(bar), ::view-transition-new(bar),
+::view-transition-old(logo), ::view-transition-new(logo) { animation-duration: var(--d-page); animation-timing-function: var(--ease-out); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0s; }
 
 /* ---------- Teléfono ---------- */
 @media (max-width: 640px) {
@@ -452,5 +452,6 @@
 /* ---------- Preferencias del usuario ---------- */
 @media (prefers-reduced-motion: reduce) {
   .jab *, .jab *::before, .jab *::after { animation: none !important; transition: none !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
 @media (prefers-contrast: more) { :root { --line: var(--ink-3); } }

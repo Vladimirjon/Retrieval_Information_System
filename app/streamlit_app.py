@@ -3,7 +3,8 @@
 Ejecutar desde la raíz del repositorio:
     python -m streamlit run app/streamlit_app.py
 
-La navegación usa la dirección base. Los enlaces anteriores todavía se pueden abrir.
+Rutas: / (inicio), /search, /comparison y /metrics; las opciones de la búsqueda van en
+los parámetros de la URL (ver app/ui.py).
 
 Variables de entorno opcionales:
     JAB_ARTIFACTS_DIR  carpeta con los índices (por defecto, ./artifacts)
@@ -31,10 +32,11 @@ from app.context import AppContext
 from app.ui import (
     VOCABULARY_SIZE,
     jab_component,
+    page_for,
     parse_request,
     resolve_state,
     respond,
-    view_links,
+    url_params,
 )
 from app.views import comparison, metrics
 from ris.artifacts import ensure_artifacts
@@ -47,56 +49,57 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .block-container { max-width: none; padding: 0 0 4rem; }
 .stApp { font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif; }
 .st-key-jab_views { width: min(720px, 100% - 32px); margin: 0 auto; }
-.st-key-jab_views:has(.st-key-jab_metrics) { width: min(1040px, 100% - 32px); }
+.st-key-jab_views:has(.st-key-jab_metrics),
 .jab[data-view="metricas"] .jab-main { width: min(1040px, 100% - 32px); }
-/* Cada pestaña monta una entrada distinta; los filtros conservan su contenedor. */
-.st-key-jab_view_comparar, .st-key-jab_view_metricas {
-  animation: jab-view-enter var(--d-page, 260ms) var(--ease-out, cubic-bezier(.16, 1, .3, 1));
-}
-@keyframes jab-view-enter {
-  from { opacity: 0; transform: translateY(var(--s2, 8px)); }
-  to { opacity: 1; transform: none; }
-}
 .st-key-jab_metrics {
-  --metrics-panel: #FFFFFF;
   --metrics-line: #D4CFD3;
   --metrics-shadow: 0 2px 8px rgb(32 26 31 / .04);
 }
 .st-key-jab_metrics .st-key-metrics_query_detail {
-  background: var(--metrics-panel); border-color: var(--metrics-line);
-  border-top: 2px solid var(--accent, #7A2E5E); border-radius: var(--r-menu, 18px);
-  padding: var(--s5, 24px); box-shadow: var(--metrics-shadow);
+  background: #FFF; border-color: var(--metrics-line);
+  border-top: 2px solid #7A2E5E; border-radius: 18px;
+  padding: 24px; box-shadow: var(--metrics-shadow);
 }
 .st-key-jab_metrics .st-key-metrics_query_detail [class*="st-key-jab_query_"] {
-  border-top: 1px solid var(--metrics-line); padding-top: var(--s4, 16px);
+  border-top: 1px solid var(--metrics-line); padding-top: 16px;
+  border-radius: 8px; animation: jab-query-update .45s ease-out;
+}
+@keyframes jab-query-update {
+  from { box-shadow: 0 0 0 2px #7A2E5E40; }
+  to { box-shadow: 0 0 0 2px transparent; }
 }
 .st-key-jab_metrics [data-testid="stDataFrame"] {
-  border-radius: var(--r-item, 10px); box-shadow: var(--metrics-shadow);
+  border-radius: 10px; box-shadow: var(--metrics-shadow);
 }
 .st-key-jab_metrics [data-testid="stCaptionContainer"] p { color: #5E5560; }
-.st-key-metrics_controls { background: #F3F1F2; }
+.st-key-jab_metrics .st-key-metrics_controls { background: #F3F1F2; }
 .st-key-jab_metrics .st-key-metrics_controls button { min-height: 44px; }
 .st-key-jab_metrics :is(button, input, [role="radio"], [role="checkbox"], [role="combobox"]):focus-visible {
   outline: 2px solid #7A2E5E; outline-offset: 3px;
 }
 .st-key-jab_metrics .stTooltipIcon button { min-width: 28px; min-height: 28px; }
+/* Retira el panel anterior mientras Streamlit cambia de ruta. */
+body:has(.jab:not([data-view="metricas"])) .st-key-jab_metrics,
+body:has(.jab[data-view="metricas"]) .st-key-jab_view_comparar { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .st-key-jab_view_comparar, .st-key-jab_view_metricas,
+  .jab:is([data-view="comparar"], [data-view="metricas"]) .results-head .logo {
+    animation: jab-view-arrive 260ms cubic-bezier(.16, 1, .3, 1);
+  }
+}
+@keyframes jab-view-arrive {
+  from { opacity: .6; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
 @media (max-width: 600px) {
-  .st-key-jab_views:has(.st-key-jab_metrics) { width: calc(100% - 24px); }
+  .st-key-jab_views:has(.st-key-jab_metrics),
   .jab[data-view="metricas"] .jab-main { width: calc(100% - 24px); }
   .st-key-jab_metrics [data-testid="stMetricValue"] { font-size: 1.75rem; }
-  .st-key-jab_metrics .st-key-metrics_query_detail { padding: var(--s4, 16px); }
+  .st-key-jab_metrics .st-key-metrics_query_detail { padding: 16px; }
 }
-/* La navegación del componente es inmediata; no esperar al fin del rerun para
-   ocultar la vista anterior que Streamlit conserva durante la transición. */
-body:has(.jab[data-view="buscar"]) .st-key-jab_views,
-body:has(.jab:not([data-view="metricas"])) .st-key-jab_metrics,
-body:has(.jab:not([data-view="comparar"])) .st-key-jab_view_comparar,
-body:has(.jab:not([data-view="metricas"])) .st-key-jab_view_metricas { display: none; }
-/* Solo el buscador tiene su propio indicador de carga. Las vistas nativas
-   conservan la atenuación de Streamlit mientras actualizan sus datos. */
-[data-testid="stElementContainer"][data-stale="true"]:has(.jab) { opacity: 1 !important; transition: none !important; }
-.st-key-jab_metrics [class*="st-key-jab_query_"] { border-radius: 8px; animation: jab-query-update .45s ease-out; }
-@keyframes jab-query-update { from { box-shadow: 0 0 0 2px #7A2E5E40; } to { box-shadow: 0 0 0 2px transparent; } }
+/* Streamlit atenúa la página mientras vuelve a ejecutar el script en cada interacción;
+   jab ya muestra su propio estado de carga, así que se anula ese fundido gris. */
+[data-testid="stElementContainer"][data-stale="true"] { opacity: 1 !important; transition: none !important; }
 .jab-loading { min-height: 85vh; display: grid; place-content: center; justify-items: center; gap: 24px; color: #201A1F; text-align: center; }
 .jab-loading svg { width: 120px; height: auto; }
 .jab-loading .dot { fill: #7A2E5E; }
@@ -104,8 +107,8 @@ body:has(.jab:not([data-view="metricas"])) .st-key-jab_view_metricas { display: 
 .jab-loading p { margin: 0; max-width: 36ch; color: #5E5560; font-size: 14px; }
 @keyframes jab-load { from { opacity: 1; transform: scaleX(1); } to { opacity: .65; transform: scaleX(.98); } }
 @media (prefers-reduced-motion: reduce) {
-  .jab-loading-bar, .st-key-jab_view_comparar, .st-key-jab_view_metricas,
-  .st-key-jab_metrics [class*="st-key-jab_query_"] { animation: none; }
+  .jab-loading-bar,
+  .st-key-jab_metrics .st-key-metrics_query_detail [class*="st-key-jab_query_"] { animation: none; }
 }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -194,15 +197,27 @@ def _pages() -> dict[str, st.Page]:
 
 
 def _current_request(page: str):
-    """Lee los enlaces anteriores al entrar y conserva la última petición del navegador."""
+    """Estado vigente y si llegó desde la URL (nav) en vez de desde la interfaz.
+
+    Gana lo último que ocurrió: una acción del navegador sube su seq; un cambio de la
+    URL que no hizo la app (recargar, atrás, adelante, un enlace) cambia la ruta o los
+    parámetros sin cambiar el seq, y entonces se adopta la URL con un seq nuevo.
+
+    Solo cuenta como cambio una URL distinta de la que se vio en la ejecución anterior:
+    una ejecución que el navegador pidió antes de procesar un `switch_page` todavía
+    trae la URL vieja, y adoptarla devolvería la interfaz a un estado ya abandonado.
+    """
     sent = (st.session_state.get("jab") or {}).get("request")
-    current = resolve_state(
+    current, nav, seen = resolve_state(
         st.session_state.get("jab_current"),
         None if sent is None else parse_request(sent),
         page, st.query_params.to_dict(),
+        st.session_state.get("jab_seen_url"), st.session_state.get("jab_nav", 0),
     )
+    st.session_state["jab_seen_url"] = seen
     st.session_state["jab_current"] = current
-    return current
+    st.session_state["jab_nav"] = nav
+    return current, nav
 
 
 def main() -> None:
@@ -212,11 +227,7 @@ def main() -> None:
     active = st.navigation(list(pages.values()), position="hidden")
     page = next((key for key, value in pages.items() if value.url_path == active.url_path),
                 "home")
-    request = _current_request(page)
-    if page != "home":
-        st.switch_page(pages["home"], query_params={})
-    title = {"buscar": "Buscar", "comparar": "Comparar", "metricas": "Métricas"}
-    st.set_page_config(page_title=f"jab · {title[request.view]}")
+    st.set_page_config(page_title=active.title)  # la pestaña nombra la vista
     st.markdown(PAGE_CSS, unsafe_allow_html=True)
     status = _engine_status()
     if status["ready"]:
@@ -237,6 +248,7 @@ def main() -> None:
             loading.empty()
         status["ready"] = True
 
+    request, nav = _current_request(page)
     cache = st.session_state.get("jab_response")
     if cache and request.q and cache.get("key") == request.key and "error" not in cache:
         cache = {**cache, "seq": request.seq}  # misma búsqueda (p. ej. solo cambió la vista)
@@ -244,21 +256,24 @@ def main() -> None:
         cache = respond(engine, request)
     st.session_state["jab_response"] = cache
 
-    base_path = "/" + st.get_option("server.baseUrlPath").strip("/")
-    base_path = base_path.rstrip("/") + "/"
     jab_component(get_suggestions(), get_vocabulary(engine))(
         key="jab",
         data={
             "initial": {"q": request.q, "model": request.model, "k": request.k,
                         "stem": request.stem, "graph": request.graph, "view": request.view,
-                        "route": request.route, "seq": request.seq},
+                        "route": request.route, "seq": request.seq, "nav": nav},
             "response": cache,
-            "basePath": base_path,
-            "links": view_links(request, base_path),
         },
         default={"request": None},
         on_request_change=lambda: None,
     )
+
+    # La URL sigue al estado: ruta según la vista y parámetros con las opciones.
+    target, params = page_for(request), url_params(request)
+    if target != page:
+        st.switch_page(pages[target], query_params=params)
+    if st.query_params.to_dict() != params:
+        st.query_params.from_dict(params)
 
     if request.view != "buscar":
         context = AppContext(

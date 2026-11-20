@@ -2,7 +2,8 @@
 // El navegador gestiona escritura, menús y animación; Python ejecuta la búsqueda.
 // Contrato con Python (app/ui.py):
 //   estado "request" → {q, model, k, stem, graph, view, seq}; cada cambio sube seq (ninguno se pierde)
-//   data.initial     ← estado vigente en Python (incluye su seq).
+//   data.initial     ← estado vigente en Python (incluye su seq). `nav` sube cuando ese estado llegó
+//                      desde la URL (recargar, atrás, adelante, un enlace): entonces la interfaz lo adopta.
 //   data.response    ← {seq, key, model, stem, elapsed_ms, terms, suggestion, hits:[{rank, doc_id, text, score, matched, spans}]}
 //                      o {seq, key, error, suggestion}
 //   response.graph   ← solo con graph activo: {nodes:[[x, y, z, coseno]], edges:[[i, j, coseno]], shown,
@@ -37,10 +38,9 @@ export default function ({ parentElement, data, setStateValue }) {
 function mount(root, data) {
   const $ = (s) => root.querySelector(s);
   const init = data.initial || {};
-  const basePath = data.basePath || "/";
   const state = {
     q: init.q || "", model: init.model || "bm25", k: init.k || 10, stem: !!init.stem, graph: !!init.graph,
-    view: init.view || "buscar", route: init.route || "home", seq: init.seq || 0, timer: null, hasHits: false,
+    view: init.view || "buscar", route: init.route || "home", seq: init.seq || 0, nav: init.nav || 0, timer: null, hasHits: false,
     renderedKey: null, page: 1, response: null, pageTimer: null,
   };
   const bar = $(".bar"), input = $("#jab-q"), clear = $(".clear"), chip = $(".chip"), menu = $("#jab-menu");
@@ -84,105 +84,52 @@ function mount(root, data) {
   }
   on(root, "animationend", (e) => { if (e.animationName === "jab-hop") e.target.classList.remove("hop"); });
 
-  // ---------- Movimiento de la cabecera entre vistas ----------
-  let moving = false, logoMotion, barMotion;
-  const logoFor = (mode) => $(mode === "home" ? ".home .logo" : ".results-head .logo");
+  // ---------- Modo: inicio ↔ resultados ----------
+  let moving = false;
   const placeBar = (mode) => root.querySelector(`[data-slot="${mode}"]`).append(bar);
-  function animateLayout(element, before, options, nudge = 0) {
-    const after = element.getBoundingClientRect();
-    if (!after.width || !after.height) return;
-    const visible = before.width > 0 && before.height > 0;
-    const x = visible ? before.left - after.left : 0;
-    const y = visible ? before.top - after.top : 8;
-    const sx = visible ? before.width / after.width : 1;
-    const sy = visible ? before.height / after.height : 1;
-    if (visible && !nudge && !x && !y && sx === 1 && sy === 1) return;
-    const frames = [{
-      transform: `translate(${x}px, ${y}px) scale(${sx}, ${sy})`,
-      transformOrigin: "top left", opacity: visible ? 1 : 0,
-    }];
-    // Cuando las cabeceras coinciden, el logo sube y vuelve sin saltar al primer fotograma.
-    if (visible && Math.hypot(x, y) < nudge) {
-      frames.push({ transform: `translateY(-${nudge}px)`, transformOrigin: "top left", offset: 0.42 });
-      options = { ...options, easing: "ease-in-out" };
-    }
-    frames.push({ transform: "none", transformOrigin: "top left", opacity: 1 });
-    return element.animate(frames, options);
-  }
   function setMode(mode) {
-    const view = state.view, previousMode = root.dataset.mode;
-    const viewChanged = root.dataset.view !== view;
-    if (previousMode === mode && !viewChanged) return;
-    const supportsAnimation = typeof bar.animate === "function";
-    const animate = supportsAnimation && !reduced();
-    // Leer la posición ya animada antes de cancelar permite invertir el movimiento al pulsar rápido.
-    const logoBefore = animate && logoFor(previousMode).getBoundingClientRect();
-    const barBefore = animate && bar.getBoundingClientRect();
-    logoMotion?.cancel(); barMotion?.cancel();
-    logoMotion = barMotion = null;
+    if (root.dataset.mode === mode) return;
     const focused = document.activeElement === input, reopen = !suggest.hidden;
-    moving = true;
-    root.dataset.view = view;
-    if (previousMode !== mode) {
-      root.dataset.mode = mode;
-      placeBar(mode);
-    }
-    if (view === "metricas") hideSuggest();
-    else {
-      if (focused) input.focus({ preventScroll: true });
+    const apply = () => {
+      moving = true;
+      // Mover la barra en el DOM le quita el foco: se mira otra vez justo antes, porque
+      // el campo pudo recibirlo después de pedir el cambio (p. ej. tras pulsar ×).
+      const keep = focused || document.activeElement === input;
+      root.dataset.mode = mode; placeBar(mode);
+      if (keep) input.focus({ preventScroll: true });
       if (reopen) showSuggest(input.value);
-    }
-    moving = false;
-    updateGhost();
-    const logo = logoFor(mode);
-    if (animate) {
-      const css = getComputedStyle(root);
-      const options = {
-        duration: parseFloat(css.getPropertyValue("--d-page")),
-        easing: css.getPropertyValue("--ease-out").trim(),
-      };
-      logoMotion = animateLayout(logo, logoBefore, { ...options, duration: 340 }, viewChanged ? 12 : 0);
-      barMotion = animateLayout(bar, barBefore, options);
-    } else if (supportsAnimation && viewChanged) {
-      // La preferencia permite un cambio de opacidad sin desplazamiento ni escala.
-      logoMotion = logo.animate([{ opacity: 0.45 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
-    }
+      moving = false;
+      updateGhost();
+    };
+    if (document.startViewTransition && !reduced()) document.startViewTransition(apply);
+    else apply();
   }
-  listeners.signal.addEventListener("abort", () => { logoMotion?.cancel(); barMotion?.cancel(); });
 
   // ---------- Búsqueda: Python responde con el mismo seq ----------
-  const snapshot = () => ({ q: state.q.trim(), model: state.model, k: state.k, stem: state.stem, graph: state.graph, view: state.view, route: state.route });
-  function remember(push) {
-    const value = snapshot();
-    const entry = { ...window.history.state, jabRequest: value };
-    if (push) window.history.pushState(entry, "", basePath);
-    else window.history.replaceState(entry, "", basePath);
-  }
-  function sendRequest(push = false) {
-    remember(push);
-    send("request", { ...snapshot(), seq: ++state.seq });
-  }
-  function search(push = false) {
+  const currentRequest = () => ({ q: state.q.trim(), model: state.model, k: state.k, stem: state.stem, graph: state.graph, view: state.view, route: state.route, seq: state.seq });
+  function search() {
     clearTimeout(state.timer);
     clearTimeout(state.pageTimer);
     list.classList.remove("leaving");
     const q = state.q.trim();
+    state.seq += 1;
     state.page = 1; state.renderedKey = null;
-    setMode(isHome() ? "home" : "results");
-    sendRequest(push);
-    if (!q) { state.hasHits = false; state.response = null; list.innerHTML = ""; list.dataset.stale = "false"; status.innerHTML = ""; pager.hidden = true; dym.hidden = true; bar.dataset.busy = "false"; showGraph(null); return; }
+    send("request", currentRequest());
+    if (!q) { state.hasHits = false; state.renderedKey = null; state.response = null; list.innerHTML = ""; list.dataset.stale = "false"; status.innerHTML = ""; pager.hidden = true; dym.hidden = true; bar.dataset.busy = "false"; showGraph(null); if (isHome()) setMode("home"); return; }
+    setMode("results");
     bar.dataset.busy = "true";
     graphBox.dataset.stale = "true";
     if (state.hasHits) list.dataset.stale = "true"; else renderSkeleton();
   }
   const schedule = () => { clearTimeout(state.timer); state.timer = setTimeout(search, DEBOUNCE); };
-  // Diseño de inicio (logo grande): Buscar sin consulta ni búsqueda confirmada.
+  const searchNow = () => { hop(); search(); };
+  // Diseño de inicio (logo grande): Buscar sin consulta y fuera de /search.
   const isHome = () => state.view === "buscar" && !state.q.trim() && state.route !== "search";
-  // Confirmar desde el inicio añade una entrada al historial de la pestaña.
+  // Acción explícita (Enter, sugerencia, ejemplo, «Quizás quisiste decir»): pasa a /search.
+  // Ese cambio de página vuelve a montar el componente; el aviso devuelve el foco al campo.
   const commitSearch = () => {
-    const push = state.route !== "search" && !!state.q.trim();
-    if (push) state.route = "search";
-    hop(); search(push);
+    if (state.route !== "search" && state.q.trim()) { state.route = "search"; window.__jabRefocus = true; }
+    searchNow();
   };
 
   function split(text) {
@@ -873,10 +820,7 @@ function mount(root, data) {
   on(input, "focus", updateGhost);
   let blurTimer;
   on(input, "blur", () => { clearTimeout(blurTimer); blurTimer = setTimeout(() => { updateGhost(); if (!moving && !bar.contains(document.activeElement)) hideSuggest(); }, 0); });
-  function clearSearch(push = false) {
-    editInput(""); syncClear(); hideSuggest(); input.focus(); search(push); updateGhost();
-  }
-  on(clear, "click", () => clearSearch());
+  on(clear, "click", () => { editInput(""); syncClear(); hideSuggest(); input.focus(); search(); updateGhost(); });
   // Ejemplos de inicio: tres preguntas reales de FiQA (train), distintas en cada visita.
   const pool = SUGG.filter((s) => s.length >= 18 && s.length <= 52 && s.endsWith("?"));
   if (pool.length >= 3) {
@@ -886,12 +830,7 @@ function mount(root, data) {
     root.querySelectorAll(".example span").forEach((span, i) => { span.textContent = chosen[i]; });
   }
   root.querySelectorAll(".example").forEach((b) => on(b, "click", () => { editInput(b.textContent.trim()); syncClear(); commitSearch(); input.focus(); }));
-  root.querySelectorAll("[data-logo]").forEach((a) => on(a, "click", (e) => {
-    e.preventDefault();
-    const push = !isHome();
-    state.route = "home"; state.view = "buscar";
-    markView(); hop(); clearSearch(push);
-  }));
+  root.querySelectorAll("[data-logo]").forEach((a) => on(a, "click", (e) => { e.preventDefault(); hop(); state.route = "home"; setView("buscar"); clear.click(); }));
 
   // ---------- Menú del modelo (chip o Ctrl/⌘ K) ----------
   root.querySelector("[data-models]").innerHTML = MODELS.map((m, i) => `
@@ -922,7 +861,7 @@ function mount(root, data) {
     root.querySelector("[data-stem-row]").setAttribute("aria-disabled", dense);
     gsw.setAttribute("aria-checked", state.graph); root.dataset.graph = state.graph ? "on" : "off";
   }
-  const rerun = () => { if (state.q.trim()) search(); else sendRequest(); };
+  const rerun = () => { if (state.q.trim()) search(); else { state.seq += 1; send("request", currentRequest()); } };
   function setModel(id) { state.model = id; syncControls(); hop(); rerun(); }
   on(chip, "click", () => openMenu(menu.hidden));
   on(menu, "click", (e) => {
@@ -941,14 +880,14 @@ function mount(root, data) {
   });
   on(document, "pointerdown", (e) => { if (!menu.hidden && !menu.contains(e.target) && !chip.contains(e.target)) openMenu(false); });
   on(document, "keydown", (e) => {
-    if (state.view === "metricas") return;
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); openMenu(menu.hidden); }
     else if (e.key === "/" && !typing) { e.preventDefault(); input.focus(); }
   });
 
-  // ---------- Vistas e historial de la pestaña ----------
+  // ---------- Vistas: Buscar / Comparar / Métricas (cada una con su ruta) ----------
   function markView() {
+    root.dataset.view = state.view;
     root.querySelectorAll("[data-view-link]").forEach((a) => {
       if (a.dataset.viewLink === state.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
@@ -956,45 +895,43 @@ function mount(root, data) {
   function setView(view) {
     if (state.view === view) return;
     state.view = view;
-    openMenu(false); hideSuggest(); markView();
+    markView(); hop();
     setMode(isHome() ? "home" : "results");
-    clearTimeout(state.timer);
-    sendRequest(true);
+    state.seq += 1; send("request", currentRequest());
   }
-  root.querySelectorAll("[data-view-link]").forEach((a) => on(a, "click", (e) => {
-    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-    e.preventDefault(); setView(a.dataset.viewLink);
-  }));
+  root.querySelectorAll("[data-view-link]").forEach((a) => on(a, "click", (e) => { e.preventDefault(); setView(a.dataset.viewLink); }));
 
-  function restore(saved) {
-    Object.assign(state, saved);
-    input.value = state.q; syncClear(); hideSuggest(); openMenu(false); syncControls(); markView(); updateGhost();
-    state.hasHits = false;
-    search();
+  // Estado que llega desde la URL (recargar, atrás, adelante, un enlace compartido).
+  function adopt(init) {
+    Object.assign(state, {
+      q: init.q || "", model: init.model || "bm25", k: init.k || 10, stem: !!init.stem, graph: !!init.graph,
+      view: init.view || "buscar", route: init.route || "home", seq: init.seq || 0, nav: init.nav || 0, renderedKey: null, page: 1, hasHits: false,
+    });
+    input.value = state.q; syncClear(); hideSuggest(); syncControls(); markView(); updateGhost();
+    setMode(isHome() ? "home" : "results");
+    if (state.q.trim()) { bar.dataset.busy = "true"; renderSkeleton(); }
+    else { list.innerHTML = ""; status.innerHTML = ""; pager.hidden = true; dym.hidden = true; showGraph(null); }
   }
-  on(window, "popstate", (e) => { if (e.state?.jabRequest) restore(e.state.jabRequest); });
 
   // ---------- Estado inicial (también tras volver a montar) ----------
   input.value = state.q; syncClear(); syncControls(); placeBar("home"); markView();
-  root.dataset.view = state.view;
+  if (window.__jabRefocus) {  // se volvió a montar tras pasar a /search desde el campo
+    window.__jabRefocus = false;
+    requestFrame(() => { input.focus({ preventScroll: true }); input.setSelectionRange(input.value.length, input.value.length); });
+  }
   if (!isHome()) { root.dataset.mode = "results"; placeBar("results"); }
-  const saved = window.location.pathname === basePath && !window.location.search && window.history.state?.jabRequest;
-  if (saved && Object.keys(saved).some((key) => saved[key] !== state[key])) restore(saved);
-  else remember(false);
 
   let resent = -1;         // si Python atendió un estado viejo, se reenvía una vez con seq nuevo
   return {
     receive(d) {
+      if ((d.initial?.nav ?? 0) > state.nav) adopt(d.initial);
       const r = d.response, pySeq = d.initial?.seq ?? 0;
-      if (pySeq === state.seq && d.links) {
-        root.querySelectorAll("[data-view-link]").forEach((a) => { a.href = d.links[a.dataset.viewLink]; });
-      }
       if (r && r.seq === state.seq) {
         bar.dataset.busy = "false"; list.dataset.stale = "false";
         if (r.key !== state.renderedKey || r.error) { render(r); state.renderedKey = r.error ? null : r.key; }
       }
       if (pySeq < state.seq && resent !== state.seq) {
-        resent = state.seq + 1; send("request", { ...snapshot(), seq: ++state.seq });
+        state.seq += 1; resent = state.seq; send("request", currentRequest());
       }
     },
   };
