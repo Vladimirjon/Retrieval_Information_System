@@ -924,6 +924,9 @@ function mount(root, data) {
       view: init.view || "buscar", route: init.route || "home", seq: init.seq || 0, nav: init.nav || 0, renderedKey: null, page: 1, hasHits: false,
     });
     input.value = state.q; syncClear(); hideSuggest(); syncControls(); markView(); updateGhost();
+    // Atrás, adelante y recargar no pasan por currentRequest(): sin esto Comparar vacío conservaría
+    // data-query="on" (línea «Buscando…» eterna y sin ejemplos).
+    root.dataset.query = state.q.trim() ? "on" : "off"; state.searchedKey = searchKey();
     setMode(isHome() ? "home" : "results");
     if (state.q.trim()) { bar.dataset.busy = "true"; renderSkeleton(); }
     else { list.innerHTML = ""; status.innerHTML = ""; pager.hidden = true; dym.hidden = true; showGraph(null); }

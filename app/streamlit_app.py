@@ -95,6 +95,11 @@ body:has(.jab[data-view="metricas"]) .st-key-jab_view_comparar { display: none; 
   from { opacity: .6; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
+/* En teléfono la cabecera pasa a una columna: el logo no puede ocupar todo el ancho porque, al subir
+   a la fila de navegación, taparía sus enlaces. */
+@media (max-width: 640px) {
+  .jab[data-view="metricas"] .results-head .logo { justify-self: start; width: max-content; }
+}
 @media (max-width: 600px) {
   .st-key-jab_views:has(.st-key-jab_metrics) { width: calc(100% - 24px); }
   .jab[data-view="metricas"] .jab-main, .jab[data-view="metricas"] .top { width: calc(100% - 24px); }

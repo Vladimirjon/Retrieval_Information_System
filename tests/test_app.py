@@ -341,6 +341,8 @@ def test_compare_waits_longer_and_search_never_shows_an_old_list_as_current():
     set_view = js.split("function setView(", 1)[1].split("root.querySelectorAll", 1)[0]
     assert 'view === "buscar" && state.searchedKey !== searchKey()) search();' in set_view
     assert "state.searchedKey = searchKey();" in js.split("function search(", 1)[1]
+    adopt = js.split("function adopt(", 1)[1].split("// ----------", 1)[0]
+    assert 'root.dataset.query = state.q.trim() ? "on" : "off"' in adopt and "state.searchedKey = searchKey()" in adopt
 
 
 def test_model_menu_is_compact_but_keeps_touch_targets():
