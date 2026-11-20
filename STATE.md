@@ -1,8 +1,19 @@
 # Estado del proyecto
 
-Actualizado: 20 de noviembre de 2026. `main` está en `a7e3698` (PR #44: Comparar, Métricas e informe; #14, #15 y #17 cerradas). Trabajo en curso en la rama `fix/18-pulido-interfaz-buscar-comparar-metricas`, creada desde `origin/main`, sin commit ni PR.
+Actualizado: 20 de noviembre de 2026. La QA de #18 se preparó en `docs/18-qa-entrega` desde `164fadd` (PR #45 integrado); para el estado de integración, consultar el PR asociado a #18.
 
-## Pulido de interfaz de Buscar, Comparar y Métricas (20 de noviembre, rama `fix/18-pulido-interfaz-buscar-comparar-metricas`, sin commit)
+## QA final y entrega (#18)
+
+- **Repositorio y documentación:** el repositorio remoto actual es `Vladimirjon/fiqa-information-retrieval`; la URL de `origin` local aún conserva el nombre anterior. Se actualizó `readme.md` con la app, el informe, los resultados, la reproducción de evaluación y el comportamiento de descarga de artefactos. Se retiraron afirmaciones obsoletas de que la implementación y las métricas estaban pendientes.
+- **App pública:** el 20 de noviembre se comprobó en navegador la búsqueda BM25 de «What is inflation?», Comparar con resultados de los cuatro modelos y la vista de métricas con siete configuraciones. Es un recorrido puntual, no una prueba de todos los controles ni del despertar tras 12 horas de reposo. La prueba anterior de #16 registró 977 MiB después de la carga inicial; no es el pico bajo uso ni mide la variante Porter.
+- **Informe:** `pdfinfo` confirmó cinco páginas A4 y el SHA-256 coincide con `docs/informe/README.md`. Se renderizaron e inspeccionaron las cinco páginas. `verificar_fuentes.py --pdf`, ejecutado con el runtime de documentos y salida en `artifacts/qa-18-pdf/`, verificó 4 536 filas, siete configuraciones, 49 medias de grupo, cuatro rankings de casos y la correspondencia del PDF. No se regeneraron rankings ni artefactos completos.
+- **Pruebas locales:** Python 3.12.10, `pytest -q` con `HF_HUB_OFFLINE=1` y `NLTK_DATA=data/nltk_data`: 537 pruebas pasaron; `ruff check .` sin errores. Las ejecuciones de pytest dentro del sandbox quedaron esperando en una prueba de Streamlit; la ejecución completa que pasó se hizo fuera del sandbox.
+- **Instalación limpia:** con Python 3.12.10 se creó `artifacts/qa18-clean-env`, se instalaron `requirements.txt` y el paquete editable como indica el README y `pip check` no encontró conflictos. En ese entorno, `pytest -q` pasó 537 pruebas y `ruff check .` no encontró errores. Las pruebas usaron los recursos NLTK locales con `HF_HUB_OFFLINE=1`; esto no prueba una descarga de datos desde cero ni reconstruye los artefactos.
+- **CI anterior:** el PR #45 se integró en `164fadd`; su ejecución [CI 44793091520](https://github.com/Vladimirjon/fiqa-information-retrieval/actions/runs/44793091520) pasó Ruff y tests sobre el merge de prueba `3e079ce` del head `932e7dc`. Esta evidencia no es el CI de la presente rama.
+- **Integridad de entrega:** `git ls-files` no mostró rutas `data/`, `artifacts/` o `.env` ni archivos `.faiss`, `.npy`, `.parquet` o `.zip` versionados. Es una comprobación de rutas y extensiones, no una auditoría completa de secretos. La carpeta preexistente `prototipos/` permanece sin seguimiento y no forma parte de esta tarea.
+- **Seguimiento:** el resultado del CI y la integración de esta documentación constan en el PR de #18. Sigue sin constar la revisión humana de aportes del informe. El plazo interno era el 17; la preparación puede completarse antes de la entrega oficial prevista para el lunes 23, según aclaró el usuario. La publicación de la app y del repositorio no acredita por sí sola esa entrega futura.
+
+## Registro histórico: pulido de interfaz antes del PR #45 (20 de noviembre)
 
 Pedido por @Vladimirjon con capturas; hecho solo con Claude Code (agentes Opus para el armazón de Buscar y el rediseño de Comparar, Sonnet para Métricas y las revisiones, cada cambio revisado por el otro modelo; sin Codex ni otros agentes).
 

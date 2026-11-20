@@ -2,6 +2,8 @@
 
 Proyecto universitario de Recuperación de Información, Prof. Iván Carrera. Compara modelos clásicos y semánticos sobre FiQA mediante consultas libres, rankings y métricas.
 
+**Aplicación:** [jab-retrieval-information-system.streamlit.app](https://jab-retrieval-information-system.streamlit.app/) · **Informe:** [PDF](docs/informe/informe_tecnico.pdf) · **Evaluación:** [resultados y reproducción](reports/README.md).
+
 [Enunciado completo](docs/ESPECIFICACION.md): construir índice invertido, implementar Jaccard, coseno TF-IDF y BM25, generar embeddings y buscar en una base vectorial, ofrecer una interfaz web gratuita, evaluar con qrels y analizar los cuatro modelos. Entregables: URL del sistema, código con instrucciones e informe técnico de máximo 5 páginas.
 
 ## Modelos y dataset
@@ -15,9 +17,9 @@ Proyecto universitario de Recuperación de Información, Prof. Iván Carrera. Co
 
 Decisiones del equipo: [PLAN](docs/PLAN.md). FiQA está en inglés y es de dominio financiero; el cargador fija las revisiones de origen y conserva los documentos con texto vacío. [Datos verificados](docs/DATASET.md): 57 638 documentos, 6 648 consultas y 648 consultas test distintas; test tiene 1 706 filas de qrels binarios. Fuentes del profesor: [corpus y consultas](https://huggingface.co/datasets/BeIR/fiqa), [qrels](https://huggingface.co/datasets/BeIR/fiqa-qrels).
 
-Evaluación prevista: P@10 y R@10 por consulta, MAP@1000 por sistema, clásicos con y sin Porter. No hay resultados todavía.
+La evaluación usa P@10 y R@10 por consulta y MAP@1000 por sistema, con y sin Porter en los modelos clásicos. Los resultados y su procedencia están en [reports/](reports/README.md); el análisis y los ejemplos se presentan en el [informe técnico](docs/informe/informe_tecnico.pdf) ([fuente editable](docs/informe/informe_tecnico.md)).
 
-## Stack y estructura prevista
+## Stack y estructura
 
 Python 3.12, NLTK, NumPy/SciPy dispersas, sentence-transformers, FAISS y Streamlit; pytest, ruff y GitHub Actions. Las versiones están fijadas en `requirements.txt`. No se permiten motores completos ni rank_bm25.
 
@@ -32,7 +34,7 @@ docs/informe/         fuente e informe final
 data/, artifacts/     archivos locales, fuera de Git
 ```
 
-La implementación está en curso. Se prevé publicar los artefactos en un repo de HF Hub del equipo para que el Space los descargue al arrancar; no se guardan en GitHub.
+Los artefactos están publicados en el dataset de Hugging Face indicado por `deploy/artifacts.json`. Por defecto, la app verifica los archivos locales y descarga los ausentes o con hash distinto. Si se define `JAB_ARTIFACTS_DIR`, usa esa carpeta y no descarga automáticamente. Los artefactos no se guardan en GitHub.
 
 `scripts/build_artifacts.py` muestra el avance del índice por cada 1.000 documentos,
 con porcentaje, vocabulario, velocidad y tiempo transcurrido. Ejecutarlo otra vez es
@@ -122,9 +124,9 @@ python -m pytest
 python -m ruff check .
 ```
 
-Según la salida comprobada en Python 3.12.10, `python -m pytest` pasó 1 prueba y `python -m ruff check .` terminó sin errores.
+Las pruebas y Ruff se ejecutan también en CI. Para regenerar las métricas con los artefactos disponibles, ejecuta `python scripts/evaluate.py`; consulta [reports/README.md](reports/README.md) antes de hacerlo, pues sobrescribe los reportes de evaluación.
 
-La aplicación Streamlit existe desde la issue #13 y se inicia con el siguiente comando. Requiere los artefactos; si existe `deploy/artifacts.json`, se descargan automáticamente:
+La aplicación Streamlit se inicia con el siguiente comando. Requiere los artefactos; con `deploy/artifacts.json` y sin `JAB_ARTIFACTS_DIR`, verifica y descarga los necesarios automáticamente:
 
 ```powershell
 python -m streamlit run app/streamlit_app.py
@@ -132,7 +134,7 @@ python -m streamlit run app/streamlit_app.py
 
 ## Despliegue
 
-El destino es [Streamlit Community Cloud](https://share.streamlit.io/), con los artefactos fuera de Git en el dataset público de Hugging Face `VLADIMIRJON/jab-fiqa-artifacts`. El código y esta preparación no publican nada automáticamente.
+La aplicación está publicada en [Streamlit Community Cloud](https://jab-retrieval-information-system.streamlit.app/), con los artefactos fuera de Git en el [dataset público de Hugging Face](https://huggingface.co/datasets/VLADIMIRJON/jab-fiqa-artifacts). Community Cloud volvió a desplegar la app tras un merge a `main` en la comprobación del 17 de noviembre; los cambios locales no se publican por sí solos.
 
 ### Publicar artefactos (una persona con sesión de Hugging Face)
 
@@ -148,7 +150,7 @@ Los archivos se derivan de BeIR/fiqa; la licencia de origen debe consultarse en 
 
 ### Crear la aplicación
 
-En [share.streamlit.io](https://share.streamlit.io/) despliega el repositorio `Vladimirjon/Retrieval_Information_System`, rama `main`, archivo principal `app/streamlit_app.py`; en la configuración avanzada selecciona Python 3.12. El manifiesto `deploy/artifacts.json` debe estar en esa rama y contener el SHA confirmado del dataset.
+En [share.streamlit.io](https://share.streamlit.io/) despliega el repositorio `Vladimirjon/fiqa-information-retrieval`, rama `main`, archivo principal `app/streamlit_app.py`; en la configuración avanzada selecciona Python 3.12. El manifiesto `deploy/artifacts.json` debe estar en esa rama y contener el SHA confirmado del dataset.
 
 Community Cloud instalará `app/requirements.txt`: busca primero el archivo de dependencias en la carpeta del archivo de entrada (`app/`) y después en la raíz; intenta instalar con `uv` y, si falla, con `pip`. Fuente: [dependencias de la app en Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies). `requirements.txt` de la raíz sigue siendo el archivo de desarrollo y CI.
 
@@ -166,7 +168,7 @@ El ruleset `proteger-main` (id 26888439), verificado por API el 9 de noviembre d
 
 ## Estado y fechas
 
-Planificación local al 9 de noviembre de 2026; implementación pendiente. **Todo terminado el martes 17 de noviembre**; entrega oficial el 23. Del 18 al 23 solo contingencia.
+El código, la aplicación y el informe están disponibles. La entrega oficial figura para el 23 de noviembre de 2026 en el [enunciado](docs/ESPECIFICACION.md); su envío por el canal del profesor requiere una constancia independiente de la publicación.
 
 - [Plan completo y mapa de requisitos](docs/PLAN.md)
 - [Estado actual](STATE.md)
