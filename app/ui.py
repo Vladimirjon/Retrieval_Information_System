@@ -208,6 +208,26 @@ def highlight_spans(text: str, matched: tuple[str, ...] | list[str], *, stem: bo
     return spans
 
 
+def highlight_html(text: str, matched: tuple[str, ...] | list[str], *, stem: bool) -> str:
+    """Texto escapado con `<mark>` en las mismas palabras que marca `highlight_spans`.
+
+    Trabaja con índices de `str` de Python (no UTF-16) y escapa todo lo demás, así el
+    resultado se puede insertar tal cual en HTML.
+    """
+    terms = set(matched)
+    if not terms:
+        return html.escape(text)
+    parts = []
+    cursor = 0
+    for word in _DISPLAY_WORD.finditer(text):
+        if terms.intersection(_word_terms(word.group().lower(), stem)):
+            parts.append(html.escape(text[cursor:word.start()]))
+            parts.append(f"<mark>{html.escape(word.group())}</mark>")
+            cursor = word.end()
+    parts.append(html.escape(text[cursor:]))
+    return "".join(parts)
+
+
 def graph_payload(engine: SearchEngine, query: str, hits: tuple, shown: int) -> dict:
     """Grafo 3D de la consulta para la interfaz, o el motivo legible si no se pudo.
 

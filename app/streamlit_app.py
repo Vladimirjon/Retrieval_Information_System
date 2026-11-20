@@ -48,20 +48,22 @@ PAGE_CSS = """
 header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .block-container { max-width: none; padding: 0 0 4rem; }
 .stApp { font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif; }
+/* Reserva siempre el hueco de la barra de desplazamiento: sin salto lateral entre vistas. */
+[data-testid="stMain"] { scrollbar-gutter: stable; }
 .st-key-jab_views { width: min(720px, 100% - 32px); margin: 0 auto; }
 .st-key-jab_views:has(.st-key-jab_metrics),
 .jab[data-view="metricas"] .jab-main { width: min(1040px, 100% - 32px); }
-/* Métricas: barra superior, logo y contenido comparten el mismo ancho centrado. */
-.jab[data-view="metricas"] .top { width: min(1040px, 100% - 32px); margin: 0 auto; padding: 0; }
-/* El logo sube a la fila de la navegación; solo él recibe clics en esa franja. */
+/* Métricas: el logo sube a la fila de la navegación, alineado con el contenido; la
+   navegación no cambia (misma esquina que en Buscar y Comparar). Solo el logo recibe clics. */
 .jab[data-view="metricas"] .jab-main { margin-top: -54px; position: relative; pointer-events: none; }
 .jab[data-view="metricas"] .jab-main :is(a, button) { pointer-events: auto; }
+.jab[data-view="metricas"] .results-head .logo { height: auto; }
 .st-key-jab_metrics {
-  --metrics-line: #D4CFD3;
+  --metrics-line: var(--line, #E4E0D8);
   gap: 12px;
 }
 .st-key-jab_metrics .st-key-metrics_controls {
-  background: #F3F1F2; border-radius: var(--r-item, 10px); padding: 10px 16px 12px;
+  background: var(--surface, #F4F2EE); border-radius: var(--r-item, 10px); padding: 10px 16px 12px;
   row-gap: 8px; align-items: flex-end;
 }
 .st-key-jab_metrics .st-key-metrics_controls button { min-height: 36px; }
@@ -69,11 +71,12 @@ header[data-testid="stHeader"], footer, #MainMenu { display: none !important; }
 .st-key-jab_metrics [data-testid="stHeading"] h3 { font-size: 1.125rem; line-height: 1.3; padding: 4px 0 0; }
 .st-key-jab_metrics [data-testid="stDataFrame"] { border-radius: var(--r-item, 10px); }
 .st-key-jab_metrics [data-testid="stCaptionContainer"] { opacity: 1; }
-.st-key-jab_metrics [data-testid="stCaptionContainer"] p { color: #5E5560; font-size: .8125rem; }
+.st-key-jab_metrics [data-testid="stCaptionContainer"] p { color: #57524B; font-size: .8125rem; }
 .st-key-jab_metrics [data-testid="stAlertContainer"]:has([data-testid="stAlertContentInfo"]) {
-  background: #F3F1F2; color: #201A1F; border: 1px solid var(--metrics-line);
+  background: var(--surface, #F4F2EE); color: #201A1F; border: 1px solid var(--metrics-line);
 }
 .st-key-jab_metrics .st-key-metrics_heading_row { align-items: baseline; justify-content: space-between; row-gap: 0; }
+.st-key-jab_metrics .st-key-metrics_heading_row > * { flex: 0 1 auto; }
 .st-key-jab_metrics .st-key-metrics_query_detail { gap: 12px; border-top: 1px solid var(--metrics-line); padding-top: 12px; margin-top: 4px; }
 .st-key-jab_metrics .st-key-metrics_detail_controls { align-items: flex-end; row-gap: 8px; }
 .st-key-jab_metrics :is(button, input, [role="radio"], [role="checkbox"], [role="combobox"]):focus-visible {
@@ -102,7 +105,7 @@ body:has(.jab[data-view="metricas"]) .st-key-jab_view_comparar { display: none; 
 }
 @media (max-width: 600px) {
   .st-key-jab_views:has(.st-key-jab_metrics) { width: calc(100% - 24px); }
-  .jab[data-view="metricas"] .jab-main, .jab[data-view="metricas"] .top { width: calc(100% - 24px); }
+  .jab[data-view="metricas"] .jab-main { width: calc(100% - 24px); }
   .st-key-jab_metrics .st-key-metrics_controls { padding: 10px 12px 12px; }
   .st-key-jab_metrics .st-key-metrics_reset { margin-left: 0; }
 }
@@ -112,8 +115,8 @@ body:has(.jab[data-view="metricas"]) .st-key-jab_view_comparar { display: none; 
 .jab-loading { min-height: 85vh; display: grid; place-content: center; justify-items: center; gap: 24px; color: #201A1F; text-align: center; }
 .jab-loading svg { width: 120px; height: auto; }
 .jab-loading .dot { fill: #7A2E5E; }
-.jab-loading-bar { width: min(440px, 80vw); height: 56px; border-radius: 28px; background: #F3F1F2; animation: jab-load 1.4s ease-in-out infinite alternate; }
-.jab-loading p { margin: 0; max-width: 36ch; color: #5E5560; font-size: 14px; }
+.jab-loading-bar { width: min(440px, 80vw); height: 56px; border-radius: 28px; background: #F4F2EE; animation: jab-load 1.4s ease-in-out infinite alternate; }
+.jab-loading p { margin: 0; max-width: 36ch; color: #57524B; font-size: 14px; }
 @keyframes jab-load { from { opacity: 1; transform: scaleX(1); } to { opacity: .65; transform: scaleX(.98); } }
 @media (prefers-reduced-motion: reduce) {
   .jab-loading-bar,

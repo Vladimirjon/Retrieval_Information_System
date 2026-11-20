@@ -324,9 +324,13 @@ def test_compare_without_query_reuses_the_home_examples_and_shows_progress():
     assert '$(state.view === "comparar" ? "[data-cmp-start]" : ".home").append(examples)' in js
     assert 'root.dataset.query = state.q.trim() ? "on" : "off"' in js
     assert '.jab[data-view="comparar"][data-query="off"] .cmp-start' in css
-    # Mientras Python no pinta la comparación, la barra dice que está buscando
-    assert 'class="cmp-pending" role="status"' in html
-    assert '.jab[data-view="comparar"][data-query="on"] .cmp-pending' in css
+    # Sin frases visibles: Comparar vacío solo muestra los ejemplos, centrados bajo la barra,
+    # y mientras carga basta el progreso de la barra; el aviso queda para lectores de pantalla.
+    assert "Compara los cuatro modelos" not in html
+    assert 'class="cmp-pending sr-only" role="status"' in html
+    assert '.jab[data-view="comparar"][data-query="on"] .cmp-pending { display: block; }' in css
+    start = css.split('.jab[data-view="comparar"][data-query="off"] .cmp-start {', 1)[1].split("}", 1)[0]
+    assert "justify-content: center" in start and "grid-column: 2" in start
     # Comparar y su cabecera comparten ancho; la barra conserva el de Buscar
     assert '.jab[data-view="comparar"] .jab-main { width: min(1120px' in css
 
@@ -350,7 +354,10 @@ def test_model_menu_is_compact_but_keeps_touch_targets():
     opt = css.split(".jab .opt {", 1)[1].split("}", 1)[0]
     setting = css.split(".jab .setting {", 1)[1].split("}", 1)[0]
     assert "min-height: 40px" in opt and "min-height: 40px" in setting
-    assert "@media (pointer: coarse) { .jab .opt, .jab .setting, .jab .example { min-height: 44px; } }" in css
+    coarse = css.split("@media (pointer: coarse) {", 1)[1].split("\n}", 1)[0]
+    assert ".jab .opt, .jab .setting { min-height: 44px; }" in coarse
+    # Los ejemplos se ven compactos (32 px) pero conservan 44 px de toque con ::after
+    assert ".jab .example::after" in coarse and "inset: -6px 0" in coarse
 
 
 def test_query_is_a_bounded_textarea_with_the_combobox_contract():
@@ -596,6 +603,125 @@ def test_palette_is_ciruela_and_old_colors_are_gone():
         assert old not in css
 
 
+def test_warm_neutrals_and_shared_tokens_replace_the_lilac_greys():
+    css = (FRONTEND / "styles.css").read_text(encoding="utf-8")
+    page_css = (Path(__file__).parent.parent / "app" / "streamlit_app.py").read_text(encoding="utf-8")
+    config = (Path(__file__).parent.parent / ".streamlit" / "config.toml").read_text(encoding="utf-8")
+    # Otros módulos consumen estos nombres: no se renombran.
+    for token in ("--teal: #246477", "--teal-soft: #E3F0F2", "--ochre: #A86A12", "--ochre-soft: #F8EBD2"):
+        assert token in css
+    for old in ("#F3F1F2", "#E6E1E4", "#D4CFD3", "#5E5560", "#756B77"):
+        assert old not in css + page_css + config
+    assert "--surface: #F4F2EE" in css and 'secondaryBackgroundColor = "#F4F2EE"' in config
+
+
+# ---------- Regresiones de la interfaz (navegación, barra, ejemplos, Métricas) ----------
+
+def test_search_with_an_empty_query_always_shows_home_regardless_of_route():
+    # Regresión: con la ruta /search y la consulta vacía (× en /search, Comparar vaciado y
+    # volver a Buscar, atrás/adelante) el modo quedaba en «results» sin nada: página en blanco.
+    js = (FRONTEND / "app.js").read_text(encoding="utf-8")
+    is_home = re.search(r"const isHome = .*?;\n", js).group()
+    run_frontend_js("""
+import assert from 'node:assert/strict';
+const state = {view: 'buscar', q: '', route: 'search'};
+""" + is_home + """
+assert.equal(isHome(), true);
+state.route = 'home'; assert.equal(isHome(), true);
+state.q = '   '; assert.equal(isHome(), true);
+state.q = 'tax'; assert.equal(isHome(), false);
+state.route = 'search'; assert.equal(isHome(), false);
+state.q = ''; state.view = 'comparar'; assert.equal(isHome(), false);
+state.view = 'metricas'; assert.equal(isHome(), false);
+""")
+    # Todo cambio de modo decide con isHome(): vista, URL adoptada, búsqueda vacía y montaje.
+    set_view = js.split("function setView(", 1)[1].split("root.querySelectorAll", 1)[0]
+    adopt = js.split("function adopt(", 1)[1].split("// ----------", 1)[0]
+    assert 'setMode(isHome() ? "home" : "results")' in set_view
+    assert 'setMode(isHome() ? "home" : "results")' in adopt
+    assert 'if (isHome()) setMode("home")' in js.split("function search(", 1)[1]
+    assert 'if (!isHome()) { root.dataset.mode = "results"' in js
+
+
+def test_query_bar_keeps_one_line_until_the_user_expands_it():
+    html, css, js = build_assets(())
+    assert 'class="grow"' in html and 'aria-controls="jab-q" hidden' in html
+    assert '.jab .bar:not([data-expanded="true"]) :is(textarea, .ghost) { white-space: pre;' in css
+    assert "ghost.scrollLeft = input.scrollLeft" in js
+    assert ":not(:focus) { clip-path" not in css  # enfocar ya no cambia la altura
+    assert "align-items: start" in css.split(".jab .results-head {", 1)[1].split("}", 1)[0]
+    run_frontend_js("""
+import assert from 'node:assert/strict';
+// dataset convierte a texto, como en el DOM
+const bar = {dataset: new Proxy({expanded: 'false'}, {set(t, k, v) { t[k] = String(v); return true; }})};
+const grow = {hidden: true, attrs: {}, setAttribute(k, v) { this.attrs[k] = String(v); }};
+let content = {w: 150, h: 42};
+const open = () => String(bar.dataset.expanded) === 'true';
+const input = {value: 'consulta', style: {}, scrollTop: 0, clientWidth: 200,
+  get clientHeight() { return parseInt(this.style.height); },
+  get scrollWidth() { return open() ? 200 : Math.max(200, content.w); },
+  get scrollHeight() { return open() ? Math.max(this.clientHeight, content.h) : this.clientHeight; }};
+""" + frontend_function("sizeInput", "setExpanded") + frontend_function("setExpanded", "updateGhost") + """
+sizeInput(); assert.equal(input.style.height, '42px'); assert.equal(grow.hidden, true);
+content = {w: 600, h: 90};
+sizeInput(); assert.equal(input.style.height, '42px'); assert.equal(grow.hidden, false);
+setExpanded(true); sizeInput(); assert.equal(input.style.height, '90px');
+assert.equal(grow.attrs['aria-expanded'], 'true');
+content = {w: 900, h: 200};
+sizeInput(); assert.equal(input.style.height, '138px'); assert.equal(input.style.overflowY, 'auto');
+content = {w: 0, h: 42};  // acortar: se contrae sola
+sizeInput(); assert.equal(open(), false); assert.equal(grow.hidden, true); assert.equal(input.style.height, '42px');
+// vaciar: también, aunque el placeholder ocupe dos líneas (Chrome lo cuenta en scrollHeight)
+setExpanded(true); input.value = ''; content = {w: 400, h: 66};
+sizeInput(); assert.equal(open(), false); assert.equal(grow.hidden, true); assert.equal(input.style.height, '42px');
+""")
+
+
+def test_examples_are_short_in_one_row_and_reshuffled_with_the_placeholder():
+    html, css, js = build_assets(())
+    assert "Busca en FiQA" not in html + js
+    limit = int(re.search(r"const EXAMPLE_MAX = (\d+);", js).group(1))
+    assert limit <= 36
+    fallbacks = re.findall(r"<span>([^<]+)</span></button>", html)
+    assert len(fallbacks) == 3 and all(len(text) <= limit for text in fallbacks)
+    assert "input.placeholder = placeholder" in js and "b.title = chosen[i]" in js
+    # Nuevos al volver a mostrar el inicio o Comparar vacío: ×, cambio de vista, URL adoptada.
+    assert js.count("shuffleExamples()") >= 4
+    assert "search(); updateGhost(); shuffleExamples(); });" in js
+    assert "if (!state.q.trim()) shuffleExamples();" in js.split("function setView(", 1)[1]
+    example = css.split(".jab .example {", 1)[1].split("}", 1)[0]
+    assert "height: 32px" in example and "font-size: var(--t-xs)" in example
+    assert "flex-wrap" not in css.split(".jab .examples {", 1)[1].split("}", 1)[0]
+    assert "text-overflow: ellipsis" in css.split(".jab .example span {", 1)[1].split("}", 1)[0]
+
+
+def test_tooltip_listens_on_document_once_and_is_wider():
+    html, css, js = build_assets(())
+    for event in ("pointerover", "pointerout", "focusin", "focusout"):
+        assert f'on(document, "{event}", (e) => {{ const target' in js or \
+            f'on(document, "{event}", (e) => {{ if (tipTarget' in js
+        assert f'on(root, "{event}"' not in js
+    assert html.count('id="jab-tip"') == 1
+    assert "max-width: 320px" in css.split(".jab .tooltip {", 1)[1].split("}", 1)[0]
+
+
+def test_qid_fields_only_accept_digits_up_to_the_longest_qid():
+    js = (FRONTEND / "app.js").read_text(encoding="utf-8")
+    rows = (Path(__file__).parent.parent / "reports" / "metrics_per_query.csv").read_text(encoding="utf-8")
+    qids = {line.split(",")[2] for line in rows.splitlines()[1:] if line}
+    assert qids and all(qid.isdigit() for qid in qids)
+    assert int(re.search(r"const QID_MAX = (\d+);", js).group(1)) == max(map(len, qids))
+    assert '".st-key-metrics_qid input, .st-key-metrics_qid_filter input"' in js
+    assert 'el.inputMode = "numeric"; el.maxLength = QID_MAX' in js
+    assert 'on(document, "beforeinput"' in js and 'text.replace(/\\D/g, "")' in js
+
+
+def test_navigation_keeps_its_corner_in_every_view():
+    page_css = (Path(__file__).parent.parent / "app" / "streamlit_app.py").read_text(encoding="utf-8")
+    assert '.jab[data-view="metricas"] .top' not in page_css
+    assert '[data-testid="stMain"] { scrollbar-gutter: stable; }' in page_css
+
+
 def test_wordmark_uses_current_color_and_one_dot():
     svg = WORDMARK.read_text(encoding="utf-8")
     assert 'stroke="currentColor"' in svg
@@ -786,3 +912,80 @@ def test_back_button_adopts_the_previous_url_with_a_new_seq():
     state, nav, seen = resolve_state(current, None, "search", SEARCH_A, seen_metrics, 3)
     assert (state.view, state.q, state.seq, nav) == ("buscar", "a", 8, 4)
     assert seen != seen_metrics
+
+
+def test_comparison_hover_focus_touch_jump_and_filter():
+    helper = frontend_function("mountComparison", "mount")
+    run_frontend_js("""
+import assert from 'node:assert/strict';
+const handlers = {}, signal = {addEventListener() {}};
+const on = (target, type, fn) => { handlers[type] = fn; };
+const reduced = () => false;
+let observe;
+globalThis.MutationObserver = class {
+  constructor(fn) { observe = fn; }
+  observe() {} disconnect() {}
+};
+globalThis.window = {};
+const card = (id, model = 'tfidf', coverage = '2') => ({
+  dataset: {docId: id, model, coverage}, attrs: {}, scrolls: [], focused: false,
+  setAttribute(k, v) { this.attrs[k] = v; },
+  closest(selector) { return selector === '.cmp-doc' ? this : null; },
+  focus() { this.focused = true; },
+  scrollIntoView(options) { this.scrolls.push(options); },
+});
+let cards = [card('a', 'jaccard'), card('a', 'tfidf'), card('b'), card('u', 'tfidf', '1')];
+const button = (cls, dataset) => ({dataset, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; },
+  closest(s) { return s === cls ? this : s === '.cmp-doc' && cls === '.cmp-jump' ? cards[0] : null; }});
+const segs = [button('.cmp-seg', {only: 'false'}), button('.cmp-seg', {only: 'true'})];
+const jump = button('.cmp-jump', {jumpModel: 'tfidf'});
+const panel = {dataset: {},
+  querySelectorAll(s) { return s === '.cmp-doc' ? cards : segs; },
+  querySelector() { return cards[0]; },
+};
+globalThis.document = {body: {}, activeElement: null, querySelector() { return panel; }};
+""" + helper + """
+mountComparison(on, signal);
+const event = (type, target, extra = {}) => handlers[type]({target, ...extra});
+const active = () => cards.filter((c) => c.dataset.active === 'true');
+// El puntero resalta el mismo documento en las otras columnas y lo suelta al salir.
+event('pointerover', cards[0], {pointerType: 'mouse'});
+assert.deepEqual(active(), [cards[0], cards[1]]);
+event('pointerout', cards[0], {pointerType: 'mouse', relatedTarget: null});
+assert.equal(active().length, 0);
+// Una tarjeta de un solo modelo no resalta nada.
+event('pointerover', cards[3], {pointerType: 'mouse'});
+assert.equal(active().length, 0);
+// El foco por teclado hace lo mismo y Escape lo limpia.
+event('focusin', cards[2]); assert.deepEqual(active(), [cards[2]]);
+event('focusout', cards[2], {relatedTarget: null}); assert.equal(active().length, 0);
+event('focusin', cards[0]); event('keydown', null, {key: 'Escape'});
+assert.equal(active().length, 0);
+// El ratón no fija nada al hacer clic en la tarjeta; el dedo sí, y otro toque lo suelta.
+event('click', cards[0], {pointerType: 'mouse'}); assert.equal(active().length, 0);
+event('click', cards[0], {pointerType: 'touch'}); assert.equal(active().length, 2);
+event('pointerover', cards[2], {pointerType: 'mouse'}); assert.equal(active().length, 2);
+event('click', {closest() { return null; }}, {pointerType: 'touch'});
+assert.equal(cards[0].dataset.active, 'false');
+event('pointerout', cards[2], {pointerType: 'mouse', relatedTarget: null});
+event('click', cards[0], {pointerType: 'touch'}); event('click', cards[0], {pointerType: 'touch'});
+assert.equal(active().length, 0);
+// «Ver en…» lleva a la tarjeta del otro modelo, la enfoca, y fija el documento con cualquier puntero.
+event('click', jump, {pointerType: 'mouse'});
+assert.deepEqual(cards[1].scrolls, [{behavior: 'smooth', block: 'center'}]);
+assert.equal(cards[1].focused, true); assert.equal(cards[0].focused, false);
+assert.deepEqual(active(), [cards[0], cards[1]]);
+event('keydown', null, {key: 'Escape'}); assert.equal(active().length, 0);
+// El filtro vive en window: sobrevive a un repintado y a montar de nuevo el componente.
+event('click', segs[1]); assert.equal(panel.dataset.onlyShared, 'true');
+assert.deepEqual(segs.map((s) => s.attrs['aria-pressed']), ['false', 'true']);
+event('pointerover', cards[0], {pointerType: 'mouse'});
+cards = [card('a'), card('b')]; observe();
+assert.equal(active().length, 0);
+assert.equal(panel.dataset.onlyShared, 'true');
+assert.equal(window.__jabCmp.onlyShared, true);
+panel.dataset = {}; mountComparison(on, signal);
+assert.equal(panel.dataset.onlyShared, 'true');
+event('click', segs[0]); assert.equal(panel.dataset.onlyShared, 'false');
+assert.deepEqual(segs.map((s) => s.attrs['aria-pressed']), ['true', 'false']);
+""")

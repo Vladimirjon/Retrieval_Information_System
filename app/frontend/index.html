@@ -3,9 +3,9 @@
 
   <header class="top">
     <nav class="nav" aria-label="Vistas">
-      <a href="#" data-view-link="buscar" aria-current="page">Buscar</a>
-      <a href="#" data-view-link="comparar">Comparar</a>
-      <a href="#" data-view-link="metricas">Métricas</a>
+      <a href="#" data-view-link="buscar" data-label="Buscar" aria-current="page">Buscar</a>
+      <a href="#" data-view-link="comparar" data-label="Comparar">Comparar</a>
+      <a href="#" data-view-link="metricas" data-label="Métricas">Métricas</a>
     </nav>
   </header>
 
@@ -14,9 +14,9 @@
       <a class="logo first" href="#" aria-label="jab, inicio" data-logo></a>
       <div class="slot" data-slot="home"></div>
       <div class="examples" aria-label="Ejemplos">
-        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>How should I invest my savings?</span></button>
-        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>What is a good credit score?</span></button>
-        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>Should I pay off my mortgage early?</span></button>
+        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>What is a mutual fund?</span></button>
+        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>How do I build wealth?</span></button>
+        <button class="example" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg><span>Is a car loan bad debt?</span></button>
       </div>
     </section>
 
@@ -24,11 +24,9 @@
       <a class="logo" href="#" aria-label="jab, inicio" data-logo data-home></a>
       <div class="slot" data-slot="results"></div>
       <!-- Comparar sin consulta: los ejemplos del inicio se mueven aquí (app.js, placeExamples). -->
-      <div class="cmp-start" data-cmp-start>
-        <p>Compara los cuatro modelos con tu consulta o con un ejemplo:</p>
-      </div>
-      <!-- Hasta que llega la vista de Python (su CSS oculta esta línea). -->
-      <p class="cmp-pending" role="status">Buscando con los cuatro modelos…</p>
+      <div class="cmp-start" data-cmp-start></div>
+      <!-- Solo para lectores de pantalla, hasta que llega la vista de Python (su CSS la oculta). -->
+      <p class="cmp-pending sr-only" role="status">Buscando con los cuatro modelos…</p>
     </div>
 
     <div class="bar" role="search">
@@ -38,10 +36,13 @@
       <label class="sr-only" for="jab-q">Consulta</label>
       <span class="ghost" aria-hidden="true"></span>
       <textarea id="jab-q" rows="1" autocomplete="off" spellcheck="false" maxlength="300"
-             placeholder="Busca en FiQA: How should I invest my savings?"
+             placeholder="How to maximise savings?"
              role="combobox" aria-autocomplete="both" aria-expanded="false" aria-controls="jab-suggest"
              aria-describedby="jab-ghost-hint"></textarea>
       <span id="jab-ghost-hint" class="sr-only">Tab o flecha derecha aceptan la sugerencia en gris.</span>
+      <button class="grow" type="button" aria-label="Ver la consulta completa" aria-expanded="false" aria-controls="jab-q" hidden>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 6 4 4 4-4"/></svg>
+      </button>
       <button class="clear" type="button" aria-label="Borrar" hidden>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
       </button>
