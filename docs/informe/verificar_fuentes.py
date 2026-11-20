@@ -72,7 +72,7 @@ def verify_pdf() -> dict:
     path = HERE / "informe_tecnico.pdf"
     reader = PdfReader(path)
     require(len(reader.pages) == 5, "El PDF no tiene cinco páginas")
-    require(reader.metadata.author == "Ismael Freire, Johann Passquel y Jorge Torres",
+    require(reader.metadata.author == "Ismael Freire, Johann Pasquel y Jorge Torres",
             "Los integrantes del PDF no coinciden")
     markdown = (HERE / "informe_tecnico.md").read_text(encoding="utf-8")
     blocks = markdown.split("<!-- pagebreak -->")

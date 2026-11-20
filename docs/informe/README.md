@@ -59,7 +59,7 @@ Get-FileHash docs/informe/informe_tecnico.pdf, artifacts/informe-segunda.pdf -Al
 
 Ambas salidas fueron idénticas con Python 3.12.16 y las versiones fijadas de
 `requirements-pdf.txt`. El SHA-256 registrado es
-`991a1b45fc7ff001405fac09c4fa54f2fecd205a7e04005d0ec4d206230a4910`.
+`caf49386e97be6573b4efc2b43227380cf7153ab6713ee78d277101a338ec70d`.
 
 La extracción de texto no sustituye la revisión visual. Con Poppler disponible,
 renderizar **todas** las páginas en una carpeta ignorada y abrirlas:

@@ -160,7 +160,7 @@
     }
   ],
   "deployment_revision": "5d7f05e86ceea9b5f95cecba061c8c30031c880c",
-  "source_sha256": "8c6743b4d56902288835f2f71f2b44a9418944e52238d408ae2b5d36bd27ba65",
+  "source_sha256": "cab36b7323d885aba0b9547bea458f01d0be2408705447d688e73129bc1805e7",
   "scope": "Auditoría de reportes y texto; no reevalúa test ni verifica los artefactos completos.",
   "discrepancies": [
     "El aporte 12_comparacion_modelos.md conserva la advertencia antigua de hashes densos distintos. Los campos actuales artifact_bytes_equal_to_original son true y los hashes locales de #12 coinciden con #11 y deploy/artifacts.json. Se sigue la evidencia estructurada.",
@@ -175,7 +175,7 @@
   "pdf": {
     "pages": 5,
     "format": "A4",
-    "sha256": "991a1b45fc7ff001405fac09c4fa54f2fecd205a7e04005d0ec4d206230a4910",
+    "sha256": "caf49386e97be6573b4efc2b43227380cf7153ab6713ee78d277101a338ec70d",
     "complete_text_matches_markdown_per_page": true,
     "links": [
       "https://andrefreitas.org/papers/www_fiqa_2018.pdf",

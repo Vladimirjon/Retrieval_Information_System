@@ -4,7 +4,7 @@
 
 Comparación de Jaccard, TF-IDF, BM25 y MiniLM con búsqueda exacta
 
-**Integrantes.** Ismael Freire, Johann Passquel y Jorge Torres.
+**Integrantes.** Ismael Freire, Johann Pasquel y Jorge Torres.
 
 Recuperación de Información · Prof. Iván Carrera · 19 de noviembre de 2026
 
